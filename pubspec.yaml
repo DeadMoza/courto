@@ -1,0 +1,44 @@
+name: courto
+description: "courto app"
+
+publish_to: 'none' 
+
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.8.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.2
+  geolocator: ^11.0.0
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  intl: ^0.20.2
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+
+  flutter_lints: ^5.0.0
+
+
+flutter:
+
+  uses-material-design: true
+
+
+  assets:
+    - assets/images/courtoFull.png
+    - assets/images/courto.png
+    
+  fonts:
+    - family: Changa
+      fonts:
+        - asset: assets/Changa-SemiBold.ttf
+          weight: 600
