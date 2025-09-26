@@ -5,6 +5,8 @@ import '../services/auth_service.dart';
 import '../pages/home_page.dart';
 import '/constants.dart';
 import 'signup_page.dart'; 
+import 'resetPasswordPages/phone_input_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,6 +22,18 @@ class _LoginPageState extends State<LoginPage> {
   bool showPassword = false;
 
   Future<void> login() async {
+    String phone = phoneController.text.trim();
+
+    if (phone.startsWith("09")) {
+      phone = "218${phone.substring(1)}";
+    } else if (phone.startsWith("9")) {
+      phone = "218$phone";
+    } else if (phone.startsWith("0")) {
+      phone = "218${phone.substring(1)}";
+    } else if (!phone.startsWith("218")) {
+      phone = "218$phone";
+    }
+    print(phone);
     FocusScope.of(context).unfocus();
     setState(() => loading = true);
 
@@ -30,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
         url,
         headers: {"Content-Type": "application/json"},
         body: json.encode({
-          "phone_number": phoneController.text.trim(),
+          "phone_number": phone,
           "password": passController.text.trim(),
         }),
       );
@@ -60,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
       _showError("خطأ في الاتصال بالشبكة، يرجى التحقق من الاتصال بالإنترنت");
     }
   }
+
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -167,7 +182,12 @@ class _LoginPageState extends State<LoginPage> {
 
                   // Forgot password
                   TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(
+                        builder: (_) => PhoneInputPage( phoneNumber: phoneController.text.trim(),),
+                      ),
+                    );
+                  },
                     child: const Text(
                       "هل نسيت كلمة المرور؟",
                       style: TextStyle(color: Colors.red),

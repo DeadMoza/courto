@@ -3,27 +3,21 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../services/auth_service.dart';
-import '/constants.dart';
-import 'home_page.dart';
+import 'reset_password_page.dart';
 
 class OtpPage extends StatefulWidget {
   final String phoneNumber;
-  final String fullName;
-  final String password;
 
   const OtpPage({
     super.key,
     required this.phoneNumber,
-    required this.fullName,
-    required this.password,
   });
 
   @override
-  _OtpPageState createState() => _OtpPageState();
+  OtpPageState createState() => OtpPageState();
 }
 
-class _OtpPageState extends State<OtpPage> {
+class OtpPageState extends State<OtpPage> {
   final List<TextEditingController> codeControllers =
       List.generate(4, (_) => TextEditingController());
   String? generatedCode;
@@ -75,7 +69,7 @@ class _OtpPageState extends State<OtpPage> {
           },
           body: json.encode({
             "phoneNumber": widget.phoneNumber,
-            "message": "رمز التحقق الخاص بك هو: $generatedCode",
+            "message": "رمز إعادة تعيين كلمة المرور هو: $generatedCode",
             "senderID": "13201",
           }),
         );
@@ -106,51 +100,20 @@ class _OtpPageState extends State<OtpPage> {
     });
   }
 
-  Future<void> _verifyCode() async {
+  void _verifyCode() {
     final enteredCode = codeControllers.map((c) => c.text).join();
     if (enteredCode != generatedCode) {
       _showError("رمز التحقق غير صحيح");
       return;
     }
 
-    setState(() => loading = true);
-
-    try {
-      final res = await http.post(
-        Uri.parse("${apiUrl}users/signup"),
-        headers: {"Content-Type": "application/json"},
-        body: json.encode({
-          "full_name": widget.fullName,
-          "phone_number": widget.phoneNumber,
-          "password": widget.password,
-        }),
-      );
-
-      setState(() => loading = false);
-
-      if (res.statusCode == 200) {
-        final data = json.decode(res.body);
-        await AuthService.saveSession(data["user"], data["token"]);
-
-        if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
-          (route) => false,
-        );
-      } else {
-        String message = "فشل إنشاء الحساب";
-        try {
-          final data = json.decode(res.body);
-          if (data["error"] != null) message = data["error"];
-        } catch (_) {}
-        if (!mounted) return;
-        Navigator.pop(context, message);
-      }
-    } catch (_) {
-      setState(() => loading = false);
-      _showError("حدث خطأ أثناء إنشاء الحساب");
-    }
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ResetPasswordPage(phoneNumber: widget.phoneNumber),
+      ),
+    );
   }
 
   void _showError(String message) {
@@ -161,6 +124,7 @@ class _OtpPageState extends State<OtpPage> {
       ),
     );
   }
+
   Widget _otpFields() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -210,15 +174,6 @@ class _OtpPageState extends State<OtpPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Image.asset(
-                    "assets/images/courtoFull.png",
-                    width: 150,
-                    height: 150,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Title
                   const Text(
                     "رمز التحقق",
                     style: TextStyle(
@@ -228,23 +183,14 @@ class _OtpPageState extends State<OtpPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Censored phone
                   Text(
                     "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black87,
-                    ),
+                    style: const TextStyle(fontSize: 16, color: Colors.black87),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
-
-                  // OTP fields
                   _otpFields(),
                   const SizedBox(height: 28),
-
-                  // Confirm button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -268,14 +214,12 @@ class _OtpPageState extends State<OtpPage> {
                             )
                           : const Text(
                               "تأكيد",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white),
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.white),
                             ),
                     ),
                   ),
                   const SizedBox(height: 20),
-
-                  // Resend button
                   TextButton(
                     onPressed: secondsRemaining > 0 ? null : _sendOtp,
                     child: Text(

@@ -1,10 +1,10 @@
+import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import 'fields_list_page.dart';
 import 'fields_map_page.dart';
 import 'settings_page.dart';
-import 'login_page.dart';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -116,7 +116,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                      MaterialPageRoute(builder: (_) => const SignupPage()),
                     ).then((_) {
                       setState(() {}); // refresh after login
                     });
