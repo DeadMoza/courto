@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../constants.dart';
+import 'field_details_page.dart';
 
 class FieldsListPage extends StatefulWidget {
   final int cityId;
@@ -14,8 +15,6 @@ class FieldsListPage extends StatefulWidget {
 }
 
 class _FieldsListPageState extends State<FieldsListPage> {
-  String selectedFilter = "الأقرب"; // default filter
-  final List<String> filters = ["الأقرب", "الأرخص", "الأعلى تقييماً"];
 
   List<Map<String, dynamic>> fields = [];
   bool loading = true;
@@ -116,44 +115,6 @@ class _FieldsListPageState extends State<FieldsListPage> {
         body: SafeArea(
           child: Column(
             children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 100),
-                height: _showFilter ? 40 : 0,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _showFilter
-                    ? Container(
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 4),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.filter_list, color: Colors.red),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedFilter,
-                                  items: filters
-                                      .map((f) => DropdownMenuItem(
-                                            value: f,
-                                            child: Text(f),
-                                          ))
-                                      .toList(),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedFilter = value!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : null,
-              ),
               Expanded(
                 child: loading
                     ? const Center(child: CircularProgressIndicator(color: Colors.red))
@@ -168,9 +129,14 @@ class _FieldsListPageState extends State<FieldsListPage> {
                               final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
 
                               return GestureDetector(
-                                onTap: () {
-                                  // Navigate to field details 
-                                },
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => FieldDetailsPage(field: field),
+                                  ),
+                                );
+                              },
                                 child: Container(
                                   margin: const EdgeInsets.only(bottom: 14),
                                   decoration: BoxDecoration(
@@ -212,6 +178,8 @@ class _FieldsListPageState extends State<FieldsListPage> {
                                                         fontSize: 18,
                                                         fontWeight: FontWeight.bold,
                                                         color: Colors.black87),
+                                                        overflow: TextOverflow.ellipsis,
+                                                        maxLines: 1,
                                                   ),
                                                   const SizedBox(height: 6),
                                                   Row(

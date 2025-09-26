@@ -101,7 +101,6 @@ class _HomePageState extends State<HomePage> {
                     AuthService.userData?['full_name'] ?? '',
                     style: const TextStyle(
                       fontSize: 20,
-                      fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),

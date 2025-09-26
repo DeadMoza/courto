@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../pages/home_page.dart';
 import '/constants.dart';
+import 'signup_page.dart'; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,7 +31,7 @@ class _LoginPageState extends State<LoginPage> {
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "phone_number": phoneController.text.trim(),
-          "password": passController.text,
+          "password": passController.text.trim(),
         }),
       );
 
@@ -82,15 +83,11 @@ class _LoginPageState extends State<LoginPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  
                   Image.asset(
                     "assets/images/courtoFull.png",
                     width: 150,
                     height: 150,
                   ),
-                  const SizedBox(height: 6),
-
-
                   const SizedBox(height: 32),
 
                   // Phone field
@@ -168,11 +165,29 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
 
+                  // Forgot password
                   TextButton(
                     onPressed: () {},
                     child: const Text(
                       "هل نسيت كلمة المرور؟",
                       style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+
+                  // Signup redirect
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SignupPage()),
+                      );
+                    },
+                    child: const Text(
+                      "مستخدم جديد؟ أنشئ حساب",
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
