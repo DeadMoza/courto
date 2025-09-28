@@ -210,14 +210,6 @@ class _OtpPageState extends State<OtpPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Image.asset(
-                    "assets/images/courtoFull.png",
-                    width: 150,
-                    height: 150,
-                  ),
-                  const SizedBox(height: 12),
-
                   // Title
                   const Text(
                     "رمز التحقق",
@@ -229,7 +221,6 @@ class _OtpPageState extends State<OtpPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Censored phone
                   Text(
                     "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
                     style: const TextStyle(

@@ -8,7 +8,6 @@ class SettingsPage extends StatelessWidget {
   void _logout(BuildContext context) async {
     await AuthService.clearSession();
 
-    // Navigate to login page and remove all previous routes
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginPage()),
@@ -18,17 +17,59 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        onPressed: () => _logout(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        ),
-        child: const Text(
-          "تسجيل الخروج",
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
+    final options = [
+      {
+        "icon": Icons.history,
+        "title": "سجل الحجوزات",
+        "onTap": () {
+          // TODO: navigate to booking history page
+        }
+      },
+      {
+        "icon": Icons.account_balance_wallet,
+        "title": "شحن المحفظة",
+        "onTap": () {
+          // TODO: navigate to charge wallet page
+        }
+      },
+      {
+        "icon": Icons.support_agent,
+        "title": "الدعم",
+        "onTap": () {
+          // TODO: navigate to support page
+        }
+      },
+      {
+        "icon": Icons.info,
+        "title": "حول التطبيق",
+        "onTap": () {
+          // TODO: navigate to about page
+        }
+      },
+      {
+        "icon": Icons.logout,
+        "title": "تسجيل الخروج",
+        "onTap": () => _logout(context),
+      },
+    ];
+
+    return Scaffold(
+      body: ListView.separated(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        itemCount: options.length,
+        separatorBuilder: (_, __) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final option = options[index];
+          return ListTile(
+            leading: Icon(option["icon"] as IconData, color: Colors.red),
+            title: Text(
+              option["title"] as String,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            onTap: option["onTap"] as void Function(),
+          );
+        },
       ),
     );
   }

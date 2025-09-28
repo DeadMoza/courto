@@ -22,6 +22,16 @@ class _HomePageState extends State<HomePage> {
   int _cityId = 1; // default Tripoli
   bool _loadingCity = true;
 
+  double? _userLat;
+  double? _userLng;
+  double? cityLatitude;
+  double? cityLongitude;
+
+  // New state for fields data
+  List<Map<String, dynamic>> _fields = [];
+  bool _loadingFields = true;
+  String? _fieldsErrorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -32,6 +42,9 @@ class _HomePageState extends State<HomePage> {
     final position = await LocationService.getUserLocation();
 
     if (position != null) {
+      _userLat = position.latitude;
+      _userLng = position.longitude;
+
       try {
         final url = Uri.parse("${apiUrl}users/getUserCity");
         final res = await http.post(
@@ -39,7 +52,7 @@ class _HomePageState extends State<HomePage> {
           headers: {"Content-Type": "application/json"},
           body: jsonEncode({
             "latitude": position.latitude,
-            "longitude": position.longitude, // fixed typo
+            "longitude": position.longitude,
           }),
         );
 
@@ -47,6 +60,8 @@ class _HomePageState extends State<HomePage> {
           final data = jsonDecode(res.body);
           setState(() {
             _cityId = data["city_id"] ?? 1;
+            cityLatitude = data["city_latitude"];
+            cityLongitude = data["city_longitude"];
             _loadingCity = false;
           });
         } else {
@@ -67,6 +82,53 @@ class _HomePageState extends State<HomePage> {
         _loadingCity = false;
       });
     }
+
+    // After city detection is complete (whether successful or fallback)
+    await _fetchFields();
+  }
+
+  // Moved API call from FieldsListPage
+  Future<void> _fetchFields() async {
+    setState(() {
+      _loadingFields = true;
+      _fieldsErrorMessage = null;
+    });
+
+    try {
+      // Use the detected/default cityId
+      final url = Uri.parse("${apiUrl}users/getFieldsByCity/$_cityId");
+      final res = await http.get(url);
+
+      print("getFieldByCity response: ${res.body}");
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+
+        if (data["fields"] != null && data["fields"] is List) {
+          setState(() {
+            _fields = List<Map<String, dynamic>>.from(data["fields"]);
+            _loadingFields = false;
+          });
+        } else {
+          setState(() {
+            _fields = [];
+            _fieldsErrorMessage = "لا توجد ملاعب في هذه المدينة";
+            _loadingFields = false;
+          });
+        }
+      } else {
+        setState(() {
+          _fieldsErrorMessage = "فشل تحميل الملاعب";
+          _loadingFields = false;
+        });
+      }
+    } catch (e) {
+      print("Error fetching fields: $e");
+      setState(() {
+        _fieldsErrorMessage = "فشل التحميل، تحقق من اتصالك بالإنترنت";
+        _loadingFields = false;
+      });
+    }
   }
 
   @override
@@ -80,9 +142,27 @@ class _HomePageState extends State<HomePage> {
     }
 
     final screens = [
-      FieldsListPage(cityId: _cityId),
-      const FieldsMapPage(),
-      const SettingsPage(),
+      // Pass data and state to FieldsListPage
+      FieldsListPage(
+        key: const PageStorageKey('FieldsListPage'), // Optional: helps preserve scroll position
+        cityId: _cityId,
+        fields: _fields,
+        loading: _loadingFields,
+        errorMessage: _fieldsErrorMessage,
+      ),
+      // Pass data and state to FieldsMapPage (Index 1)
+      FieldsMapPage(
+        key: const PageStorageKey('FieldsMapPage'), // Recommended for IndexedStack
+        initialLat: _userLat ?? 32.8872, // Tripoli fallback
+        initialLng: _userLng ?? 13.1913,
+        cityLat: cityLatitude ?? 32.8872,
+        cityLng: cityLongitude ?? 13.1913,
+        fields: _fields, // Pass the fetched fields
+        loading: _loadingFields,
+      ),
+      const SettingsPage(
+        key: PageStorageKey('SettingsPage'),
+      ),
     ];
 
     return Directionality(
@@ -103,6 +183,7 @@ class _HomePageState extends State<HomePage> {
                       fontSize: 20,
                       color: Colors.white,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 )
               else
@@ -124,7 +205,11 @@ class _HomePageState extends State<HomePage> {
                 )
               : null,
         ),
-        body: screens[_selectedIndex],
+        // 👇 The key change is here: Use IndexedStack
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: screens,
+        ),
         bottomNavigationBar: Container(
           color: Colors.red,
           child: BottomNavigationBar(
