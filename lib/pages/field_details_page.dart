@@ -71,7 +71,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       // Active pill is wider for styling
-      width: isCurrent ? 24.0 : 8.0,
+      width: isCurrent ? 16.0 : 8.0,
       height: 8.0,
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
@@ -140,23 +140,21 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             children: [
               // Image Carousel Section: Using Container with Margin (instead of Padding)
               Container(
-                // 1. Margin applied here as requested
                 margin: const EdgeInsets.only(top: 10.0),
-                height: 250, // Keep height on the parent container
+                height: 220, // Keep height on the parent container
                 child: Stack(
                   children: [
                     if (images.isNotEmpty)
                       SizedBox(
-                        height: 250,
+                        height: 220,
                         child: PageView.builder(
                           controller: _pageController, // Use the controller
                           itemCount: images.length,
-                          // No need for onPageChanged here, as the listener handles it
+                      
                           itemBuilder: (context, index) {
-                            // 2. Added Padding inside the builder to provide horizontal spacing
-                            // This makes the images appear "un-stuck" as they scroll.
+           
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(5.0), // Rounded corners for styling
                                 child: Image.network(
@@ -209,8 +207,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           ),
                         ),
                       ),
-                    
-                    // Carousel Pill Indicator
+                 
                     if (images.isNotEmpty && images.length > 1)
                       Positioned(
                         bottom: 10,

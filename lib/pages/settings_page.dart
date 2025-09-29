@@ -54,6 +54,7 @@ class SettingsPage extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: Colors.red[50],
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 10),
         itemCount: options.length,
