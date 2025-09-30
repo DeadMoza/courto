@@ -272,42 +272,42 @@ class _FieldsMapPageState extends State<FieldsMapPage>
               ),
             ],
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                field["field_name"] ?? 'ملعب',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontFamily: "Changa",
-                  fontSize: 18,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  field["field_name"] ?? 'ملعب',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: "Changa",
+                    fontSize: 18,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              if (field["field_price"] != null)
-                Row(
-                  children: [
-                    const Icon(Icons.attach_money,
-                        color: Colors.white70, size: 18),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        "${field["field_price"]} د.ل / الساعة",
-                        style: const TextStyle(
-                          fontFamily: "Changa",
-                          fontSize: 16,
-                          color: Colors.white70,
+                const SizedBox(height: 8),
+                if (field["field_price"] != null)
+                  Row(
+                    children: [
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          "${field["field_price"]} / الساعة",
+                          style: const TextStyle(
+                            fontFamily: "Changa",
+                            fontSize: 16,
+                            color: Colors.white70,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                  ],
-                ),
-            ],
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ),

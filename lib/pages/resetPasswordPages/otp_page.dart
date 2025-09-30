@@ -143,7 +143,7 @@ class OtpPageState extends State<OtpPage> {
               fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(5),
               ),
             ),
             onChanged: (val) {
@@ -200,7 +200,7 @@ class OtpPageState extends State<OtpPage> {
                         backgroundColor: Colors.red,
                         disabledBackgroundColor: Colors.red[300],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       child: loading

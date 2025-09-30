@@ -133,7 +133,7 @@ class _SignupPageState extends State<SignupPage> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -152,7 +152,7 @@ class _SignupPageState extends State<SignupPage> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -182,7 +182,7 @@ class _SignupPageState extends State<SignupPage> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -214,7 +214,7 @@ class _SignupPageState extends State<SignupPage> {
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -231,7 +231,7 @@ class _SignupPageState extends State<SignupPage> {
                         backgroundColor: Colors.red,
                         disabledBackgroundColor: Colors.red[300],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       child: const Text(

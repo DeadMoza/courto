@@ -8,7 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await initializeDateFormatting('ar', null);
-  await AuthService.loadSession(); // load the session on app start
+  await AuthService.loadSession();
 
   runApp(const MyApp());
 }

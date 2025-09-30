@@ -1,6 +1,5 @@
-import 'package:courto/pages/signup_page.dart';
+import 'package:courto/app_bar.dart';
 import 'package:flutter/material.dart';
-import '../services/auth_service.dart';
 import '../services/location_service.dart';
 import 'fields_list_page.dart';
 import 'fields_map_page.dart';
@@ -169,42 +168,7 @@ class _HomePageState extends State<HomePage> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.red,
-          automaticallyImplyLeading: false,
-          title: Row(
-            children: [
-              if (AuthService.isLoggedIn)
-                Expanded(
-                  child: Text(
-                    AuthService.userData?['full_name'] ?? '',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      color: Colors.white,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                )
-              else
-                const Spacer(),
-              _buildWallet(),
-            ],
-          ),
-          leading: !AuthService.isLoggedIn
-              ? IconButton(
-                  icon: const Icon(Icons.login_rounded, color: Colors.white),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SignupPage()),
-                    ).then((_) {
-                      setState(() {}); // refresh after login
-                    });
-                  },
-                )
-              : null,
-        ),
+        appBar: buildHomeAppBar(context),
         // 👇 The key change is here: Use IndexedStack
         body: IndexedStack(
           index: _selectedIndex,
@@ -239,34 +203,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildWallet() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.3),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.account_balance_wallet,
-              color: Colors.red, size: 22),
-          const SizedBox(width: 4),
-          Text(
-            AuthService.userData?['wallet_balance']?.toString() ?? '0',
-            style: const TextStyle(
-                color: Colors.red, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildIcon(IconData icon, int index) {
     bool isSelected = _selectedIndex == index;

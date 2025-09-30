@@ -1,3 +1,4 @@
+import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -91,48 +92,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.red[50],
-        appBar: AppBar(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  "${AuthService.userData?['full_name'] ?? ''}",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.account_balance_wallet,
-                        color: Colors.red, size: 22),
-                    const SizedBox(width: 4),
-                    Text(
-                      AuthService.userData?['wallet_balance']?.toString() ?? '0',
-                      style: const TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+        appBar: buildHomeAppBar(context),
         body: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 80),
           child: Column(

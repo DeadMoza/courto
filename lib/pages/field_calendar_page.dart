@@ -1,3 +1,4 @@
+import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -114,11 +115,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text("تقويم ${widget.field['field_name']}"),
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-        ),
+        appBar: buildHomeAppBar(context),
         backgroundColor: Colors.red.shade50,
         body: loading
             ? const Center(child: CircularProgressIndicator(color: Colors.red))

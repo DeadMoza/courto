@@ -1,3 +1,4 @@
+import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -95,14 +96,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            "أوقات الحجز - ${AppFormat.formatDateArabic(widget.date)}",
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.red,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
+        appBar: buildHomeAppBar(context),
         backgroundColor: Colors.red.shade50,
         body: ListView.builder(
           padding: const EdgeInsets.all(16),

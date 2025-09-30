@@ -1,6 +1,10 @@
+import 'package:courto/pages/settingsPages/about_page.dart';
 import 'package:flutter/material.dart';
+import '../charge_wallet_dialog.dart';
 import '../services/auth_service.dart';
 import 'login_page.dart';
+import 'settingsPages/booking_history_page.dart';
+
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -17,19 +21,22 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final options = [
+    final loggedInOptions = [
       {
         "icon": Icons.history,
         "title": "سجل الحجوزات",
         "onTap": () {
-          // TODO: navigate to booking history page
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BookingsHistoryPage()),
+          );
         }
       },
       {
         "icon": Icons.account_balance_wallet,
         "title": "شحن المحفظة",
         "onTap": () {
-          // TODO: navigate to charge wallet page
+          showChargeWalletDialog(context);
         }
       },
       {
@@ -43,7 +50,8 @@ class SettingsPage extends StatelessWidget {
         "icon": Icons.info,
         "title": "حول التطبيق",
         "onTap": () {
-          // TODO: navigate to about page
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutAppPage()),
+          );
         }
       },
       {
@@ -52,6 +60,30 @@ class SettingsPage extends StatelessWidget {
         "onTap": () => _logout(context),
       },
     ];
+
+    final loggedOutOptions = [
+      {
+        "icon": Icons.info,
+        "title": "حول التطبيق",
+        "onTap": () {
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutAppPage()),
+          );
+        }
+      },
+      {
+        "icon": Icons.login,
+        "title": "تسجيل الدخول",
+        "onTap": () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+          );
+        }
+      },
+    ];
+
+    // Pick the list depending on login state
+    final options = AuthService.isLoggedIn ? loggedInOptions : loggedOutOptions;
 
     return Scaffold(
       backgroundColor: Colors.red[50],
