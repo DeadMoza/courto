@@ -3,7 +3,7 @@ import 'package:courto/pages/signup_page.dart';
 import 'services/auth_service.dart';
 import 'charge_wallet_dialog.dart';
 
-PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title}) {
+PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool isHome = false}) {
   return AppBar(
     elevation: 0,
     backgroundColor: Colors.red,
@@ -54,18 +54,21 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title}) {
         ),
       ],
     ),
-    leading: !AuthService.isLoggedIn
-        ? IconButton(
-            icon: const Icon(Icons.login_rounded, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SignupPage()),
-              ).then((_) {
-                // refresh after login
-              });
-            },
-          )
-        : null,
+    leading: isHome
+        ? (!AuthService.isLoggedIn
+            ? IconButton(
+                icon: const Icon(Icons.login_rounded, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SignupPage()),
+                  );
+                },
+              )
+            : null)
+        : IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
   );
 }

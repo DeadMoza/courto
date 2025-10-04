@@ -168,8 +168,7 @@ class _HomePageState extends State<HomePage> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.grey[100],
-        appBar: buildHomeAppBar(context),
-        // 👇 The key change is here: Use IndexedStack
+        appBar: buildHomeAppBar(context, isHome: true),
         body: IndexedStack(
           index: _selectedIndex,
           children: screens,

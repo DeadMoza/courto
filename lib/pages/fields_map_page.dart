@@ -97,10 +97,8 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       "assets/images/courtoFieldSprite.png", 130,
     );
 
-    // 2. Stadium Icons (capacity > 14)
-    // NOTE: We use the same image path but for different size/purpose
     _cachedIcons[_stadiumIconKey] = await _bitmapDescriptorFromAsset(
-      "assets/images/courtoStadiumSprite.png", 110,
+      "assets/images/courtoStadiumSprite.png", 120,
     );
     _cachedIcons[_stadiumSelectedIconKey] = await _bitmapDescriptorFromAsset(
       "assets/images/courtoStadiumSprite.png", 140,
