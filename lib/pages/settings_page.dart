@@ -57,7 +57,28 @@ class SettingsPage extends StatelessWidget {
       {
         "icon": Icons.logout,
         "title": "تسجيل الخروج",
-        "onTap": () => _logout(context),
+        "onTap": () => showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Text("تسجيل الخروج؟"),
+                  actions: <Widget>[
+                    TextButton(
+                      child: Text('نعم'),
+                      onPressed: () {
+                        _logout(context);
+                      },
+                    ),
+                    TextButton(
+                      child: Text('لا'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            )
       },
     ];
 

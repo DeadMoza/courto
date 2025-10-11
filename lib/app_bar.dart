@@ -44,10 +44,10 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
                     color: Colors.red, size: 22),
                 const SizedBox(width: 4),
                 Text(
-                  AuthService.userData?['wallet_balance']?.toString() ?? '0',
-                  style: const TextStyle(
-                      color: Colors.red, fontWeight: FontWeight.bold),
-                ),
+                  AuthService.walletBalance.toStringAsFixed(2),
+                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                )
+
               ],
             ),
           ),

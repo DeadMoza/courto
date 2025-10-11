@@ -33,7 +33,7 @@ class _LoginPageState extends State<LoginPage> {
     } else if (!phone.startsWith("218")) {
       phone = "218$phone";
     }
-    print(phone);
+ 
     FocusScope.of(context).unfocus();
     setState(() => loading = true);
 
@@ -46,6 +46,8 @@ class _LoginPageState extends State<LoginPage> {
         body: json.encode({
           "phone_number": phone,
           "password": passController.text.trim(),
+          "device_id": AuthService.playerId,
+          "platform": AuthService.platform
         }),
       );
 

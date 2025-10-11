@@ -1,5 +1,6 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
+import 'package:courto/pages/daily_booking_confirmation_page.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -126,7 +127,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
   if (_isBooked(slot)) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('هذه الفترة محجوزة')),
+      const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.red,),
     );
     return;
   }
@@ -149,7 +150,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text(
-                'لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية')),
+                'لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.red,),
       );
     }
     return;
@@ -171,14 +172,14 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
   if (!isAdjacent) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)')),
+      const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.red,),
     );
     return;
   }
 
   if (_selectedSlots.length >= 3) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات')),
+      const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.red,),
     );
     return;
   }
@@ -222,22 +223,25 @@ Future<void> _onContinuePressed() async {
                     onTap: () {
                       Navigator.pop(ctx);
                       _bookingFrequency = "daily";
-                      Navigator.pushNamed(
-                        context,
-                        '/confirmBooking',
-                        arguments: {
-                          'field': widget.field,
-                          'date': widget.date.toIso8601String(),
-                          'slots': _selectedSlots
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DailyBookingConfirmationPage(
+                          field: widget.field,
+                          date: widget.date,
+                          slots: _selectedSlots
                               .map((s) => {
                                     'start': s.start.toIso8601String(),
                                     'end': s.end.toIso8601String(),
                                   })
                               .toList(),
-                          'total_price': _currentTotalBookingPrice,
-                          'frequency': _bookingFrequency,
-                        },
-                      );
+                          totalBookingPrice: _currentTotalBookingPrice,
+                          remainingPaymentToOwner: _remainingPaymentToOwner,
+                          frequency: _bookingFrequency,
+                          userId: AuthService.userData?['id']
+                        ),
+                      ),
+                    );
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -265,22 +269,7 @@ Future<void> _onContinuePressed() async {
                     onTap: () {
                       Navigator.pop(ctx);
                       _bookingFrequency = "monthly";
-                      Navigator.pushNamed(
-                        context,
-                        '/confirmBooking',
-                        arguments: {
-                          'field': widget.field,
-                          'date': widget.date.toIso8601String(),
-                          'slots': _selectedSlots
-                              .map((s) => {
-                                    'start': s.start.toIso8601String(),
-                                    'end': s.end.toIso8601String(),
-                                  })
-                              .toList(),
-                          'total_price': _currentTotalBookingPrice,
-                          'frequency': _bookingFrequency,
-                        },
-                      );
+                      Navigator.pop(context);
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,

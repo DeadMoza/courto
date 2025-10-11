@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:ui' as ui;
 import '../../constants.dart';
 import '../../services/auth_service.dart';
+import 'booking_details_page.dart';
 
 class BookingsHistoryPage extends StatefulWidget {
   const BookingsHistoryPage({super.key});
@@ -125,101 +126,111 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
         statusColor = Colors.grey;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(5),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.red.withOpacity(0.15),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Field name + status
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    fieldName,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: statusColor),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12),
-                  ),
-                ),
-              ],
+    return InkWell(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+            builder: (_) => BookingDetailsPage(booking: booking),
             ),
-            const SizedBox(height: 12),
-
-            // Date
-            Row(
-              children: [
-                const Icon(Icons.calendar_today,
-                    color: Colors.redAccent, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  bookingDate,
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Time
-            Row(
-              children: [
-                const Icon(Icons.access_time,
-                    color: Colors.redAccent, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  "$startTime - $endTime",
-                  style: const TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Price
-            Row(
-              children: [
-                const Icon(Icons.attach_money,
-                    color: Colors.redAccent, size: 18),
-                const SizedBox(width: 6),
-                Text(
-                  "$price د.ل",
-                  style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+          );
+        },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(5),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.15),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            )
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Field name + status
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      fieldName,
+                      style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: statusColor),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+      
+              // Date
+              Row(
+                children: [
+                  const Icon(Icons.calendar_today,
+                      color: Colors.redAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    bookingDate,
+                    style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+      
+              // Time
+              Row(
+                children: [
+                  const Icon(Icons.access_time,
+                      color: Colors.redAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    "$startTime - $endTime",
+                    style: const TextStyle(fontSize: 14, color: Colors.black54),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+      
+              // Price
+              Row(
+                children: [
+                  const Icon(Icons.attach_money,
+                      color: Colors.redAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    "$price د.ل",
+                    style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

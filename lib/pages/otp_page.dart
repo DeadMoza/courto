@@ -116,6 +116,9 @@ class _OtpPageState extends State<OtpPage> {
     setState(() => loading = true);
 
     try {
+      final deviceId = AuthService.playerId;
+      final platform = AuthService.platform;
+
       final res = await http.post(
         Uri.parse("${apiUrl}users/signup"),
         headers: {"Content-Type": "application/json"},
@@ -123,6 +126,8 @@ class _OtpPageState extends State<OtpPage> {
           "full_name": widget.fullName,
           "phone_number": widget.phoneNumber,
           "password": widget.password,
+          "device_id": deviceId,
+          "platform": platform
         }),
       );
 
