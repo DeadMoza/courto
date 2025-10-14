@@ -1,13 +1,16 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'constants.dart';
 import 'services/auth_service.dart' show AuthService;
 
 Future<void> showChargeWalletDialog(BuildContext context) async {
   if (!AuthService.isLoggedIn) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text("يجب تسجيل الدخول أولاً")),
-  );
-  return;
-}
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("يجب تسجيل الدخول أولاً")),
+    );
+    return;
+  }
 
   String? selectedMethod; // initially null
   final courtoCardController = TextEditingController();
@@ -76,7 +79,6 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         key: const ValueKey("buttonsRow"),
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          // Bank Card Button
                           GestureDetector(
                             onTap: () {
                               // TODO: implement bank card flow
@@ -102,11 +104,10 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                               ],
                             ),
                           ),
-                          // Courto Card Button
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                selectedMethod = "courto"; // show input field
+                                selectedMethod = "courto"; 
                               });
                             },
                             child: Column(
@@ -142,16 +143,54 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                     ),
                     ElevatedButton(
                       child: const Text("تأكيد"),
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           final cardNumber = courtoCardController.text;
                           Navigator.pop(ctx);
+
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                  "تم شحن المحفظة برقم بطاقة كورتو: $cardNumber"),
-                            ),
+                            const SnackBar(content: Text("جارٍ معالجة الكرت...")),
                           );
+
+                          try {
+                            final response = await http.post(
+                              Uri.parse("${apiUrl}users/redeemVoucher"),
+                              headers: {'Content-Type': 'application/json', 'authorization': 'Bearer ${AuthService.token}'},
+                              body: jsonEncode({
+                                'code': cardNumber,
+                                'user_id': AuthService.userData?["id"],
+                              }),
+                            );
+
+                            final data = jsonDecode(response.body);
+
+                            if (data['success'] == true) {
+                              // Update AuthService wallet balance
+                              AuthService.userData?['wallet_balance'] = data['wallet_balance'];
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. الرصيد الحالي: ${data['wallet_balance']} دينار."),
+                                ),
+                              );
+
+                              // Optional: force UI refresh
+                              setState(() {});
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(data['message'] ?? "حدث خطأ"),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      "حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقًا.")),
+                            );
+                          }
                         }
                       },
                     ),
