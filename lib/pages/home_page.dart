@@ -98,8 +98,6 @@ class _HomePageState extends State<HomePage> {
       final url = Uri.parse("${apiUrl}users/getFieldsByCity/$_cityId");
       final res = await http.get(url);
 
-      print("getFieldByCity response: ${res.body}");
-
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
 
@@ -146,6 +144,8 @@ class _HomePageState extends State<HomePage> {
         key: const PageStorageKey('FieldsListPage'), // Optional: helps preserve scroll position
         cityId: _cityId,
         fields: _fields,
+        user_lat: _userLat,
+        user_long: _userLng,
         loading: _loadingFields,
         errorMessage: _fieldsErrorMessage,
       ),

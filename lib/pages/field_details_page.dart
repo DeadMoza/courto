@@ -231,14 +231,6 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                       "${AppFormat.formatArabicTime(widget.field["field_open_time"] ?? '')} - ${AppFormat.formatArabicTime(widget.field["field_close_time"] ?? '')}",
                     ),
                     const SizedBox(height: 20),
-                    const Text(
-                      "الوصف:",
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       widget.field["field_description"] ?? '',
                       style: const TextStyle(fontSize: 16, color: Colors.black54),
