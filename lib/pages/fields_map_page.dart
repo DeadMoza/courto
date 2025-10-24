@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:custom_info_window/custom_info_window.dart';
 import 'dart:ui' as ui;
-
-import 'field_details_page.dart'; // details page
+import 'bookingsPages/field_details_page.dart'; // details page
+import '../services/auth_service.dart'; // AuthService
 
 class FieldsMapPage extends StatefulWidget {
   final double initialLat;
@@ -32,7 +32,6 @@ class FieldsMapPage extends StatefulWidget {
 
 class _FieldsMapPageState extends State<FieldsMapPage>
     with TickerProviderStateMixin {
-  // ignore: unused_field
   late GoogleMapController _mapController;
   final Set<Marker> _markers = {};
   final CustomInfoWindowController _customInfoWindowController =
@@ -41,16 +40,20 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   final int radiusKm = 20;
   late LatLngBounds _cityBounds;
 
-  // Dictionary to store all icon states (Field, Stadium) to avoid reloading
   final Map<String, BitmapDescriptor> _cachedIcons = {};
-  
-  // Keys for standard and stadium icons
+  String? _selectedMarkerId;
+
+  // Icon keys
   static const String _fieldIconKey = 'field';
   static const String _fieldSelectedIconKey = 'field_selected';
   static const String _stadiumIconKey = 'stadium';
   static const String _stadiumSelectedIconKey = 'stadium_selected';
-
-  String? _selectedMarkerId;
+  static const String _tennisIconKey = 'tennis';
+  static const String _tennisSelectedIconKey = 'tennis_selected';
+  static const String _basketballIconKey = 'basketball';
+  static const String _basketballSelectedIconKey = 'basketball_selected';
+  static const String _padelIconKey = 'padel';
+  static const String _padelSelectedIconKey = 'padel_selected';
 
   @override
   void initState() {
@@ -69,54 +72,92 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   void didUpdateWidget(covariant FieldsMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.fields != oldWidget.fields) {
-      _loadFieldMarkers(); // Initial load when data changes
+      _loadFieldMarkers();
     }
   }
 
-  // Helper to get the correct icon for a field based on its capacity and selected state
+  bool get _canShowMap {
+    return AuthService.isLoggedIn &&
+        widget.initialLat != 0 &&
+        widget.initialLng != 0 &&
+        !widget.loading;
+  }
+
+  // Icon selection
   BitmapDescriptor? _getIconForField({
     required Map<String, dynamic> field,
     required bool isSelected,
   }) {
-    final int capacity = int.tryParse(field["field_capacity"]?.toString() ?? '') ?? 0;
+    final String type = (field["field_type"] ?? '').toString().toLowerCase();
+    final int capacity =
+        int.tryParse(field["field_capacity"]?.toString() ?? '') ?? 0;
     final bool isStadium = capacity > 14;
 
-    if (isStadium) {
-      return isSelected ? _cachedIcons[_stadiumSelectedIconKey] : _cachedIcons[_stadiumIconKey];
-    } else {
-      return isSelected ? _cachedIcons[_fieldSelectedIconKey] : _cachedIcons[_fieldIconKey];
+    switch (type) {
+      case 'tennis':
+        return isSelected
+            ? _cachedIcons[_tennisSelectedIconKey]
+            : _cachedIcons[_tennisIconKey];
+      case 'basketball':
+        return isSelected
+            ? _cachedIcons[_basketballSelectedIconKey]
+            : _cachedIcons[_basketballIconKey];
+      case 'padel':
+        return isSelected
+            ? _cachedIcons[_padelSelectedIconKey]
+            : _cachedIcons[_padelIconKey];
+      default:
+        if (isStadium) {
+          return isSelected
+              ? _cachedIcons[_stadiumSelectedIconKey]
+              : _cachedIcons[_stadiumIconKey];
+        } else {
+          return isSelected
+              ? _cachedIcons[_fieldSelectedIconKey]
+              : _cachedIcons[_fieldIconKey];
+        }
     }
   }
 
   Future<void> _loadCustomMarkers() async {
-    // 1. Standard Field Icons (capacity <= 14)
-    _cachedIcons[_fieldIconKey] = await _bitmapDescriptorFromAsset(
-      "assets/images/courtoFieldSprite.png", 110,
-    );
-    _cachedIcons[_fieldSelectedIconKey] = await _bitmapDescriptorFromAsset(
-      "assets/images/courtoFieldSprite.png", 130,
-    );
+    // Football
+    _cachedIcons[_fieldIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 110);
+    _cachedIcons[_fieldSelectedIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 130);
 
-    _cachedIcons[_stadiumIconKey] = await _bitmapDescriptorFromAsset(
-      "assets/images/courtoStadiumSprite.png", 120,
-    );
-    _cachedIcons[_stadiumSelectedIconKey] = await _bitmapDescriptorFromAsset(
-      "assets/images/courtoStadiumSprite.png", 140,
-    );
+    _cachedIcons[_stadiumIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoStadiumSprite.png", 130);
+    _cachedIcons[_stadiumSelectedIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoStadiumSprite.png", 150);
 
-    _loadFieldMarkers(); // Initial load after all icons are ready
+    // Tennis
+    _cachedIcons[_tennisIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoTennisSprite.png", 110);
+    _cachedIcons[_tennisSelectedIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoTennisSprite.png", 130);
+
+    // Basketball
+    _cachedIcons[_basketballIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoBasketballSprite.png", 110);
+    _cachedIcons[_basketballSelectedIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoBasketballSprite.png", 130);
+
+    // Padel
+    _cachedIcons[_padelIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoPadelSprite.png", 110);
+    _cachedIcons[_padelSelectedIconKey] =
+        await _bitmapDescriptorFromAsset("assets/images/courtoPadelSprite.png", 130);
+
+    _loadFieldMarkers();
   }
 
-  Future<BitmapDescriptor> _bitmapDescriptorFromAsset(
-      String path, int width) async {
+  Future<BitmapDescriptor> _bitmapDescriptorFromAsset(String path, int width) async {
     final ByteData data = await rootBundle.load(path);
-    final ui.Codec codec = await ui.instantiateImageCodec(
-      data.buffer.asUint8List(),
-      targetWidth: width,
-    );
+    final ui.Codec codec =
+        await ui.instantiateImageCodec(data.buffer.asUint8List(), targetWidth: width);
     final ui.FrameInfo fi = await codec.getNextFrame();
-    final ByteData? byteData =
-        await fi.image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await fi.image.toByteData(format: ui.ImageByteFormat.png);
     final Uint8List resized = byteData!.buffer.asUint8List();
     return BitmapDescriptor.fromBytes(resized);
   }
@@ -125,8 +166,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     final double latOffset = radiusKm / 110.574;
     final double latRad = widget.cityLat * (math.pi / 180.0);
     final double kmPerDegreeLng = 111.320 * math.cos(latRad);
-    final double lngOffset =
-        kmPerDegreeLng > 0 ? radiusKm / kmPerDegreeLng : 0.01;
+    final double lngOffset = kmPerDegreeLng > 0 ? radiusKm / kmPerDegreeLng : 0.01;
 
     final double south = widget.cityLat - latOffset;
     final double north = widget.cityLat + latOffset;
@@ -139,14 +179,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     );
   }
 
-  /// Initial load and full rebuild (only when data changes).
   void _loadFieldMarkers() {
     if (_cachedIcons.isEmpty) return;
 
     final markers = widget.fields
-        .where((field) =>
-            field["field_latitude"] != null &&
-            field["field_longitude"] != null)
+        .where((f) => f["field_latitude"] != null && f["field_longitude"] != null)
         .map((field) {
       final double lat =
           double.tryParse(field["field_latitude"]?.toString() ?? '') ?? 0.0;
@@ -157,15 +194,16 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       if (lat == 0.0 && lng == 0.0) return null;
 
       final bool isSelected = _selectedMarkerId == name;
-      final BitmapDescriptor? icon = _getIconForField(field: field, isSelected: isSelected);
+      final BitmapDescriptor? icon =
+          _getIconForField(field: field, isSelected: isSelected);
 
       if (icon == null) return null;
 
       return Marker(
         markerId: MarkerId(name),
         position: LatLng(lat, lng),
-        icon: icon, // Dynamically selected icon
-        onTap: () => _handleMarkerTap(field), // Use the new optimized handler
+        icon: icon,
+        onTap: () => _handleMarkerTap(field),
       );
     }).whereType<Marker>().toSet();
 
@@ -175,8 +213,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         ..addAll(markers);
     });
   }
-  
-  // NEW: Optimized logic to only update necessary markers, fixing the buffer error.
+
   void _handleMarkerTap(Map<String, dynamic> field) {
     final String name = field["field_name"] ?? 'ملعب';
     final LatLng position = LatLng(
@@ -184,24 +221,17 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       double.tryParse(field["field_longitude"]?.toString() ?? '') ?? 0.0,
     );
 
-    // 1. Deselect the previously selected marker
     final String? oldSelectedId = _selectedMarkerId;
     if (oldSelectedId != null && oldSelectedId != name) {
       _updateSingleMarkerIcon(oldSelectedId, false);
     }
-    
-    // 2. Select the new marker (or deselect the current one if tapped twice)
+
     final bool currentlySelected = _selectedMarkerId == name;
     final String? newSelectedId = currentlySelected ? null : name;
 
-    if (!currentlySelected) {
-      _updateSingleMarkerIcon(name, true);
-    }
+    if (!currentlySelected) _updateSingleMarkerIcon(name, true);
 
-    // 3. Update state and info window
-    setState(() {
-      _selectedMarkerId = newSelectedId;
-    });
+    setState(() => _selectedMarkerId = newSelectedId);
 
     if (newSelectedId != null) {
       _customInfoWindowController.addInfoWindow!(
@@ -213,13 +243,13 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     }
   }
 
-  // NEW: Function to update a single marker's icon state efficiently.
   void _updateSingleMarkerIcon(String markerId, bool isSelected) {
-    final field = widget.fields.firstWhere((f) => f["field_name"] == markerId, 
-        orElse: () => {});
+    final field = widget.fields
+        .firstWhere((f) => f["field_name"] == markerId, orElse: () => {});
     if (field.isEmpty) return;
 
-    final BitmapDescriptor? newIcon = _getIconForField(field: field, isSelected: isSelected);
+    final BitmapDescriptor? newIcon =
+        _getIconForField(field: field, isSelected: isSelected);
     if (newIcon == null) return;
 
     final Marker? existingMarker = _markers.firstWhere(
@@ -229,16 +259,30 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     if (existingMarker != null) {
       setState(() {
         _markers.remove(existingMarker);
-        _markers.add(existingMarker.copyWith(
-          iconParam: newIcon,
-        ));
+        _markers.add(existingMarker.copyWith(iconParam: newIcon));
       });
     }
   }
 
-
   Widget _buildCustomInfo(Map<String, dynamic> field) {
-    // Styled pop-up remains the same
+    IconData fieldIcon;
+    switch (field["field_type"]?.toString().toLowerCase()) {
+      case "football":
+        fieldIcon = Icons.sports_soccer;
+        break;
+      case "basketball":
+        fieldIcon = Icons.sports_basketball;
+        break;
+      case "tennis":
+        fieldIcon = Icons.sports_baseball;
+        break;
+      case "padel":
+        fieldIcon = Icons.sports_tennis;
+        break;
+      default:
+        fieldIcon = Icons.sports;
+    }
+
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -248,74 +292,110 @@ class _FieldsMapPageState extends State<FieldsMapPage>
           ),
         );
       },
-      child: _AnimatedInfoWindow( // Provides the entry animation
+      child: _AnimatedInfoWindow(
         child: Container(
           width: 240,
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-            // Styled background: Gradient
-            gradient: LinearGradient(
-              colors: [Colors.red.shade600, Colors.red.shade400],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            // Styled borders: Rounded corners
-            borderRadius: BorderRadius.circular(16), // Using 16 for better style
-            // Styled shadow
+            color: Colors.redAccent,
+            borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.25),
-                blurRadius: 8,
+                blurRadius: 6,
                 offset: const Offset(2, 4),
               ),
             ],
           ),
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  field["field_name"] ?? 'ملعب',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: "Changa",
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (field["field_price"] != null)
-                  Row(
-                    children: [
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          "${field["field_price"]} / الساعة",
-                          style: const TextStyle(
-                            fontFamily: "Changa",
-                            fontSize: 16,
-                            color: Colors.white70,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+          child: Stack(
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      field["field_name"] ?? 'ملعب',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: "Changa",
+                        fontSize: 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (field["field_price"] != null)
+                      Text(
+                        "${field["field_price"]} / الساعة",
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: "Changa",
+                          fontSize: 16,
+                          color: Colors.white70,
                         ),
                       ),
-                    ],
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white24,
+                    borderRadius: BorderRadius.circular(5),
                   ),
-              ],
-            ),
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    fieldIcon,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  bool _pointInBounds(LatLng point, LatLngBounds bounds) {
+    final double lat = point.latitude;
+    final double lng = point.longitude;
+    return lat >= bounds.southwest.latitude &&
+        lat <= bounds.northeast.latitude &&
+        lng >= bounds.southwest.longitude &&
+        lng <= bounds.northeast.longitude;
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.loading || _cachedIcons.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: Colors.red));
+    if (!_canShowMap) {
+      return Scaffold(
+        backgroundColor: Colors.red[50],
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.map, size: 60, color: Colors.redAccent),
+                SizedBox(height: 20),
+                Text(
+                  "يجب تسجيل الدخول ومنح صلاحية الوصول إلى الموقع لمشاهدة الملاعب.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     LatLng initialTarget = LatLng(widget.initialLat, widget.initialLng);
@@ -344,13 +424,10 @@ class _FieldsMapPageState extends State<FieldsMapPage>
               _customInfoWindowController.googleMapController = controller;
             },
             onTap: (_) {
-              // Only perform an update if a marker is currently selected
               if (_selectedMarkerId != null) {
                 _customInfoWindowController.hideInfoWindow!();
-                _updateSingleMarkerIcon(_selectedMarkerId!, false); // Deselect
-                setState(() {
-                  _selectedMarkerId = null;
-                });
+                _updateSingleMarkerIcon(_selectedMarkerId!, false);
+                setState(() => _selectedMarkerId = null);
               }
             },
             onCameraMove: (_) => _customInfoWindowController.onCameraMove!(),
@@ -365,18 +442,8 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       ),
     );
   }
-
-  bool _pointInBounds(LatLng point, LatLngBounds bounds) {
-    final double lat = point.latitude;
-    final double lng = point.longitude;
-    return lat >= bounds.southwest.latitude &&
-        lat <= bounds.northeast.latitude &&
-        lng >= bounds.southwest.longitude &&
-        lng <= bounds.northeast.longitude;
-  }
 }
 
-// Animated info window
 class _AnimatedInfoWindow extends StatefulWidget {
   final Widget child;
   const _AnimatedInfoWindow({required this.child});
@@ -397,7 +464,6 @@ class _AnimatedInfoWindowState extends State<_AnimatedInfoWindow>
       vsync: this,
       duration: const Duration(milliseconds: 250),
     );
-    // Provides a nice, bouncy scale-in effect
     _scale = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
     _controller.forward();
   }
@@ -410,9 +476,6 @@ class _AnimatedInfoWindowState extends State<_AnimatedInfoWindow>
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scale,
-      child: widget.child,
-    );
+    return ScaleTransition(scale: _scale, child: widget.child);
   }
 }

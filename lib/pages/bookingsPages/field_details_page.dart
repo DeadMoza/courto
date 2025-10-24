@@ -2,7 +2,6 @@ import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
-import '../services/auth_service.dart';
 import 'field_calendar_page.dart';
 
 class FieldDetailsPage extends StatefulWidget {
@@ -31,6 +30,8 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
         });
       }
     });
+      mapFieldTypes();
+
   }
 
   @override
@@ -38,6 +39,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     _pageController.dispose();
     super.dispose();
   }
+
 
   // Helper widget to build the information rows
   Widget _buildInfoRow(IconData icon, String text, {Color color = Colors.red}) {
@@ -84,6 +86,30 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     );
   }
 
+  String mappedFieldType = "";
+  void mapFieldTypes() {
+    switch (widget.field["field_type"]) {
+      case "football":
+        mappedFieldType = "كرة قدم";
+        break;
+      
+      case "basketball":
+        mappedFieldType = "كرة سلة";
+        break;
+      
+      case "tennis":
+        mappedFieldType = "تنس";
+        break;
+      
+      case "padel":
+        mappedFieldType = "بادل";
+        break;
+
+      default: "";
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<dynamic> images = widget.field["field_images"] ?? [];
@@ -114,9 +140,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           itemBuilder: (context, index) {
            
                             return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 2.0),
                               child: ClipRRect(
-                                borderRadius: BorderRadius.circular(5.0), // Rounded corners for styling
+                                borderRadius: BorderRadius.circular(5.0),
                                 child: Image.network(
                                   _resolveImageUrl(images[index].toString()),
                                   fit: BoxFit.cover,
@@ -158,7 +184,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                         margin: const EdgeInsets.symmetric(horizontal: 16.0),
                         decoration: BoxDecoration(
                           color: Colors.red[100],
-                          borderRadius: BorderRadius.circular(10.0),
+                          borderRadius: BorderRadius.circular(5.0),
                         ),
                         child: const Center(
                           child: Text(
@@ -201,7 +227,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                             style: const TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black),
+                                color: Colors.redAccent),
                           ),
                         ),
                         Container(
@@ -222,10 +248,11 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                     ),
                     const SizedBox(height: 16),
                     // Information Section
-                    _buildInfoRow(Icons.place, "${widget.field["field_city"] ?? ''} / ${widget.field["field_location"]}", color: Colors.red),
-                    _buildInfoRow(Icons.map, "${widget.field["field_location_details"] ?? ''}"),
-                    _buildInfoRow(Icons.people_alt, "${widget.field["field_capacity"] ?? ''} لاعبين"),
-                    _buildInfoRow(Icons.grass, "${widget.field["field_surface_type"] ?? ''}"),
+                    _buildInfoRow(Icons.place_outlined, "${widget.field["field_city"] ?? ''} / ${widget.field["field_location"]}", color: Colors.red),
+                    _buildInfoRow(Icons.map_outlined, "${widget.field["field_location_details"] ?? ''}"),
+                    _buildInfoRow(Icons.stadium_outlined, "ملعب ${mappedFieldType}"),
+                    _buildInfoRow(Icons.people_alt_outlined, "عدد الاعبين ${widget.field["field_capacity"] ?? ''}"),
+                    _buildInfoRow(Icons.grass_outlined, "${widget.field["field_surface_type"] ?? ''}"),
                     _buildInfoRow(
                       Icons.access_time,
                       "${AppFormat.formatArabicTime(widget.field["field_open_time"] ?? '')} - ${AppFormat.formatArabicTime(widget.field["field_close_time"] ?? '')}",
@@ -251,7 +278,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             );
           },
           backgroundColor: Colors.red,
-          icon: const Icon(Icons.calendar_today, color: Colors.white),
+          icon: const Icon(Icons.calendar_month, color: Colors.white),
           label: const Text(
             "عرض المواعيد",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),

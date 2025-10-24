@@ -3,7 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'dart:ui' as ui;
 import 'dart:math' show cos, sqrt, asin;
 import '../constants.dart';
-import 'field_details_page.dart';
+import 'bookingsPages/field_details_page.dart';
 
 class FieldsListPage extends StatefulWidget {
   final int cityId;
@@ -29,7 +29,6 @@ class FieldsListPage extends StatefulWidget {
 
 class _FieldsListPageState extends State<FieldsListPage> {
   final ScrollController _scrollController = ScrollController();
-  final ValueNotifier<bool> _showFilterNotifier = ValueNotifier(true);
 
   List<Map<String, dynamic>> _filteredFields = [];
   int? _selectedTypeId;
@@ -41,26 +40,13 @@ class _FieldsListPageState extends State<FieldsListPage> {
   @override
   void initState() {
     super.initState();
-
-    // Use the user coordinates passed from HomePage
     _userLat = widget.user_lat ?? 0;
     _userLng = widget.user_long ?? 0;
 
-    _selectedTypeId = 1; // default football
-    _selectedSort = 1;   // default closest
+    _selectedTypeId = 1;
+    _selectedSort = 1;
 
     _applyFilters();
-
-    _scrollController.addListener(_handleScroll);
-  }
-
-  void _handleScroll() {
-    final direction = _scrollController.position.userScrollDirection;
-    if (direction == ScrollDirection.reverse && _showFilterNotifier.value) {
-      _showFilterNotifier.value = false;
-    } else if (direction == ScrollDirection.forward && !_showFilterNotifier.value) {
-      _showFilterNotifier.value = true;
-    }
   }
 
   @override
@@ -71,7 +57,6 @@ class _FieldsListPageState extends State<FieldsListPage> {
     }
   }
 
-  // 🔍 Apply both type and sort filters locally
 void _applyFilters() {
   List<Map<String, dynamic>> result = List.from(widget.fields);
 
@@ -142,7 +127,7 @@ void _applyFilters() {
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
               title: const Text(
-                "فلترة الملاعب",
+                "اختر نوع الملعب",
                 textAlign: TextAlign.center,
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
@@ -302,7 +287,7 @@ void _applyFilters() {
         height: 60,
         decoration: BoxDecoration(
           color: selected ? Colors.red[100] : Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(5),
           border: Border.all(
             color: selected ? Colors.redAccent : Colors.grey[300]!,
             width: selected ? 2 : 1,
@@ -382,7 +367,7 @@ void _applyFilters() {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("$location", style: const TextStyle(color: Colors.black54)),
-                      Text("$price / الساعة", style: const TextStyle(color: Colors.red)),
+                      Text("$price / الساعة", style: const TextStyle(color: Colors.red, fontSize: 14)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -390,7 +375,7 @@ void _applyFilters() {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text("${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
-                          style: const TextStyle(fontSize: 12, color: Colors.red)),
+                          style: const TextStyle(fontSize: 14, color: Colors.red)),
                       Row(children: [
                         const Icon(Icons.people, color: Colors.red, size: 16),
                         Text(" $capacity", style: const TextStyle(color: Colors.black)),
@@ -433,46 +418,37 @@ void _applyFilters() {
   @override
   void dispose() {
     _scrollController.dispose();
-    _showFilterNotifier.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: ui.TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Colors.red[50],
-        body: SafeArea(
-          child: Stack(
-            children: [
-              _buildContent(),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: ValueListenableBuilder<bool>(
-                  valueListenable: _showFilterNotifier,
-                  builder: (context, isVisible, child) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      height: isVisible ? 60 : 0,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: isVisible
-                          ? FloatingActionButton.extended(
-                              onPressed: _showFilterDialog,
-                              backgroundColor: Colors.redAccent,
-                              icon: const Icon(Icons.filter_list, color: Colors.white),
-                              label: const Text('تصفية الملاعب',
-                                  style: TextStyle(color: Colors.white)),
-                            )
-                          : const SizedBox.shrink(),
-                    );
-                  },
+@override
+Widget build(BuildContext context) {
+  return Directionality(
+    textDirection: ui.TextDirection.rtl,
+    child: Scaffold(
+      backgroundColor: Colors.red[50],
+      body: SafeArea(
+        child: Stack(
+          children: [
+            _buildContent(),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: FloatingActionButton.extended(
+                  onPressed: _showFilterDialog,
+                  backgroundColor: Colors.redAccent,
+                  icon: const Icon(Icons.filter_list, color: Colors.white),
+                  label: const Text('فلترة الملاعب',
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 }

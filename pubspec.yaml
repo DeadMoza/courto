@@ -24,6 +24,7 @@ dependencies:
   google_maps_flutter: ^2.13.1
   custom_info_window: ^1.0.1
   onesignal_flutter: ^5.3.4
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -43,9 +44,23 @@ flutter:
     - assets/images/courto.png
     - assets/images/courtoFieldSprite.png
     - assets/images/courtoStadiumSprite.png
+    - assets/images/courtoBasketballSprite.png
+    - assets/images/courtoTennisSprite.png
+    - assets/images/courtoPadelSprite.png
     
   fonts:
     - family: Changa
       fonts:
         - asset: assets/Changa-SemiBold.ttf
           weight: 600
+
+
+flutter_launcher_icons: 
+  flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/courtoWhiteBackground.png"
+  adaptive_icon_background: "#FFFFEBEE"  # or a color hex
+  adaptive_icon_foreground: "assets/images/courtoWhiteBackground.png"
+  remove_alpha_ios: true
+

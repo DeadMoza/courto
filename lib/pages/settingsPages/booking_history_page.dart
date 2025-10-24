@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import '../../constants.dart';
 import '../../services/auth_service.dart';
@@ -64,7 +65,7 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
               AppFormat.formatArabicTime(b["booking_end_time"] ?? ""),
           "booking_status_fmt":
               AppFormat.translateStatus(b["booking_status"] ?? ""),
-          "_date_sort": parsedDate ?? DateTime(0), // for sorting
+          "_date_sort": DateTime.parse(b["booking_creation_date"]), // for sorting
         };
       }).toList();
 
@@ -110,9 +111,29 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
     final bookingDate = booking["booking_date_fmt"] ?? "";
     final startTime = booking["booking_start_time_fmt"] ?? "";
     final endTime = booking["booking_end_time_fmt"] ?? "";
-    final price = booking["booking_total_price"] ?? 0;
+    final remainingPrice = booking["booking_remaining_price"] ?? 0;
     final status = booking["booking_status_fmt"] ?? "غير معروف";
     final rawStatus = booking["booking_status"] ?? "";
+String creationDate = "";
+try {
+  final rawDate = booking["booking_creation_date"];
+  if (rawDate != null && rawDate.isNotEmpty) {
+    final parsedDate = DateTime.parse(rawDate);
+
+
+    String formatted = DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
+
+    // Replace Arabic-Indic digits with Latin digits
+    creationDate = formatted.replaceAllMapped(
+      RegExp(r'[٠١٢٣٤٥٦٧٨٩]'),
+      (m) => '٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!).toString(),
+    );
+  }
+} catch (_) {
+  creationDate = booking["booking_creation_date"] ?? "";
+}
+
+
 
     Color statusColor;
     switch (rawStatus) {
@@ -189,7 +210,7 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
               // Date
               Row(
                 children: [
-                  const Icon(Icons.calendar_today,
+                  const Icon(Icons.calendar_month_outlined,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(
@@ -217,14 +238,30 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
               // Price
               Row(
                 children: [
-                  const Icon(Icons.attach_money,
+                  const Icon(Icons.payments_outlined,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(
-                    "$price د.ل",
+                    "$remainingPrice د.ل",
                     style: const TextStyle(
                         fontSize: 16,
                         color: Colors.red,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Creation date
+                            Row(
+                children: [
+                  const Icon(Icons.schedule_send_outlined,
+                      color: Colors.redAccent, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    creationDate,
+                    style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
                         fontWeight: FontWeight.bold),
                   ),
                 ],

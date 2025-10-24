@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../../constants.dart';
 import '../../services/auth_service.dart';
-import 'booking_history_page.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -115,13 +114,12 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200 && data["message"] != null) {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"])),
+          SnackBar(content: Text(data["message"]), backgroundColor: Colors.redAccent,),
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const BookingsHistoryPage()),
-        );
+        Navigator.popUntil(context, ModalRoute.withName('/settingsPage'));
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -146,7 +144,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     final bookingDate = booking["booking_date_fmt"] ?? "--";
     final startTime = booking["booking_start_time_fmt"] ?? "--";
     final endTime = booking["booking_end_time_fmt"] ?? "--";
-    final price = booking["booking_total_price"] ?? "--";
+    final bookingPrice = booking["booking_price"];
+    final remainingPrice = booking["booking_remaining_price"] ?? "--";
     final status = booking["booking_status"];
     final isPending = status == "pending";
 
@@ -165,7 +164,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             physics: const BouncingScrollPhysics(),
             child: Card(
               color: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
               elevation: 6,
               child: Padding(
                 padding: const EdgeInsets.all(20),
@@ -202,33 +201,42 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             ),
                           ],
                         ),
-                        Text("رمز الحجز: ${booking["booking_id"] ?? '--'}"),
+                        Text("رمز الحجز: ${booking["booking_id"] ?? '--'}", style: TextStyle(color: Colors.black54),),
                       ],
                     ),
                     const SizedBox(height: 30),
 
-                    // Centered Date, Time & Price
+                    // Date, Time & Price
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.calendar_today, color: Colors.redAccent),
+                            const Icon(Icons.calendar_month, color: Colors.redAccent),
                             const SizedBox(width: 8),
-                            Text(bookingDate),
+                            Text(bookingDate, style: TextStyle(color: Colors.black54),),
                           ],
                         ),
                         const SizedBox(height: 8),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("$startTime - $endTime"),
+                            Text("$startTime - $endTime", style: TextStyle(color: Colors.black54),), 
                           ],
                         ),
+
+                        const SizedBox(height: 10),
+                        const Divider(),
+                        const SizedBox(height: 10),
+
+                        Text(
+                          "سعر الحجز: $bookingPrice د.ل",
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
+                        ),
+
                         const SizedBox(height: 8),
                         Text(
-                          "السعر المتبقي: $price د.ل",
+                          "السعر المتبقي: $remainingPrice د.ل",
                           style: const TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
                         ),
@@ -268,9 +276,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.cancel,),
+                    : const Icon(Icons.cancel,color: Colors.white,),
                 label: Text(
                   isCancelling ? "جارٍ الإلغاء..." : "إلغاء الحجز",
+                  style: TextStyle(color: Colors.white),
                 ),
               )
             : null,

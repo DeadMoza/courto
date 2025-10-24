@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:courto/pages/settingsPages/booking_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -7,6 +6,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'pages/home_page.dart';
+import 'pages/settings_page.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -18,7 +18,7 @@ void main() async {
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
 
   // Ask for permission
-  OneSignal.Notifications.requestPermission(true);
+  await OneSignal.Notifications.requestPermission(true);
 
 // get OneSignal player id
 final id = await OneSignal.User.getOnesignalId();
@@ -69,6 +69,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
+        '/settingsPage' : (context) => const SettingsPage(),
         '/bookingHistoryPage' : (context) => const BookingsHistoryPage()
       },
     );

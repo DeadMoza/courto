@@ -23,7 +23,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
   token = jwtToken;
   isLoggedIn = true;
 
-  if (user['user_id'] != null) {
+  if (user['id'] != null) {
     await OneSignal.login(user['id'].toString());
 
     // Try to get playerId from OneSignal, fallback to existing value
@@ -54,8 +54,8 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
       userData = jsonDecode(userString) as Map<String, dynamic>;
       isLoggedIn = true;
 
-      if (userData?['user_id'] != null) {
-        await OneSignal.login(userData!['user_id'].toString());
+      if (userData?['id'] != null) {
+        await OneSignal.login(userData!['id'].toString());
 
         // refresh playerId if missing
         if (playerId == null) {
@@ -69,9 +69,10 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
                 : Platform.isIOS
                     ? 'ios'
                     : 'unknown';
-            await prefs.setString('platform', platform!);
           }
+            await prefs.setString('platform', platform!);
         }
+        await refreshWalletBalance();
       }
     } else {
       await clearSession();
@@ -82,6 +83,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
   static Future<void> clearSession() async {
     try {
       if (userData!['id'] != null) {
+        // ignore: unused_local_variable
         final res = await http.delete(
           Uri.parse("${apiUrl}users/removeDevice"),
           headers: {"Content-Type": "application/json", "authorization": "Bearer $token"},
@@ -89,12 +91,13 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
             "user_id": userData!['id'],
             "device_id": playerId,
           }),
-        ); print("#########################################"); print(res.body);
+        ); 
       }
     // ignore: empty_catches
     } catch (e) {
      
     }
+
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('sessionToken');
@@ -107,11 +110,49 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
     await OneSignal.logout();
   }
 
-  static double get walletBalance {
-    return double.tryParse(userData!['wallet_balance']?.toString() ?? '0') ?? 0;
-  }
+    static double get walletBalance {
+      if (userData == null) return 0.0; // prevents null crash
+      final balanceString = userData?['wallet_balance']?.toString() ?? '0';
+      return double.tryParse(balanceString) ?? 0.0;
+    }
+
 
   static String get fullName {
     return userData?['full_name']?.toString() ?? '';
   }
+
+    /// Fetch the latest wallet balance from the API and update local data
+  static Future<void> refreshWalletBalance() async {
+
+    if (userData == null || token == null) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse("${apiUrl}users/getUserWallet"),
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "user_id": userData!['id'],
+        }),
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final balance = double.tryParse(data['balance'].toString()) ?? 0;
+
+        // Update memory
+        userData!['wallet_balance'] = balance;
+
+        // Save updated user data in SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('userData', jsonEncode(userData));
+
+      } 
+    // ignore: empty_catches
+    } catch (e) {
+
+    }
+  }
+
 }

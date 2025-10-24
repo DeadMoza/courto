@@ -68,70 +68,86 @@ class _DailyBookingConfirmationPageState
     return merged;
   }
 
-  Future<void> _bookField() async {
-    final mergedRanges = _mergeConsecutiveSlots();
-    if (mergedRanges.isEmpty) return;
+Future<void> _bookField() async {
+  final mergedRanges = _mergeConsecutiveSlots();
+  if (mergedRanges.isEmpty) return;
 
-    final firstRange = mergedRanges.first;
-    final startTime = firstRange['start']!;
-    final endTime = firstRange['end']!;
-    final note = _noteController.text;
+  final firstRange = mergedRanges.first;
+  final startTime = firstRange['start']!;
+  final endTime = firstRange['end']!;
+  final note = _noteController.text;
+  print("############################################################");
+    print(widget.slots);
+  print(mergedRanges);
 
-    // Show loading
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+  // Normalize times for display
+  String formatTime(DateTime dt) =>
+      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+
+  final bookingDate = DateTime(
+    widget.date.year,
+    widget.date.month,
+    widget.date.day,
+  );
+
+  // Prepare time strings
+  final startTimeStr = formatTime(startTime);
+  final endTimeStr = formatTime(endTime);
+
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const Center(child: CircularProgressIndicator()),
+  );
+
+  try {
+    final uri = Uri.parse('${apiUrl}users/bookField');
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${AuthService.token}',
+      },
+      body: jsonEncode({
+        "field_id": widget.field['field_id'],
+        "user_id": widget.userId,
+        "booking_date": bookingDate.toIso8601String().split('T').first,
+        "start_time": startTimeStr,
+        "end_time": endTimeStr,
+        "booking_price": widget.totalBookingPrice,
+        "remaining_price": widget.remainingPaymentToOwner,
+        "notes": note,
+        "client_id": widget.field["field_client_id"],
+        "field_name": widget.field["field_name"],
+      }),
     );
 
-    try {
-      final uri = Uri.parse('${apiUrl}users/bookField');
-      final response = await http.post(
-        uri,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${AuthService.token}',
-        },
-        body: jsonEncode({
-          "field_id": widget.field['field_id'],
-          "user_id": widget.userId,
-          "booking_date": widget.date.toIso8601String().split('T').first,
-          "start_time":
-              "${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}",
-          "end_time":
-              "${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}",
-          "total_price": widget.totalBookingPrice,
-          "notes": note,
+    Navigator.pop(context);
 
-          //notification data
-          "client_id": widget.field["field_client_id"],
-          "field_name": widget.field["field_name"],
-
-        }),
-      );
-
-      Navigator.pop(context);
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("تم ارسال طلب الحجز الى صاحب الملعب."), backgroundColor: Colors.red,),
-        );
-        Navigator.popUntil(context, ModalRoute.withName("/"));
-        Navigator.pushNamed(context, "/bookingHistoryPage");
-      } else {
-        final data = jsonDecode(response.body);
-        final message = data['message'] ?? 'فشل تأكيد الحجز';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red,),
-        );
-      }
-    } catch (e) {
-      Navigator.pop(context);
+    if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red,),
+        const SnackBar(
+          content: Text("تم ارسال طلب الحجز الى صاحب الملعب."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      Navigator.popUntil(context, ModalRoute.withName("/"));
+      Navigator.pushNamed(context, "/bookingHistoryPage");
+    } else {
+      final data = jsonDecode(response.body);
+      final message = data['message'] ?? 'فشل تأكيد الحجز';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
       );
     }
+  } catch (e) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red),
+    );
   }
+}
+
 
   void _confirmBooking() {
     showDialog(
@@ -161,7 +177,7 @@ class _DailyBookingConfirmationPageState
             ),
             onPressed: () {
               Navigator.pop(context); // Close the confirmation popup
-              _bookField(); // 🔥 Call API here
+              _bookField();
             },
             child: const Text(
               "تأكيد",

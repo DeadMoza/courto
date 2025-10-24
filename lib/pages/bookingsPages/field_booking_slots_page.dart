@@ -1,10 +1,10 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
-import 'package:courto/pages/daily_booking_confirmation_page.dart';
+import 'package:courto/pages/bookingsPages/daily_booking_confirmation_page.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
-import '../services/auth_service.dart';
+import '../../services/auth_service.dart';
 
 class FieldBookingSlotsPage extends StatefulWidget {
   final Map<String, dynamic> field;
@@ -76,34 +76,50 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   }
 
   Map<String, dynamic>? _findBookingForSlot(TimeSlot slot) {
-    try {
-      return widget.bookings.firstWhere((b) {
-        final bookingDate = DateTime.parse(b['booking_date']);
-        final startParts = (b['start_time'] as String).split(':');
-        final endParts = (b['end_time'] as String).split(':');
+  try {
+    return widget.bookings.firstWhere((b) {
+      final bookingDate = DateTime.parse(b['booking_date']);
+      final startParts = (b['start_time'] as String).split(':');
+      final endParts = (b['end_time'] as String).split(':');
 
-        final start = DateTime(
-          bookingDate.year,
-          bookingDate.month,
-          bookingDate.day,
-          int.parse(startParts[0]),
-          int.parse(startParts[1]),
-        );
-        final end = DateTime(
-          bookingDate.year,
-          bookingDate.month,
-          bookingDate.day,
-          int.parse(endParts[0]),
-          int.parse(endParts[1]),
-        );
+      int startHour = int.parse(startParts[0]);
+      int endHour = int.parse(endParts[0]);
 
-        return slot.start.isAtSameMomentAs(start) ||
-            (slot.start.isAfter(start) && slot.start.isBefore(end));
-      });
-    } catch (e) {
-      return null;
-    }
+      // Build booking times
+      var start = DateTime(
+        bookingDate.year,
+        bookingDate.month,
+        bookingDate.day,
+        startHour,
+        int.parse(startParts[1]),
+      );
+
+      var end = DateTime(
+        bookingDate.year,
+        bookingDate.month,
+        bookingDate.day,
+        endHour,
+        int.parse(endParts[1]),
+      );
+
+      // Handle bookings that go after midnight (e.g., 23:00–02:00)
+      if (end.isBefore(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+
+      if (startHour < 5) {
+        start = start.add(const Duration(days: 1));
+        end = end.add(const Duration(days: 1));
+      }
+
+      return slot.start.isAtSameMomentAs(start) ||
+          (slot.start.isAfter(start) && slot.start.isBefore(end));
+    });
+  } catch (e) {
+    return null;
   }
+}
+
 
   bool _isConfirmed(TimeSlot slot) {
     final booking = _findBookingForSlot(slot);
@@ -203,6 +219,44 @@ double get _remainingPaymentToOwner =>
 Future<void> _onContinuePressed() async {
   if (_selectedSlots.isEmpty) return;
 
+  // Sort the slots chronologically
+  _selectedSlots.sort((a, b) => a.start.compareTo(b.start));
+
+  // Calculate merged start and end times as one continuous range
+  final firstSlot = _selectedSlots.first;
+  final lastSlot = _selectedSlots.last;
+
+  final baseDate = widget.date;
+
+  // Normalize both start and end to the same booking date
+  final normalizedStart = DateTime(
+    baseDate.year,
+    baseDate.month,
+    baseDate.day,
+    firstSlot.start.hour,
+  );
+
+  int endHour = lastSlot.end.hour;
+  // If the end hour is smaller (e.g., 2 after midnight), still keep it on the same date
+  if (endHour < firstSlot.start.hour) {
+    // Just treat it as next-hour on same date, we keep date constant
+    endHour = lastSlot.end.hour;
+  }
+
+  final normalizedEnd = DateTime(
+    baseDate.year,
+    baseDate.month,
+    baseDate.day,
+    lastSlot.end.hour,
+  );
+
+  final mergedSlot = [
+    {
+      'start': normalizedStart.toIso8601String(),
+      'end': normalizedEnd.toIso8601String(),
+    }
+  ];
+
   await showDialog(
     context: context,
     builder: (ctx) {
@@ -224,24 +278,19 @@ Future<void> _onContinuePressed() async {
                       Navigator.pop(ctx);
                       _bookingFrequency = "daily";
                       Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DailyBookingConfirmationPage(
-                          field: widget.field,
-                          date: widget.date,
-                          slots: _selectedSlots
-                              .map((s) => {
-                                    'start': s.start.toIso8601String(),
-                                    'end': s.end.toIso8601String(),
-                                  })
-                              .toList(),
-                          totalBookingPrice: _currentTotalBookingPrice,
-                          remainingPaymentToOwner: _remainingPaymentToOwner,
-                          frequency: _bookingFrequency,
-                          userId: AuthService.userData?['id']
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DailyBookingConfirmationPage(
+                            field: widget.field,
+                            date: widget.date,
+                            slots: mergedSlot,
+                            totalBookingPrice: _currentTotalBookingPrice,
+                            remainingPaymentToOwner: _remainingPaymentToOwner,
+                            frequency: _bookingFrequency,
+                            userId: AuthService.userData?['id'],
+                          ),
                         ),
-                      ),
-                    );
+                      );
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -308,6 +357,7 @@ Future<void> _onContinuePressed() async {
   );
 }
 
+
   Widget _buildSlotTile(TimeSlot slot) {
     final isConfirmed = _isConfirmed(slot);
     final isSelected =
@@ -321,7 +371,7 @@ Future<void> _onContinuePressed() async {
       textStyle =
           const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
     } else if (isSelected) {
-      bg = Colors.blue.shade500;
+      bg = Colors.amber;
       textStyle =
           const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
     } else {

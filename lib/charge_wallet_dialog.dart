@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'constants.dart';
 import 'services/auth_service.dart' show AuthService;
 
 Future<void> showChargeWalletDialog(BuildContext context) async {
   if (!AuthService.isLoggedIn) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("يجب تسجيل الدخول أولاً")),
+      const SnackBar(content: Text("يجب تسجيل الدخول أولاً"), backgroundColor: Colors.redAccent),
     );
     return;
   }
@@ -146,53 +147,74 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                       onPressed: () async {
                         if (_formKey.currentState!.validate()) {
                           final cardNumber = courtoCardController.text;
-                          Navigator.pop(ctx);
+                          Navigator.pop(ctx); // close dialog before showing loader
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("جارٍ معالجة الكرت...")),
+                          // Show loading overlay that blocks user interaction
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(
+                              child: CircularProgressIndicator(color: Colors.redAccent),
+                            ),
                           );
 
                           try {
                             final response = await http.post(
                               Uri.parse("${apiUrl}users/redeemVoucher"),
-                              headers: {'Content-Type': 'application/json', 'authorization': 'Bearer ${AuthService.token}'},
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'authorization': 'Bearer ${AuthService.token}'
+                              },
                               body: jsonEncode({
                                 'code': cardNumber,
                                 'user_id': AuthService.userData?["id"],
                               }),
                             );
 
+                            Navigator.pop(context); // close the loading dialog
+
                             final data = jsonDecode(response.body);
 
                             if (data['success'] == true) {
-                              // Update AuthService wallet balance
+                              // Update wallet balance locally
                               AuthService.userData?['wallet_balance'] = data['wallet_balance'];
+
+                              // Save updated user data in SharedPreferences
+                              final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('userData', jsonEncode(AuthService.userData));
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
-                                      "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. الرصيد الحالي: ${data['wallet_balance']} دينار."),
+                                    "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. "
+                                    "الرصيد الحالي: ${data['wallet_balance']} دينار.",
+                                  ),
+                                  backgroundColor: Colors.redAccent,
                                 ),
                               );
 
-                              // Optional: force UI refresh
+                              // Optional: refresh global UI state
                               setState(() {});
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(data['message'] ?? "حدث خطأ"),
+                                  backgroundColor: Colors.redAccent,
                                 ),
                               );
                             }
                           } catch (e) {
+                            Navigator.pop(context); // ensure loader closes on error
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text(
-                                      "حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقًا.")),
+                                content: Text("حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقًا."),
+                                backgroundColor: Colors.redAccent,
+                              ),
                             );
                           }
                         }
                       },
+
                     ),
                   ]
                 : [
