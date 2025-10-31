@@ -1,6 +1,7 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui' as ui;
 import 'field_calendar_page.dart';
 
@@ -17,6 +18,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   // 1. New: PageController for better control and viewportFraction
   final PageController _pageController = PageController(viewportFraction: 0.95);
   int _currentPage = 0;
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
@@ -64,7 +66,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   // Helper function to resolve image URL
   String _resolveImageUrl(String url) {
     // Ensuring the API URL doesn't have a trailing slash if the image URL is relative
-    final apiUrlBase = apiUrl.endsWith('/') ? apiUrl.substring(0, apiUrl.length - 1) : apiUrl;
+    final apiUrlBase = apiUrl!.endsWith('/') ? apiUrl!.substring(0, apiUrl!.length - 1) : apiUrl;
     return url.startsWith("http") ? url : "$apiUrlBase$url";
   }
 

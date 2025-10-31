@@ -1,6 +1,7 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -24,6 +25,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
   bool loading = true;
 
   int get totalSlots => widget.field["slots_per_day"] ?? 10; 
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
@@ -36,7 +38,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     final url = Uri.parse("${apiUrl}users/getfieldBookings/${widget.field['field_id']}");
 
     try {
-      final res = await http.get(url, headers: {"Content-Type": "application/json"});
+      final res = await http.get(url, headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'});
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
         final Map<DateTime, List<dynamic>> temp = {};

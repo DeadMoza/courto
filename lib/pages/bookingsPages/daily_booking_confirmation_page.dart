@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
@@ -34,6 +35,8 @@ class DailyBookingConfirmationPage extends StatefulWidget {
 class _DailyBookingConfirmationPageState
     extends State<DailyBookingConfirmationPage> {
   final TextEditingController _noteController = TextEditingController();
+  final apiUrl = dotenv.env['API_URL'];
+
 
   List<Map<String, DateTime>> _mergeConsecutiveSlots() {
     if (widget.slots.isEmpty) return [];
@@ -107,6 +110,7 @@ Future<void> _bookField() async {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${AuthService.token}',
+        'x-api-key': '${dotenv.env['API_KEY']}'
       },
       body: jsonEncode({
         "field_id": widget.field['field_id'],

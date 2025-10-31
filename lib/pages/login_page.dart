@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
 import '../pages/home_page.dart';
-import '/constants.dart';
 import 'signup_page.dart'; 
 import 'resetPasswordPages/phone_input_page.dart';
 
@@ -20,6 +20,8 @@ class _LoginPageState extends State<LoginPage> {
   final passController = TextEditingController();
   bool loading = false;
   bool showPassword = false;
+  final apiUrl = dotenv.env['API_URL'];
+
 
   Future<void> login() async {
     String phone = phoneController.text.trim();
@@ -42,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       final res = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
         body: json.encode({
           "phone_number": phone,
           "password": passController.text.trim(),

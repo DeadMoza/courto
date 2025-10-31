@@ -1,5 +1,6 @@
 import 'package:courto/app_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/location_service.dart';
 import 'fields_list_page.dart';
 import 'fields_map_page.dart';
@@ -7,7 +8,6 @@ import 'settings_page.dart';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../constants.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -30,6 +30,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _fields = [];
   bool _loadingFields = true;
   String? _fieldsErrorMessage;
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
@@ -48,7 +49,7 @@ class _HomePageState extends State<HomePage> {
         final url = Uri.parse("${apiUrl}users/getUserCity");
         final res = await http.post(
           url,
-          headers: {"Content-Type": "application/json"},
+          headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
           body: jsonEncode({
             "latitude": position.latitude,
             "longitude": position.longitude,
@@ -96,7 +97,8 @@ class _HomePageState extends State<HomePage> {
     try {
       // Use the detected/default cityId
       final url = Uri.parse("${apiUrl}users/getFieldsByCity/$_cityId");
-      final res = await http.get(url);
+      final res = await http.get(url,
+          headers: {'x-api-key': '${dotenv.env['API_KEY']}'},);
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);

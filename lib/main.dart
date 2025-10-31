@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:courto/pages/settingsPages/booking_history_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
@@ -11,10 +12,11 @@ import 'services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
 
   await initializeDateFormatting('ar', null);
 
-  OneSignal.initialize("c897f37c-06d5-4d5e-b700-9c2bca2af312"); 
+  OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID']!); 
   OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
 
   // Ask for permission
@@ -38,8 +40,8 @@ AuthService.platform = Platform.isAndroid
 final prefs = await SharedPreferences.getInstance();
 await prefs.setString('platform', AuthService.platform!);
 
-// Now load session
-await AuthService.loadSession();
+  // Now load session
+  await AuthService.loadSession();
 
   runApp(const MyApp());
 }

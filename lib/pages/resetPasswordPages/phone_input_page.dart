@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '../../constants.dart';
 import 'otp_page.dart'; 
 
 class PhoneInputPage extends StatefulWidget {
@@ -16,6 +16,7 @@ class PhoneInputPage extends StatefulWidget {
 class _PhoneInputPageState extends State<PhoneInputPage> {
   late TextEditingController phoneController;
   bool loading = false;
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
@@ -59,7 +60,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
       final url = Uri.parse("${apiUrl}users/checkPhoneNumber");
       final res = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
         body: jsonEncode({"phone_number": phone}),
       );
 

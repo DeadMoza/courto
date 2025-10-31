@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:io' show Platform; // For detecting platform
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 
-import '../constants.dart';
 
 class AuthService {
   static bool isLoggedIn = false;
@@ -12,6 +12,8 @@ class AuthService {
   static String? token;
   static String? playerId;
   static String? platform; 
+  
+
 
   /// Save session after successful signup/login
 static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) async {
@@ -39,7 +41,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
             : 'unknown';
     await prefs.setString('platform', platform!);
   }
-}
+  }
 
 
   /// Load session from local storage
@@ -81,12 +83,14 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
 
   /// Logout user and clear session
   static Future<void> clearSession() async {
+    final apiUrl = dotenv.env['API_URL'];
+
     try {
       if (userData!['id'] != null) {
         // ignore: unused_local_variable
         final res = await http.delete(
           Uri.parse("${apiUrl}users/removeDevice"),
-          headers: {"Content-Type": "application/json", "authorization": "Bearer $token"},
+          headers: {"Content-Type": "application/json", "authorization": "Bearer $token", 'x-api-key': '${dotenv.env['API_KEY']}'},
           body: jsonEncode({
             "user_id": userData!['id'],
             "device_id": playerId,
@@ -123,6 +127,8 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
 
     /// Fetch the latest wallet balance from the API and update local data
   static Future<void> refreshWalletBalance() async {
+    final apiUrl = dotenv.env['API_URL'];
+
 
     if (userData == null || token == null) return;
 
@@ -132,6 +138,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
         headers: {
           "Content-Type": "application/json",
           "authorization": "Bearer $token",
+          'x-api-key': '${dotenv.env['API_KEY']}'
         },
         body: jsonEncode({
           "user_id": userData!['id'],

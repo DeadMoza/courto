@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '../../constants.dart';
 import '../../services/auth_service.dart';
 
 class BookingDetailsPage extends StatefulWidget {
@@ -20,6 +20,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   bool canCancel = false;
   Duration timeRemaining = Duration.zero;
   Timer? countdownTimer;
+  final apiUrl = dotenv.env['API_URL'];
+
 
   @override
   void initState() {
@@ -107,6 +109,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         headers: {
           "Authorization": "Bearer $token",
           "Content-Type": "application/json",
+          'x-api-key': '${dotenv.env['API_KEY']}'
         },
         body: jsonEncode({"booking_id": bookingId, "user_id": userId}),
       );

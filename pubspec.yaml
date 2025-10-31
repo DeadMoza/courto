@@ -25,6 +25,7 @@ dependencies:
   custom_info_window: ^1.0.1
   onesignal_flutter: ^5.3.4
   flutter_launcher_icons: ^0.14.4
+  flutter_dotenv: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -40,6 +41,7 @@ flutter:
 
 
   assets:
+    - .env
     - assets/images/courtoFull.png
     - assets/images/courto.png
     - assets/images/courtoFieldSprite.png

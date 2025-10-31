@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'reset_password_page.dart';
 
@@ -24,6 +25,8 @@ class OtpPageState extends State<OtpPage> {
   bool loading = false;
   int secondsRemaining = 0;
   Timer? timer;
+  final rasaelUsername = dotenv.env['RASAEL_USERNAME'];
+  final rasaelPassword = dotenv.env['RASAEL_PASSWORD'];
 
   @override
   void initState() {
@@ -52,7 +55,7 @@ class OtpPageState extends State<OtpPage> {
       final loginRes = await http.post(
         Uri.parse("https://client.almasafa.ly/api/MasafaRasaelLogin"),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"username": "shami", "password": "rgmj9125AZ"}),
+        body: json.encode({"username": "$rasaelUsername", "password": "$rasaelPassword"}),
       );
 
       if (loginRes.statusCode == 200) {

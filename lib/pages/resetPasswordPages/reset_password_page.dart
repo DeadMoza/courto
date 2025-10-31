@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '/constants.dart';
+
 
 class ResetPasswordPage extends StatefulWidget {
   final String phoneNumber;
@@ -18,6 +19,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool showPassword = false;
   bool showConfirmPassword = false;
   bool loading = false;
+  final apiUrl = dotenv.env['API_URL'];
 
   void _resetPassword() async {
     String newPass = newPassController.text.trim();
@@ -38,7 +40,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       final res = await http.patch(
         Uri.parse("${apiUrl}users/resetPassword"),
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
         body: json.encode({
           "phone_number": widget.phoneNumber,
           "new_password": newPass,

@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../services/auth_service.dart';
-import '/constants.dart';
 import 'home_page.dart';
 
 class OtpPage extends StatefulWidget {
@@ -30,6 +30,9 @@ class _OtpPageState extends State<OtpPage> {
   bool loading = false;
   int secondsRemaining = 0;
   Timer? timer;
+  final apiUrl = dotenv.env['API_URL'];
+  final rasaelUsername = dotenv.env['RASAEL_USERNAME'];
+  final rasaelPassword = dotenv.env['RASAEL_PASSWORD'];
 
   @override
   void initState() {
@@ -58,7 +61,7 @@ class _OtpPageState extends State<OtpPage> {
       final loginRes = await http.post(
         Uri.parse("https://client.almasafa.ly/api/MasafaRasaelLogin"),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"username": "shami", "password": "rgmj9125AZ"}),
+        body: json.encode({"username": "$rasaelUsername", "password": "$rasaelPassword"}),
       );
 
       if (loginRes.statusCode == 200) {
@@ -121,7 +124,7 @@ class _OtpPageState extends State<OtpPage> {
 
       final res = await http.post(
         Uri.parse("${apiUrl}users/signup"),
-        headers: {"Content-Type": "application/json"},
+        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
         body: json.encode({
           "full_name": widget.fullName,
           "phone_number": widget.phoneNumber,

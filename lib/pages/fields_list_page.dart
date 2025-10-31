@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui' as ui;
 import 'dart:math' show cos, sqrt, asin;
 import '../constants.dart';
@@ -36,6 +37,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
 
   late double _userLat;
   late double _userLng;
+  final apiUrl = dotenv.env['API_URL'];
 
   @override
   void initState() {
@@ -231,7 +233,7 @@ void _applyFilters() {
     final url = images[0].toString();
     return url.startsWith("http")
         ? url
-        : "${apiUrl.endsWith('/') ? apiUrl.substring(0, apiUrl.length - 1) : apiUrl}$url";
+        : "${apiUrl!.endsWith('/') ? apiUrl!.substring(0, apiUrl!.length - 1) : apiUrl}$url";
   }
 
   Widget _buildTypeBox({

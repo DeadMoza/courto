@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'constants.dart';
 import 'services/auth_service.dart' show AuthService;
 
 Future<void> showChargeWalletDialog(BuildContext context) async {
@@ -16,6 +16,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
   String? selectedMethod; // initially null
   final courtoCardController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final apiUrl = dotenv.env['API_URL'];
 
   await showDialog(
     context: context,
@@ -163,7 +164,8 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                               Uri.parse("${apiUrl}users/redeemVoucher"),
                               headers: {
                                 'Content-Type': 'application/json',
-                                'authorization': 'Bearer ${AuthService.token}'
+                                'authorization': 'Bearer ${AuthService.token}',
+                                'x-api-key': '${dotenv.env['API_KEY']}'
                               },
                               body: jsonEncode({
                                 'code': cardNumber,

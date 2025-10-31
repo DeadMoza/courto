@@ -256,107 +256,98 @@ Future<void> _onContinuePressed() async {
       'end': normalizedEnd.toIso8601String(),
     }
   ];
-
-  await showDialog(
-    context: context,
-    builder: (ctx) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text(
-              "اختر نوع الحجز",
-              textAlign: TextAlign.center,
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+await showDialog(
+  context: context,
+  builder: (ctx) {
+    return AlertDialog(
+      title: const Text(
+        "اختر نوع الحجز",
+        textAlign: TextAlign.center,
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // Daily booking (active)
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(ctx);
+                _bookingFrequency = "daily";
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DailyBookingConfirmationPage(
+                      field: widget.field,
+                      date: widget.date,
+                      slots: mergedSlot,
+                      totalBookingPrice: _currentTotalBookingPrice,
+                      remainingPaymentToOwner: _remainingPaymentToOwner,
+                      frequency: _bookingFrequency,
+                      userId: AuthService.userData?['id'],
+                    ),
+                  ),
+                );
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Daily booking
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _bookingFrequency = "daily";
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DailyBookingConfirmationPage(
-                            field: widget.field,
-                            date: widget.date,
-                            slots: mergedSlot,
-                            totalBookingPrice: _currentTotalBookingPrice,
-                            remainingPaymentToOwner: _remainingPaymentToOwner,
-                            frequency: _bookingFrequency,
-                            userId: AuthService.userData?['id'],
-                          ),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.red[100],
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Icon(
-                            Icons.calendar_today,
-                            size: 40,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text("يومي"),
-                      ],
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.red[100],
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: const Icon(
+                      Icons.calendar_today,
+                      size: 40,
+                      color: Colors.red,
                     ),
                   ),
-                  // Monthly booking
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      _bookingFrequency = "monthly";
-                      Navigator.pop(context);
-                    },
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: Colors.red[100],
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Icon(
-                            Icons.calendar_view_month,
-                            size: 40,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text("شهري"),
-                      ],
-                    ),
-                  ),
+                  const SizedBox(height: 8),
+                  const Text("يومي"),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                child: const Text("إلغاء"),
-                onPressed: () => Navigator.pop(ctx),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
 
+            // Monthly booking (disabled)
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: const Icon(
+                    Icons.calendar_view_month,
+                    size: 40,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  "شهري (غير متاح)",
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          child: const Text("إلغاء"),
+          onPressed: () => Navigator.pop(ctx),
+        ),
+      ],
+    );
+  },
+);
+}
 
   Widget _buildSlotTile(TimeSlot slot) {
     final isConfirmed = _isConfirmed(slot);
