@@ -75,13 +75,10 @@ Future<void> _bookField() async {
   final mergedRanges = _mergeConsecutiveSlots();
   if (mergedRanges.isEmpty) return;
 
-  final firstRange = mergedRanges.first;
-  final startTime = firstRange['start']!;
-  final endTime = firstRange['end']!;
+  // Use the earliest start and latest end from all merged ranges
+  final earliestStart = mergedRanges.first['start']!;
+  final latestEnd = mergedRanges.last['end']!;
   final note = _noteController.text;
-  print("############################################################");
-    print(widget.slots);
-  print(mergedRanges);
 
   // Normalize times for display
   String formatTime(DateTime dt) =>
@@ -94,13 +91,13 @@ Future<void> _bookField() async {
   );
 
   // Prepare time strings
-  final startTimeStr = formatTime(startTime);
-  final endTimeStr = formatTime(endTime);
+  final startTimeStr = formatTime(earliestStart);
+  final endTimeStr = formatTime(latestEnd);
 
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator()),
+    builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
   );
 
   try {
@@ -192,6 +189,43 @@ Future<void> _bookField() async {
       ),
     );
   }
+  
+  // --- NEW METHOD FOR MIDNIGHT WARNING ---
+  void _showMidnightInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible( 
+                child: Text(
+                  "تنبيه بخصوص التوقيت",
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.right,
+                ),
+              ),
+              SizedBox(width: 8),
+              Icon(Icons.access_time, color: Colors.redAccent),
+            ],
+          ),
+          content: const Text(
+            "إذا كانت فترة الحجز تمتد إلى ما بعد منتصف الليل (12:00 ص)، فإن تلك الساعات تقع فعليًا في اليوم التالي للتاريخ المحدد في الأعلى، وليس في التاريخ الحالي.",
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("حسناً", style: TextStyle(color: Colors.black)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+ 
 
   @override
   Widget build(BuildContext context) {
@@ -200,7 +234,7 @@ Future<void> _bookField() async {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        appBar: buildHomeAppBar(context, title: "تأكيد الحجز"),
+        appBar: buildHomeAppBar(context),
         backgroundColor: Colors.red.shade50,
         bottomNavigationBar: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -209,7 +243,7 @@ Future<void> _bookField() async {
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
+                  blurRadius: 5,
                   offset: const Offset(0, -2)),
             ],
           ),
@@ -230,6 +264,24 @@ Future<void> _bookField() async {
                       style: const TextStyle(
                         fontSize: 18,
                         color: Colors.redAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                    const SizedBox(height: 8),
+                                      Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "المبلغ المتبقي:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      "${widget.remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -260,8 +312,9 @@ Future<void> _bookField() async {
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Card(
+            color: Colors.white,
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             elevation: 3,
             child: Padding(
               padding: const EdgeInsets.all(20),
@@ -277,60 +330,78 @@ Future<void> _bookField() async {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  
+                  // --- MODIFIED ROW TO INCLUDE INFO ICON AND handle space ---
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.calendar_today,
-                          size: 20, color: Colors.grey),
-                      const SizedBox(width: 6),
-                      Text(
-                        AppFormat.formatDateArabic(widget.date),
-                        style: const TextStyle(fontSize: 16, color: Colors.grey),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today,
+                              size: 20, color: Colors.grey),
+                          const SizedBox(width: 6),
+                          Text(
+                            AppFormat.formatDateArabic(widget.date),
+                            style: const TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: mergedRanges.map((r) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 8, horizontal: 14),
-                        decoration: BoxDecoration(
-                          color: Colors.redAccent.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        child: Text(
-                          "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      );
-                    }).toList(),
+
+                  Row(
+                    children: [
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: mergedRanges.map((r) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Text(
+                              "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.info_outline, color: Colors.redAccent, size: 24),
+                        onPressed: () => _showMidnightInfoDialog(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
                   ),
                   const Divider(height: 30, thickness: 1.2),
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.yellow.shade50,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(color: Colors.amber.shade200),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline,
+                            const Icon(Icons.info_outline,
                                 color: Colors.amber, size: 20),
-                            SizedBox(width: 5),
+                            const SizedBox(width: 5),
                             Flexible(
                               child: Text(
-"يمكنك إلغاء الحجز بعد مرور ساعة واحدة بالضبط إذا لم يجيب صاحب الملعب على طلبك. \nولا يمكنك حجز ملعب آخر أثناء وجود حجز معلق. \n\nسيقوم صاحب الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم دفع هذا المبلغ الآن كرسوم حجز فقط، وسيتعين عليك دفع المبلغ المتبقي لصاحب الملعب بعد الانتهاء من اللعب.",
-                                style: TextStyle(
+"يمكنك إلغاء الحجز بعد مرور ساعة واحدة بالضبط إذا لم يجيب صاحب الملعب على طلبك. \nولا يمكنك حجز ملعب آخر أثناء وجود حجز معلق. \n\nسيقوم صاحب الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم دفع هذا المبلغ الآن كرسوم حجز فقط، وسيتعين عليك دفع المبلغ المتبقي لصاحب الملعب بعد او قبل الانتهاء من اللعب.",
+                                style: const TextStyle(
                                   fontSize: 14.5,
                                   height: 1.5,
                                   color: Colors.black87,
@@ -364,10 +435,10 @@ Future<void> _bookField() async {
                     maxLines: 3,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(5),
                         borderSide: const BorderSide(
                             color: Colors.redAccent, width: 1.5),
                       ),

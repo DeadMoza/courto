@@ -2,27 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'services/auth_service.dart';
 import 'charge_wallet_dialog.dart';
-
 PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool isHome = false}) {
   return AppBar(
     elevation: 0,
     backgroundColor: Colors.red,
     automaticallyImplyLeading: false,
+    // FIX: Restructure the title Row to prevent overflow
     title: Row(
+      // Ensure content is spaced out across the AppBar width
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (AuthService.isLoggedIn)
-          Expanded(
-            child: Text(
-              title ?? AuthService.userData?['full_name'] ?? '',
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.white,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          )
-        else
-          const Spacer(),
+
+        if (AuthService.isLoggedIn || title != null)
         GestureDetector(
           onTap: () => showChargeWalletDialog(context),
           child: Container(
@@ -39,6 +30,7 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
               ],
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min, // Essential to keep the Row small
               children: [
                 const Icon(Icons.account_balance_wallet,
                     color: Colors.red, size: 22),
@@ -47,11 +39,21 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
                   AuthService.walletBalance.toStringAsFixed(2),
                   style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
                 )
-
               ],
             ),
           ),
         ),
+          const Spacer(),
+
+          Text(
+            title ?? "courto",
+            maxLines: 1, 
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 30,
+              color: Colors.white,
+            ),
+          )
       ],
     ),
     leading: isHome

@@ -121,7 +121,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data["message"]), backgroundColor: Colors.redAccent,),
         );
-        Navigator.popUntil(context, ModalRoute.withName('/settingsPage'));
+        Navigator.popUntil(context, ModalRoute.withName('/'));
 
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

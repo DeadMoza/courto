@@ -22,25 +22,25 @@ void main() async {
   // Ask for permission
   await OneSignal.Notifications.requestPermission(true);
 
-// get OneSignal player id
-final id = await OneSignal.User.getOnesignalId();
-if (id != null && id.isNotEmpty) {
-  AuthService.playerId = id;
+  // Get OneSignal player ID
+  final id = await OneSignal.User.getOnesignalId();
+  if (id != null && id.isNotEmpty) {
+    AuthService.playerId = id;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('playerId', id);
+  }
+
+  // Detect platform
+  AuthService.platform = Platform.isAndroid
+      ? 'android'
+      : Platform.isIOS
+          ? 'ios'
+          : 'unknown';
+
   final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('playerId', id);
-}
+  await prefs.setString('platform', AuthService.platform!);
 
-// Detect platform early
-AuthService.platform = Platform.isAndroid
-    ? 'android'
-    : Platform.isIOS
-        ? 'ios'
-        : 'unknown';
-
-final prefs = await SharedPreferences.getInstance();
-await prefs.setString('platform', AuthService.platform!);
-
-  // Now load session
+  // Load user session
   await AuthService.loadSession();
 
   runApp(const MyApp());
@@ -68,11 +68,21 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+
+      /// ✅ This prevents font scaling from user device settings
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(textScaler: const TextScaler.linear(1.0)),
+          child: child!,
+        );
+      },
+
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-        '/settingsPage' : (context) => const SettingsPage(),
-        '/bookingHistoryPage' : (context) => const BookingsHistoryPage()
+        '/settingsPage': (context) => const SettingsPage(),
+        '/bookingHistoryPage': (context) => const BookingsHistoryPage(),
       },
     );
   }

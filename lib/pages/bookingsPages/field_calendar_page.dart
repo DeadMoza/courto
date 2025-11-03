@@ -112,7 +112,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
-    final lastDay = today.add(const Duration(days: 60));
+    final lastDay = today.add(const Duration(days: 7));
 
     return Directionality(
       textDirection: ui.TextDirection.rtl,

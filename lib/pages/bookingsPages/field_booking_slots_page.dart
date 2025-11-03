@@ -1,6 +1,7 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:courto/pages/bookingsPages/daily_booking_confirmation_page.dart';
+import 'package:courto/pages/bookingsPages/monthly_booking_confirmation_page.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -26,7 +27,6 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   late List<TimeSlot> slots;
   final List<TimeSlot> _selectedSlots = [];
 
-  static const double bookingPricePerHour = 10.0;
   String _bookingFrequency = 'daily';
 
   @override
@@ -60,10 +60,8 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       int normalizedHour = hour % 24;
       int normalizedEndHour = (hour + 1) % 24;
 
-      DateTime start = DateTime(
-          widget.date.year, widget.date.month, widget.date.day, normalizedHour);
-      DateTime end = DateTime(
-          widget.date.year, widget.date.month, widget.date.day, normalizedEndHour);
+      DateTime start = DateTime(widget.date.year, widget.date.month, widget.date.day, normalizedHour);
+      DateTime end = DateTime(widget.date.year, widget.date.month, widget.date.day, normalizedEndHour);
 
       if (hour >= 24) {
         start = start.add(const Duration(days: 1));
@@ -76,50 +74,34 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   }
 
   Map<String, dynamic>? _findBookingForSlot(TimeSlot slot) {
-  try {
-    return widget.bookings.firstWhere((b) {
-      final bookingDate = DateTime.parse(b['booking_date']);
-      final startParts = (b['start_time'] as String).split(':');
-      final endParts = (b['end_time'] as String).split(':');
+    try {
+      return widget.bookings.firstWhere((b) {
+        final bookingDate = DateTime.parse(b['booking_date']);
+        final startParts = (b['start_time'] as String).split(':');
+        final endParts = (b['end_time'] as String).split(':');
 
-      int startHour = int.parse(startParts[0]);
-      int endHour = int.parse(endParts[0]);
+        int startHour = int.parse(startParts[0]);
+        int endHour = int.parse(endParts[0]);
 
-      // Build booking times
-      var start = DateTime(
-        bookingDate.year,
-        bookingDate.month,
-        bookingDate.day,
-        startHour,
-        int.parse(startParts[1]),
-      );
+        var start = DateTime(bookingDate.year, bookingDate.month, bookingDate.day, startHour, int.parse(startParts[1]));
+        var end = DateTime(bookingDate.year, bookingDate.month, bookingDate.day, endHour, int.parse(endParts[1]));
 
-      var end = DateTime(
-        bookingDate.year,
-        bookingDate.month,
-        bookingDate.day,
-        endHour,
-        int.parse(endParts[1]),
-      );
+        if (end.isBefore(start)) {
+          end = end.add(const Duration(days: 1));
+        }
 
-      // Handle bookings that go after midnight (e.g., 23:00–02:00)
-      if (end.isBefore(start)) {
-        end = end.add(const Duration(days: 1));
-      }
+        if (startHour < 5) {
+          start = start.add(const Duration(days: 1));
+          end = end.add(const Duration(days: 1));
+        }
 
-      if (startHour < 5) {
-        start = start.add(const Duration(days: 1));
-        end = end.add(const Duration(days: 1));
-      }
-
-      return slot.start.isAtSameMomentAs(start) ||
-          (slot.start.isAfter(start) && slot.start.isBefore(end));
-    });
-  } catch (e) {
-    return null;
+        return slot.start.isAtSameMomentAs(start) ||
+            (slot.start.isAfter(start) && slot.start.isBefore(end));
+      });
+    } catch (e) {
+      return null;
+    }
   }
-}
-
 
   bool _isConfirmed(TimeSlot slot) {
     final booking = _findBookingForSlot(slot);
@@ -128,247 +110,218 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   }
 
   bool _isBooked(TimeSlot slot) {
-  final booking = _findBookingForSlot(slot);
+    final booking = _findBookingForSlot(slot);
     return booking != null &&
-      (booking['booking_status'] == "confirmed" ||
-       booking['booking_status'] == "unavailable");
-
-  } 
-
- void _onSlotTap(TimeSlot slot) {
-  if (!AuthService.isLoggedIn) {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => SignupPage()));
-    return;
+        (booking['booking_status'] == "confirmed" ||
+            booking['booking_status'] == "unavailable");
   }
 
-  if (_isBooked(slot)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.red,),
-    );
-    return;
-  }
+  void _onSlotTap(TimeSlot slot) {
+    if (!AuthService.isLoggedIn) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => SignupPage()));
+      return;
+    }
 
-  final alreadySelected =
-      _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
-
-  if (alreadySelected) {
-    // Only allow removing first or last slot
-    final minTime =
-        _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
-    final maxTime =
-        _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
-
-    if (slot.start.isAtSameMomentAs(minTime) ||
-        slot.start.isAtSameMomentAs(maxTime)) {
-      _selectedSlots.removeWhere((s) => s.start.isAtSameMomentAs(slot.start));
-      setState(() {});
-    } else {
+    if (_isBooked(slot)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text(
-                'لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.red,),
+        const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.red),
       );
+      return;
     }
-    return;
-  }
 
-  if (_selectedSlots.isEmpty) {
+    final alreadySelected =
+        _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
+
+    if (alreadySelected) {
+      final minTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
+      final maxTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
+
+      if (slot.start.isAtSameMomentAs(minTime) ||
+          slot.start.isAtSameMomentAs(maxTime)) {
+        _selectedSlots.removeWhere((s) => s.start.isAtSameMomentAs(slot.start));
+        setState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.red),
+        );
+      }
+      return;
+    }
+
+    if (_selectedSlots.isEmpty) {
+      _selectedSlots.add(slot);
+      setState(() {});
+      return;
+    }
+
+    final minTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
+    final maxTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
+
+    final isAdjacent = slot.start.isAtSameMomentAs(minTime.subtract(const Duration(hours: 1))) ||
+        slot.start.isAtSameMomentAs(maxTime.add(const Duration(hours: 1)));
+
+    if (!isAdjacent) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    if (_selectedSlots.length >= 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     _selectedSlots.add(slot);
+    _selectedSlots.sort((a, b) => a.start.compareTo(b.start));
     setState(() {});
-    return;
   }
 
-  final minTime =
-      _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
-  final maxTime =
-      _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
+  double get _fieldPrice => double.tryParse(widget.field['field_price'].toString()) ?? 0.0;
+  double get _fieldBookingPrice => double.tryParse(widget.field['field_booking_price'].toString()) ?? 0.0;
+  double get _fieldDailyProfitPrice => double.tryParse(widget.field['field_daily_profit_price'].toString()) ?? 0.0;
 
-  final isAdjacent = slot.start.isAtSameMomentAs(minTime.subtract(const Duration(hours: 1))) ||
-      slot.start.isAtSameMomentAs(maxTime.add(const Duration(hours: 1)));
+  double get _bookingPricePerHour => _fieldBookingPrice + _fieldDailyProfitPrice;
+  double get _remainingToOwnerPerHour => _fieldPrice - _fieldBookingPrice;
 
-  if (!isAdjacent) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.red,),
-    );
-    return;
-  }
+  double get _currentTotalBookingPrice => _selectedSlots.length * _bookingPricePerHour;
+  double get _remainingPaymentToOwner => _selectedSlots.length * _remainingToOwnerPerHour;
 
-  if (_selectedSlots.length >= 3) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.red,),
-    );
-    return;
-  }
+  Future<void> _onContinuePressed() async {
+    if (_selectedSlots.isEmpty) return;
 
-  _selectedSlots.add(slot);
-  _selectedSlots.sort((a, b) => a.start.compareTo(b.start));
-  setState(() {});
-}
+    _selectedSlots.sort((a, b) => a.start.compareTo(b.start));
 
+    final firstSlot = _selectedSlots.first;
+    final lastSlot = _selectedSlots.last;
+    final baseDate = widget.date;
 
-  double get _fieldPricePerHour =>
-      double.tryParse(widget.field['field_price'].toString()) ?? 0.0;
+    final normalizedStart = DateTime(baseDate.year, baseDate.month, baseDate.day, firstSlot.start.hour);
+    final normalizedEnd = DateTime(baseDate.year, baseDate.month, baseDate.day, lastSlot.end.hour);
 
-  double get _currentTotalBookingPrice =>
-      _selectedSlots.length * bookingPricePerHour;
+    final mergedSlot = [
+      {
+        'start': normalizedStart.toIso8601String(),
+        'end': normalizedEnd.toIso8601String(),
+      }
+    ];
 
-double get _remainingPaymentToOwner =>
-    _selectedSlots.length * (_fieldPricePerHour - (bookingPricePerHour / 2));
-
-// Replace your _onContinuePressed with this:
-Future<void> _onContinuePressed() async {
-  if (_selectedSlots.isEmpty) return;
-
-  // Sort the slots chronologically
-  _selectedSlots.sort((a, b) => a.start.compareTo(b.start));
-
-  // Calculate merged start and end times as one continuous range
-  final firstSlot = _selectedSlots.first;
-  final lastSlot = _selectedSlots.last;
-
-  final baseDate = widget.date;
-
-  // Normalize both start and end to the same booking date
-  final normalizedStart = DateTime(
-    baseDate.year,
-    baseDate.month,
-    baseDate.day,
-    firstSlot.start.hour,
-  );
-
-  int endHour = lastSlot.end.hour;
-  // If the end hour is smaller (e.g., 2 after midnight), still keep it on the same date
-  if (endHour < firstSlot.start.hour) {
-    // Just treat it as next-hour on same date, we keep date constant
-    endHour = lastSlot.end.hour;
-  }
-
-  final normalizedEnd = DateTime(
-    baseDate.year,
-    baseDate.month,
-    baseDate.day,
-    lastSlot.end.hour,
-  );
-
-  final mergedSlot = [
-    {
-      'start': normalizedStart.toIso8601String(),
-      'end': normalizedEnd.toIso8601String(),
-    }
-  ];
-await showDialog(
-  context: context,
-  builder: (ctx) {
-    return AlertDialog(
-      title: const Text(
-        "اختر نوع الحجز",
-        textAlign: TextAlign.center,
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // Daily booking (active)
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(ctx);
-                _bookingFrequency = "daily";
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => DailyBookingConfirmationPage(
-                      field: widget.field,
-                      date: widget.date,
-                      slots: mergedSlot,
-                      totalBookingPrice: _currentTotalBookingPrice,
-                      remainingPaymentToOwner: _remainingPaymentToOwner,
-                      frequency: _bookingFrequency,
-                      userId: AuthService.userData?['id'],
-                    ),
-                  ),
-                );
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: Colors.red[100],
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Icon(
-                      Icons.calendar_today,
-                      size: 40,
-                      color: Colors.red,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text("يومي"),
-                ],
-              ),
-            ),
-
-            // Monthly booking (disabled)
-            Column(
-              mainAxisSize: MainAxisSize.min,
+    await showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          title: const Text("اختر نوع الحجز", textAlign: TextAlign.center),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: const Icon(
-                    Icons.calendar_view_month,
-                    size: 40,
-                    color: Colors.grey,
+                // Daily booking
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _bookingFrequency = "daily";
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DailyBookingConfirmationPage(
+                          field: widget.field,
+                          date: widget.date,
+                          slots: mergedSlot,
+                          totalBookingPrice: _currentTotalBookingPrice,
+                          remainingPaymentToOwner: _remainingPaymentToOwner,
+                          frequency: _bookingFrequency,
+                          userId: AuthService.userData?['id'],
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.red[100],
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Icon(Icons.calendar_today, size: 40, color: Colors.red),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text("يومي"),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  "شهري (غير متاح)",
-                  style: TextStyle(color: Colors.grey),
+
+                // Monthly booking
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _bookingFrequency = "monthly";
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => MonthlyBookingConfirmationPage(
+                          field: widget.field,
+                          date: widget.date,
+                          slots: mergedSlot,
+                          hourlyBookingPrice: _fieldPrice,
+                          frequency: _bookingFrequency,
+                          userId: AuthService.userData?['id'],
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.blue[100],
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Icon(Icons.calendar_view_month, size: 40, color: Colors.blue),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text("شهري"),
+                    ],
+                  ),
                 ),
               ],
             ),
+          ),
+          actions: [
+            TextButton(
+              child: const Text("إلغاء"),
+              onPressed: () => Navigator.pop(ctx),
+            ),
           ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          child: const Text("إلغاء"),
-          onPressed: () => Navigator.pop(ctx),
-        ),
-      ],
+        );
+      },
     );
-  },
-);
-}
+  }
 
   Widget _buildSlotTile(TimeSlot slot) {
     final isConfirmed = _isConfirmed(slot);
-    final isSelected =
-        _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
+    final isSelected = _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
 
     Color bg;
     TextStyle textStyle;
 
     if (isConfirmed) {
       bg = Colors.redAccent;
-      textStyle =
-          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
+      textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
     } else if (isSelected) {
       bg = Colors.amber;
-      textStyle =
-          const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
+      textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
     } else {
       bg = Colors.white;
-      textStyle =
-          const TextStyle(color: Colors.black, fontWeight: FontWeight.bold);
+      textStyle = const TextStyle(color: Colors.black, fontWeight: FontWeight.bold);
     }
 
     return Container(
@@ -421,54 +374,51 @@ await showDialog(
                 bottom: 16,
                 child: SafeArea(
                   child: Material(
-                            elevation: 4, // subtle shadow
-                            borderRadius: BorderRadius.circular(10),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
+                    elevation: 4,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "سعر الحجز: ${_currentTotalBookingPrice.toStringAsFixed(2)} د.ل",
+                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                               ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "سعر الحجز: ${_currentTotalBookingPrice.toStringAsFixed(2)} د.ل",
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                                      ),
-                                      Text(
-                                        "المتبقي بعد اللعب: ${_remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
-                                        style: const TextStyle(fontSize: 13, color: Colors.grey),
-                                      ),
-                                    ],
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: _onContinuePressed,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.redAccent,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(5)),
-                                      padding:
-                                          const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                    ),
-                                    child: const Text('متابعة'),
-                                  ),
-                                ],
+                              Text(
+                                "المتبقي بعد اللعب: ${_remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
+                                style: const TextStyle(fontSize: 13, color: Colors.grey),
                               ),
+                            ],
+                          ),
+                          ElevatedButton(
+                            onPressed: _onContinuePressed,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             ),
-                          )
-
+                            child: const Text('متابعة'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
           ],

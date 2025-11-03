@@ -1,4 +1,5 @@
 import 'package:courto/app_bar.dart';
+import 'package:courto/pages/store_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/location_service.dart';
@@ -26,16 +27,28 @@ class _HomePageState extends State<HomePage> {
   double? cityLatitude;
   double? cityLongitude;
 
-  // New state for fields data
   List<Map<String, dynamic>> _fields = [];
   bool _loadingFields = true;
   String? _fieldsErrorMessage;
   final apiUrl = dotenv.env['API_URL'];
 
+  List<Widget> _screens = [];
+
   @override
   void initState() {
     super.initState();
     _detectCity();
+  }
+  
+  // 🆕 Function to handle city changes from FieldsListPage
+  void _handleCityChanged(int newCityId) {
+    if (_cityId != newCityId) {
+      setState(() {
+        _cityId = newCityId;
+      });
+      // Re-fetch fields for the newly selected city
+      _fetchFields();
+    }
   }
 
   Future<void> _detectCity() async {
@@ -49,7 +62,10 @@ class _HomePageState extends State<HomePage> {
         final url = Uri.parse("${apiUrl}users/getUserCity");
         final res = await http.post(
           url,
-          headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
+          headers: {
+            "Content-Type": "application/json",
+            'x-api-key': '${dotenv.env['API_KEY']}'
+          },
           body: jsonEncode({
             "latitude": position.latitude,
             "longitude": position.longitude,
@@ -58,81 +74,94 @@ class _HomePageState extends State<HomePage> {
 
         if (res.statusCode == 200) {
           final data = jsonDecode(res.body);
-          setState(() {
-            _cityId = data["city_id"] ?? 1;
-            cityLatitude = data["city_latitude"];
-            cityLongitude = data["city_longitude"];
-            _loadingCity = false;
-          });
-        } else {
-          setState(() {
-            _cityId = 1;
-            _loadingCity = false;
-          });
+          _cityId = data["city_id"] ?? 1;
+          cityLatitude = data["city_latitude"];
+          cityLongitude = data["city_longitude"];
         }
-      } catch (e) {
-        setState(() {
-          _cityId = 1;
-          _loadingCity = false;
-        });
-      }
-    } else {
-      setState(() {
+      } catch (_) {
         _cityId = 1;
-        _loadingCity = false;
-      });
+      }
     }
 
-    // After city detection is complete (whether successful or fallback)
+    setState(() {
+      _loadingCity = false;
+    });
+
+    // Fetch fields after detecting the city
     await _fetchFields();
   }
 
-  // Moved API call from FieldsListPage
   Future<void> _fetchFields() async {
     setState(() {
       _loadingFields = true;
       _fieldsErrorMessage = null;
+      // Re-initialize screens to show loading state immediately
+      _initScreens(); 
     });
 
     try {
-      // Use the detected/default cityId
       final url = Uri.parse("${apiUrl}users/getFieldsByCity/$_cityId");
-      final res = await http.get(url,
-          headers: {'x-api-key': '${dotenv.env['API_KEY']}'},);
+      final res = await http.get(
+        url,
+        headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+      );
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-
         if (data["fields"] != null && data["fields"] is List) {
-          setState(() {
-            _fields = List<Map<String, dynamic>>.from(data["fields"]);
-            _loadingFields = false;
-          });
+          _fields = List<Map<String, dynamic>>.from(data["fields"]);
+          _loadingFields = false;
+          print(_fields);
+          print("##################################################################");
         } else {
-          setState(() {
-            _fields = [];
-            _fieldsErrorMessage = "لا توجد ملاعب في هذه المدينة";
-            _loadingFields = false;
-          });
+          _fields = [];
+          _fieldsErrorMessage = "لا توجد ملاعب في هذه المدينة";
+          _loadingFields = false;
         }
       } else {
-        setState(() {
-          _fieldsErrorMessage = "فشل تحميل الملاعب";
-          _loadingFields = false;
-        });
+        _fieldsErrorMessage = "فشل تحميل الملاعب";
+        _loadingFields = false;
       }
     } catch (e) {
       print("Error fetching fields: $e");
-      setState(() {
-        _fieldsErrorMessage = "فشل التحميل، تحقق من اتصالك بالإنترنت";
-        _loadingFields = false;
-      });
+      _fieldsErrorMessage = "فشل التحميل، تحقق من اتصالك بالإنترنت";
+      _loadingFields = false;
     }
+
+    // Must call _initScreens *again* to pass the final data and update the UI
+    _initScreens();
+  }
+
+  void _initScreens() {
+    _screens = [
+      FieldsListPage(
+        key: ValueKey('FieldsListPage_$_cityId'), // Key changed to use city ID for full widget rebuild on city change
+        cityId: _cityId,
+        fields: _fields,
+        user_lat: _userLat,
+        user_long: _userLng,
+        loading: _loadingFields,
+        errorMessage: _fieldsErrorMessage,
+        onCityChanged: _handleCityChanged, // 🔑 The required argument is added here
+      ),
+      FieldsMapPage(
+        key: const PageStorageKey('FieldsMapPage'),
+        initialLat: _userLat ?? 32.8872,
+        initialLng: _userLng ?? 13.1913,
+        cityLat: cityLatitude ?? 32.8872,
+        cityLng: cityLongitude ?? 13.1913,
+        fields: _fields,
+        loading: _loadingFields,
+      ),
+      const StorePage(),
+      const SettingsPage(key: PageStorageKey('SettingsPage')),
+    ];
+    setState(() {}); // rebuild UI after initializing screens
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loadingCity) {
+    if (_loadingCity || _screens.isEmpty) {
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: Colors.red),
@@ -140,44 +169,30 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    final screens = [
-      // Pass data and state to FieldsListPage
-      FieldsListPage(
-        key: const PageStorageKey('FieldsListPage'), // Optional: helps preserve scroll position
-        cityId: _cityId,
-        fields: _fields,
-        user_lat: _userLat,
-        user_long: _userLng,
-        loading: _loadingFields,
-        errorMessage: _fieldsErrorMessage,
-      ),
-      // Pass data and state to FieldsMapPage (Index 1)
-      FieldsMapPage(
-        key: const PageStorageKey('FieldsMapPage'), // Recommended for IndexedStack
-        initialLat: _userLat ?? 32.8872, // Tripoli fallback
-        initialLng: _userLng ?? 13.1913,
-        cityLat: cityLatitude ?? 32.8872,
-        cityLng: cityLongitude ?? 13.1913,
-        fields: _fields, // Pass the fetched fields
-        loading: _loadingFields,
-      ),
-      const SettingsPage(
-        key: PageStorageKey('SettingsPage'),
-      ),
-    ];
-
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Colors.red[100],
         appBar: buildHomeAppBar(context, isHome: true),
+
         body: IndexedStack(
           index: _selectedIndex,
-          children: screens,
+          children: _screens,
         ),
+
         bottomNavigationBar: Container(
-          color: Colors.red,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 6,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
           child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
             items: [
               BottomNavigationBarItem(
                 icon: _buildIcon(Icons.stadium, 0),
@@ -188,7 +203,11 @@ class _HomePageState extends State<HomePage> {
                 label: "الخريطة",
               ),
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.menu, 2),
+                icon: _buildIcon(Icons.storefront, 2),
+                label: "المتجر",
+              ),
+              BottomNavigationBarItem(
+                icon: _buildIcon(Icons.menu, 3),
                 label: "الإعدادات",
               ),
             ],
@@ -196,7 +215,10 @@ class _HomePageState extends State<HomePage> {
             selectedItemColor: Colors.white,
             unselectedItemColor: Colors.white54,
             backgroundColor: Colors.red,
-            onTap: (i) => setState(() => _selectedIndex = i),
+            onTap: (i) {
+              if (i == 2) return; // disable store tab for now
+              setState(() => _selectedIndex = i);
+            },
             showUnselectedLabels: true,
           ),
         ),
@@ -204,19 +226,25 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Widget _buildIcon(IconData icon, int index) {
     bool isSelected = _selectedIndex == index;
-    return Transform.scale(
-      scale: isSelected ? 1.2 : 1.0,
-      child: Icon(icon, color: isSelected ? Colors.white : Colors.white54),
+    return AnimatedScale(
+      scale: isSelected ? 1.3 : 1.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutBack,
+      child: Icon(
+        icon,
+        color: isSelected ? Colors.white : Colors.white54,
+      ),
     );
   }
 
   Widget _buildIconImage(String assetPath, int index) {
     bool isSelected = _selectedIndex == index;
-    return Transform.scale(
-      scale: isSelected ? 1.2 : 1.0,
+    return AnimatedScale(
+      scale: isSelected ? 1.3 : 1.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutBack,
       child: Image.asset(
         assetPath,
         color: isSelected ? Colors.white : Colors.white54,

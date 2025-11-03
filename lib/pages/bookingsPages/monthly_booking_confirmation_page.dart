@@ -1,0 +1,404 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http/http.dart' as http;
+import 'package:courto/app_bar.dart';
+import 'package:courto/constants.dart';
+import 'package:courto/services/auth_service.dart';
+import 'dart:ui' as ui;
+
+class MonthlyBookingConfirmationPage extends StatefulWidget {
+  final Map<String, dynamic> field;
+  final DateTime date;
+  final List<Map<String, dynamic>> slots;
+  final double hourlyBookingPrice;
+  final String frequency;
+  final int userId;
+
+  const MonthlyBookingConfirmationPage({
+    super.key,
+    required this.field,
+    required this.date,
+    required this.slots,
+    required this.hourlyBookingPrice,
+    required this.frequency,
+    required this.userId,
+    
+  });
+
+  @override
+  State<MonthlyBookingConfirmationPage> createState() =>
+      _MonthlyBookingConfirmationPageState();
+      
+}
+
+class _MonthlyBookingConfirmationPageState
+    extends State<MonthlyBookingConfirmationPage> {
+  final TextEditingController _noteController = TextEditingController();
+  final apiUrl = dotenv.env['API_URL'];
+
+/// Merge consecutive booked time slots and handle cross-midnight times
+List<Map<String, DateTime>> _mergeConsecutiveSlots() {
+  if (widget.slots.isEmpty) return [];
+
+  List<Map<String, DateTime>> merged = [];
+  widget.slots.sort((a, b) =>
+      DateTime.parse(a['start']).compareTo(DateTime.parse(b['start'])));
+
+  DateTime? currentStart;
+  DateTime? currentEnd;
+
+  for (final s in widget.slots) {
+    DateTime start = DateTime.parse(s['start']);
+    DateTime end = DateTime.parse(s['end']);
+
+    if (end.isBefore(start)) {
+      end = end.add(const Duration(days: 1));
+    }
+
+    if (currentStart == null) {
+      currentStart = start;
+      currentEnd = end;
+    } else if (start.isAtSameMomentAs(currentEnd!)) {
+      currentEnd = end;
+    } else {
+      merged.add({'start': currentStart, 'end': currentEnd});
+      currentStart = start;
+      currentEnd = end;
+    }
+  }
+
+  if (currentStart != null && currentEnd != null) {
+    merged.add({'start': currentStart, 'end': currentEnd});
+  }
+
+  return merged;
+}
+
+
+  Future<void> _bookField() async {
+    final mergedRanges = _mergeConsecutiveSlots();
+    if (mergedRanges.isEmpty) return;
+
+    final firstRange = mergedRanges.first;
+    final startTime = firstRange['start']!;
+    final endTime = firstRange['end']!;
+    final note = _noteController.text;
+
+final hours = endTime.difference(startTime).inHours.toDouble().clamp(1, double.infinity);
+  
+
+    final totalPrice = widget.hourlyBookingPrice * hours * 30;
+    final profitPercentage =
+        (widget.field['monthly_profit_price'] ?? 4).toDouble();
+    final profit = totalPrice * profitPercentage / 100;
+    final remaining = totalPrice - profit;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final uri = Uri.parse('${apiUrl}users/bookFieldMonthly');
+      final response = await http.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ${AuthService.token}',
+          'x-api-key': '${dotenv.env['API_KEY']}'
+        },
+        body: jsonEncode({
+          "field_id": widget.field['field_id'],
+          "user_id": widget.userId,
+          "booking_date": widget.date.toIso8601String().split('T').first,
+          "start_time": "${startTime.hour.toString().padLeft(2, '0')}:00",
+          "end_time": "${endTime.hour.toString().padLeft(2, '0')}:00",
+          "total_price": totalPrice,
+          "remaining_price": remaining,
+          "notes": note,
+          "frequency": "monthly",
+          "client_id": widget.field["field_client_id"],
+          "field_name": widget.field["field_name"],
+        }),
+      );
+
+      Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("تم ارسال طلب الحجز الشهري إلى صاحب الملعب."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.popUntil(context, ModalRoute.withName("/"));
+        Navigator.pushNamed(context, "/bookingHistoryPage");
+      } else {
+        final data = jsonDecode(response.body);
+        final message = data['message'] ?? 'فشل تأكيد الحجز';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  void _confirmBooking() {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+        title: const Text(
+          "تأكيد الحجز الشهري",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.redAccent),
+        ),
+        content: const Text(
+          "هل تريد تأكيد هذا الحجز لمدة 30 يومًا؟",
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("إلغاء", style: TextStyle(color: Colors.black)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              shape:
+                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+              _bookField();
+            },
+            child: const Text("تأكيد", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mergedRanges = _mergeConsecutiveSlots();
+    final firstRange = mergedRanges.isNotEmpty ? mergedRanges.first : null;
+    final startTime = firstRange?['start'];
+    final endTime = firstRange?['end'];
+    final hours =
+        startTime != null && endTime != null ? endTime.difference(startTime).inHours : 1;
+
+    final totalPrice = widget.hourlyBookingPrice * hours * 30;
+    final profitPercentage =
+        (widget.field['monthly_profit_price'] ?? 4).toDouble();
+    final profit = totalPrice * profitPercentage / 100;
+    final remaining = totalPrice - profit;
+
+    final endDate = widget.date.add(const Duration(days: 29));
+
+    return Directionality(
+      textDirection: ui.TextDirection.rtl,
+      child: Scaffold(
+        appBar: buildHomeAppBar(context),
+        backgroundColor: Colors.red.shade50,
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2)),
+            ],
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("سعر الحجز",
+                        style: TextStyle(fontSize: 16)),
+                    Text(
+                      "${profit.toStringAsFixed(2)} د.ل",
+                      style: const TextStyle(fontSize: 16, color: Colors.red),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("المبلغ المتبقي لصاحب الملعب:",
+                        style: TextStyle(fontSize: 16)),
+                    Text(
+                      "${remaining.toStringAsFixed(2)} د.ل",
+                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: _confirmBooking,
+                    child: const Text(
+                      "تأكيد الحجز الشهري",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Card(
+            color: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 3,
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.field['field_name'] ?? 'ملعب غير معروف',
+                      style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent)),
+                  const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.calendar_today, size: 20, color: Colors.redAccent),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "من ${AppFormat.formatDateArabic(widget.date)} إلى ${AppFormat.formatDateArabic(endDate)}",
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                            height: 1.4,
+                          ),
+                          overflow: TextOverflow.visible,
+                          softWrap: true,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                  const SizedBox(height: 8),
+                  if (mergedRanges.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: mergedRanges.map((r) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: Colors.redAccent.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
+                            style: const TextStyle(
+                                fontSize: 15, color: Colors.black87),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  const Divider(height: 30, thickness: 1.2),
+                  Column(
+                    children: [
+                                        Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.yellow.shade50,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: Colors.amber.shade200),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline,
+                                color: Colors.amber, size: 20),
+                            SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+"يمكنك إلغاء الحجز بعد مرور ساعة واحدة بالضبط إذا لم يجيب صاحب الملعب على طلبك. \nولا يمكنك حجز ملعب آخر أثناء وجود حجز معلق. \n\nسيقوم صاحب الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم دفع هذا المبلغ الآن كرسوم حجز فقط، وسيتعين عليك دفع المبلغ المتبقي لصاحب الملعب بعد او قبل الانتهاء من اللعب.",
+                                style: TextStyle(
+                                  fontSize: 14.5,
+                                  height: 1.5,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                      const Text(
+                        "ملاحظات لصاحب الملعب:",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87),
+                      ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _noteController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(5)),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(5),
+                        borderSide: const BorderSide(
+                            color: Colors.redAccent, width: 1.5),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
