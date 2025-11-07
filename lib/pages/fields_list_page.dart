@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui' as ui;
 import 'dart:math' show cos, sqrt, asin;
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../constants.dart'; // Assuming AppFormat is defined here
+import '../constants.dart';
 import 'bookingsPages/field_details_page.dart';
 
 
@@ -18,6 +16,7 @@ class FieldsListPage extends StatefulWidget {
   final String? errorMessage;
 
   final Function(int newCityId) onCityChanged;
+  final List<Map<String, dynamic>> cities;
 
   const FieldsListPage({
     super.key,
@@ -28,6 +27,7 @@ class FieldsListPage extends StatefulWidget {
     required this.loading,
     this.errorMessage,
     required this.onCityChanged,
+    required this.cities,
   });
 
   @override
@@ -42,7 +42,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
   int _selectedSort = 1; // 1 = closest, 2 = cheapest
 
   // New State for City Filter
-  List<Map<String, dynamic>> _cities = [];
+  
   late int _selectedCityId; // Holds the currently selected City ID
 
   late double _userLat;
@@ -56,7 +56,6 @@ class _FieldsListPageState extends State<FieldsListPage> {
     _userLng = widget.user_long ?? 0;
     _selectedCityId = widget.cityId; 
 
-    _fetchCities(); 
     _applyFilters();
   }
 
@@ -74,27 +73,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
   }
 
   // API Call to fetch Cities
-  Future<void> _fetchCities() async {
-    try {
-      final response = await http.get(Uri.parse('${apiUrl}users/getCities'),
-      headers: {
-        'x-api-key': '${dotenv.env['API_KEY']}'
-      },);
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _cities = data.map((city) => city as Map<String, dynamic>).toList();
-        });
-      } else {
-        // Handle API error gracefully
-        print('Failed to load cities: ${response.statusCode}');
-      }
-    } catch (e) {
-      // Handle network or parsing error
-      print('Error fetching cities: $e');
-    }
-  }
 
 
   void _applyFilters() {
@@ -105,13 +84,11 @@ class _FieldsListPageState extends State<FieldsListPage> {
       double lat = double.tryParse(f["field_latitude"]?.toString() ?? "0") ?? 0;
       double lng = double.tryParse(f["field_longitude"]?.toString() ?? "0") ?? 0;
       double distance = _calculateDistance(_userLat, _userLng, lat, lng);
-      double fieldPrice = double.tryParse(f["field_price"]?.toString() ?? "0") ?? 0;
-      double dailyProfit = double.tryParse(f["field_daily_profit_price"]?.toString() ?? "0") ?? 0;
 
       return {
         ...f,
         'calculated_distance': distance,
-        'calculated_total_price': fieldPrice + dailyProfit,
+        'calculated_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
       };
 
     }).toList();
@@ -161,7 +138,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
   }
 
   String _getCityName(int cityId) {
-    return _cities.firstWhere(
+    return widget.cities.firstWhere(
       (city) => city['city_id'] == cityId,
       orElse: () => {'city_name': 'المدينة غير معروفة'},
     )['city_name'] as String;
@@ -200,14 +177,14 @@ class _FieldsListPageState extends State<FieldsListPage> {
                       // --- City Filter Section ---
                       const Text("اختر المدينة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 6),
-                      if (_cities.isEmpty)
+                      if (widget.cities.isEmpty)
                         const Center(child: Text("جاري تحميل المدن...", style: TextStyle(color: Colors.grey)))
                       else
                         Wrap(
                           alignment: WrapAlignment.start, 
                           spacing: 8,
                           runSpacing: 8,
-                          children: _cities.map((city) {
+                          children: widget.cities.map((city) {
                             final cityId = city['city_id'] as int;
                             final cityName = city['city_name'] as String;
                             return _buildCityChip(
@@ -217,10 +194,11 @@ class _FieldsListPageState extends State<FieldsListPage> {
                               onTap: () {
                                 setState(() => _selectedCityId = cityId);
                                 Navigator.pop(context);
-                                widget.onCityChanged(cityId);
+                                widget.onCityChanged(cityId); 
                               },
                             );
                           }).toList(),
+
                         ),
 
                       const SizedBox(height: 5),

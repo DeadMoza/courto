@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color.fromRGBO(255, 235, 238, 1),
+        backgroundColor: const Color(0xFFFFEBEE),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(

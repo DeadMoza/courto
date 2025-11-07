@@ -27,12 +27,40 @@ class _HomePageState extends State<HomePage> {
   double? cityLatitude;
   double? cityLongitude;
 
+  List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _fields = [];
   bool _loadingFields = true;
   String? _fieldsErrorMessage;
   final apiUrl = dotenv.env['API_URL'];
 
   List<Widget> _screens = [];
+  Widget _buildPageTransition(int index) {
+  final child = _screens[index];
+
+  // Don't animate the map page (index 1)
+  if (index == 1) return child;
+
+  return AnimatedSwitcher(
+    duration: const Duration(milliseconds: 200),
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeInCubic,
+    transitionBuilder: (Widget child, Animation<double> animation) {
+      final offsetAnimation = Tween<Offset>(
+        begin: const Offset(0.1, 0),
+        end: Offset.zero,
+      ).animate(animation);
+
+      return FadeTransition(
+        opacity: animation,
+        child: SlideTransition(position: offsetAnimation, child: child),
+      );
+    },
+    child: ValueKey(_selectedIndex) == ValueKey(index)
+        ? child
+        : const SizedBox.shrink(),
+  );
+}
+
 
   @override
   void initState() {
@@ -40,7 +68,6 @@ class _HomePageState extends State<HomePage> {
     _detectCity();
   }
   
-  // 🆕 Function to handle city changes from FieldsListPage
   void _handleCityChanged(int newCityId) {
     if (_cityId != newCityId) {
       setState(() {
@@ -48,6 +75,26 @@ class _HomePageState extends State<HomePage> {
       });
       // Re-fetch fields for the newly selected city
       _fetchFields();
+    }
+  }
+
+    Future<void> _fetchCities() async {
+    try {
+      final response = await http.get(Uri.parse('${apiUrl}users/getCities'),
+      headers: {
+        'x-api-key': '${dotenv.env['API_KEY']}'
+      },);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          _cities = data.map((city) => city as Map<String, dynamic>).toList();
+        });
+      } else {
+        // Handle API error gracefully
+      }
+    } catch (e) {
+      // Handle network or parsing error
     }
   }
 
@@ -88,6 +135,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     // Fetch fields after detecting the city
+    await _fetchCities();
     await _fetchFields();
   }
 
@@ -111,8 +159,7 @@ class _HomePageState extends State<HomePage> {
         if (data["fields"] != null && data["fields"] is List) {
           _fields = List<Map<String, dynamic>>.from(data["fields"]);
           _loadingFields = false;
-          print(_fields);
-          print("##################################################################");
+          
         } else {
           _fields = [];
           _fieldsErrorMessage = "لا توجد ملاعب في هذه المدينة";
@@ -142,7 +189,8 @@ class _HomePageState extends State<HomePage> {
         user_long: _userLng,
         loading: _loadingFields,
         errorMessage: _fieldsErrorMessage,
-        onCityChanged: _handleCityChanged, // 🔑 The required argument is added here
+        onCityChanged: _handleCityChanged, 
+        cities: _cities,
       ),
       FieldsMapPage(
         key: const PageStorageKey('FieldsMapPage'),
@@ -175,10 +223,22 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Colors.red[100],
         appBar: buildHomeAppBar(context, isHome: true),
 
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _screens,
-        ),
+body: Stack(
+  children: List.generate(_screens.length, (index) {
+    final isActive = _selectedIndex == index;
+
+    return AnimatedOpacity(
+      key: ValueKey(index),
+      duration: const Duration(milliseconds: 200),
+      opacity: isActive ? 1 : 0,
+      child: IgnorePointer(
+        ignoring: !isActive,
+        child: _buildPageTransition(index),
+      ),
+    );
+  }),
+),
+
 
         bottomNavigationBar: Container(
           decoration: BoxDecoration(

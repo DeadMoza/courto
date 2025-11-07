@@ -52,8 +52,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   // Icon keys
   static const String _fieldIconKey = 'field';
   static const String _fieldSelectedIconKey = 'field_selected';
-  static const String _stadiumIconKey = 'stadium';
-  static const String _stadiumSelectedIconKey = 'stadium_selected';
   static const String _tennisIconKey = 'tennis';
   static const String _tennisSelectedIconKey = 'tennis_selected';
   static const String _basketballIconKey = 'basketball';
@@ -97,10 +95,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     required bool isSelected,
   }) {
     final String type = (field["field_type"] ?? '').toString().toLowerCase();
-    final int capacity =
-        int.tryParse(field["field_capacity"]?.toString() ?? '') ?? 0;
-    final bool isStadium = capacity > 14;
-
+    
     switch (type) {
       case 'tennis':
         return isSelected
@@ -115,15 +110,9 @@ class _FieldsMapPageState extends State<FieldsMapPage>
             ? _cachedIcons[_padelSelectedIconKey]
             : _cachedIcons[_padelIconKey];
       default:
-        if (isStadium) {
-          return isSelected
-              ? _cachedIcons[_stadiumSelectedIconKey]
-              : _cachedIcons[_stadiumIconKey];
-        } else {
           return isSelected
               ? _cachedIcons[_fieldSelectedIconKey]
               : _cachedIcons[_fieldIconKey];
-        }
     }
   }
 
@@ -133,11 +122,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
           await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 110);
       _cachedIcons[_fieldSelectedIconKey] =
           await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 130);
-
-      _cachedIcons[_stadiumIconKey] =
-          await _bitmapDescriptorFromAsset("assets/images/courtoStadiumSprite.png", 130);
-      _cachedIcons[_stadiumSelectedIconKey] =
-          await _bitmapDescriptorFromAsset("assets/images/courtoStadiumSprite.png", 150);
 
       _cachedIcons[_tennisIconKey] =
           await _bitmapDescriptorFromAsset("assets/images/courtoTennisSprite.png", 110);
@@ -321,9 +305,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         fieldIcon = Icons.sports;
     }
 
-    final double fieldPrice = double.tryParse(field["field_price"]?.toString() ?? "0") ?? 0;
-    final double dailyProfit = double.tryParse(field["field_daily_profit_price"]?.toString() ?? "0") ?? 0;
-    final double totalPrice = fieldPrice + dailyProfit;
+    final double totalPrice = double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
 
 
     return GestureDetector(

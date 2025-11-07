@@ -179,12 +179,8 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     setState(() {});
   }
 
-  double get _fieldPrice => double.tryParse(widget.field['field_price'].toString()) ?? 0.0;
-  double get _fieldBookingPrice => double.tryParse(widget.field['field_booking_price'].toString()) ?? 0.0;
-  double get _fieldDailyProfitPrice => double.tryParse(widget.field['field_daily_profit_price'].toString()) ?? 0.0;
-
-  double get _bookingPricePerHour => _fieldBookingPrice + _fieldDailyProfitPrice;
-  double get _remainingToOwnerPerHour => _fieldPrice - _fieldBookingPrice;
+  double get _bookingPricePerHour => double.tryParse(widget.field['field_calculated_booking_price'].toString()) ?? 0.0;
+  double get _remainingToOwnerPerHour => double.tryParse(widget.field['field_calculated_remaining_price'].toString()) ?? 0.0;
 
   double get _currentTotalBookingPrice => _selectedSlots.length * _bookingPricePerHour;
   double get _remainingPaymentToOwner => _selectedSlots.length * _remainingToOwnerPerHour;
@@ -268,7 +264,8 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                           field: widget.field,
                           date: widget.date,
                           slots: mergedSlot,
-                          hourlyBookingPrice: _fieldPrice,
+                          totalBookingPrice: _currentTotalBookingPrice,
+                          remainingPaymentToOwner: _remainingPaymentToOwner,
                           frequency: _bookingFrequency,
                           userId: AuthService.userData?['id'],
                         ),

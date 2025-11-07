@@ -58,7 +58,6 @@ class SettingsPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       color: Colors.red[50],
       child: Row(
-        // **ALIGNMENT FIX:** SpaceBetween pushes the avatar to one end and text block to the other.
         mainAxisAlignment: MainAxisAlignment.spaceBetween, 
         children: [
           CircleAvatar(
@@ -138,7 +137,6 @@ class SettingsPage extends StatelessWidget {
             ),
             const Divider(height: 1),
 
-            // **NEW FEATURE:** Policy Item
             SettingsTile(
               icon: Icons.policy,
               title: "سياسة الخصوصية",

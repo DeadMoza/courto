@@ -22,7 +22,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   Timer? countdownTimer;
   final apiUrl = dotenv.env['API_URL'];
 
-
   @override
   void initState() {
     super.initState();
@@ -119,10 +118,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       if (response.statusCode == 200 && data["message"] != null) {
         // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"]), backgroundColor: Colors.redAccent,),
+          SnackBar(content: Text(data["message"]), backgroundColor: Colors.redAccent),
         );
         Navigator.popUntil(context, ModalRoute.withName('/'));
-
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -151,6 +149,20 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     final remainingPrice = booking["booking_remaining_price"] ?? "--";
     final status = booking["booking_status"];
     final isPending = status == "pending";
+    final isMonthly = booking["booking_is_monthly"] == true;
+    final period = booking["booking_period"] ?? 4; 
+
+
+    List<String> monthlyDates = [];
+    if (isMonthly && booking["booking_date"] != null) {
+      try {
+        final firstDate = DateTime.parse(booking["booking_date"]);
+        for (int i = 0; i < period; i++) {
+          final nextDate = firstDate.add(Duration(days: 7 * i));
+          monthlyDates.add("${nextDate.day}-${nextDate.month}-${nextDate.year}");
+        }
+      } catch (_) {}
+    }
 
     return Directionality(
       textDirection: ui.TextDirection.rtl,
@@ -204,48 +216,90 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             ),
                           ],
                         ),
-                        Text("رمز الحجز: ${booking["booking_id"] ?? '--'}", style: TextStyle(color: Colors.black54),),
+                        Text(
+                          "رمز الحجز: ${booking["booking_id"] ?? '--'}",
+                          style: const TextStyle(color: Colors.black54),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 30),
 
+                    if (isMonthly)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          border: Border.all(color: Colors.redAccent),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Text(
+                          "هذا الحجز شهري",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.redAccent),
+                        ),
+                      ),
+
+                    const SizedBox(height: 20),
+
+                    if (isMonthly && monthlyDates.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("مواعيد الحجز:", style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          ...monthlyDates.map((d) => Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.calendar_month_outlined, color: Colors.redAccent, size: 18),
+                                    const SizedBox(width: 6),
+                                    Text(d, style: const TextStyle(color: Colors.black54)),
+                                    const SizedBox(height: 6,),
+                                  ],
+                                ),
+                              )),
+                              Text(startTime + " - " + endTime),
+                          const Divider(),
+                        ],
+                      ),
+
                     // Date, Time & Price
-                    Column(
-                      
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.calendar_month, color: Colors.redAccent),
-                            const SizedBox(width: 8),
-                            Text(bookingDate, style: TextStyle(color: Colors.black54),),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Text("$startTime - $endTime", style: TextStyle(color: Colors.black54),), 
-                          ],
-                        ),
+                    if (!isMonthly)
+                      Column(
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_month, color: Colors.redAccent),
+                              const SizedBox(width: 8),
+                              Text(bookingDate, style: const TextStyle(color: Colors.black54)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text("$startTime - $endTime",
+                                  style: const TextStyle(color: Colors.black54)),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          const Divider(),
+                        ],
+                      ),
 
-                        const SizedBox(height: 10),
-                        const Divider(),
-                        const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
-                        Text(
-                          "سعر الحجز: $bookingPrice د.ل",
-                          style: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
-                        ),
-
-                        const SizedBox(height: 8),
-                        Text(
-                          "السعر المتبقي: $remainingPrice د.ل",
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
-                        ),
-                      ],
+                    Text(
+                      "سعر الحجز: $bookingPrice د.ل",
+                      style: const TextStyle(
+                          fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black54),
                     ),
-
+                    const SizedBox(height: 8),
+                    Text(
+                      "السعر المتبقي: $remainingPrice د.ل",
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
                   ],
                 ),
               ),
@@ -279,10 +333,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Icon(Icons.cancel,color: Colors.white,),
+                    : const Icon(Icons.cancel, color: Colors.white),
                 label: Text(
                   isCancelling ? "جارٍ الإلغاء..." : "إلغاء الحجز",
-                  style: TextStyle(color: Colors.white),
+                  style: const TextStyle(color: Colors.white),
                 ),
               )
             : null,

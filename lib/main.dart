@@ -69,7 +69,6 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      /// ✅ This prevents font scaling from user device settings
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         return MediaQuery(

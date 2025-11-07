@@ -11,18 +11,21 @@ class MonthlyBookingConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> field;
   final DateTime date;
   final List<Map<String, dynamic>> slots;
-  final double hourlyBookingPrice;
   final String frequency;
   final int userId;
+  final double totalBookingPrice;
+  final double remainingPaymentToOwner;
 
   const MonthlyBookingConfirmationPage({
     super.key,
     required this.field,
     required this.date,
     required this.slots,
-    required this.hourlyBookingPrice,
     required this.frequency,
     required this.userId,
+    required this.totalBookingPrice,
+    required this.remainingPaymentToOwner,
+
     
   });
 
@@ -83,16 +86,10 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
     final firstRange = mergedRanges.first;
     final startTime = firstRange['start']!;
     final endTime = firstRange['end']!;
-    final note = _noteController.text;
+    final note = _noteController.text;  
 
-final hours = endTime.difference(startTime).inHours.toDouble().clamp(1, double.infinity);
-  
-
-    final totalPrice = widget.hourlyBookingPrice * hours * 30;
-    final profitPercentage =
-        (widget.field['monthly_profit_price'] ?? 4).toDouble();
-    final profit = totalPrice * profitPercentage / 100;
-    final remaining = totalPrice - profit;
+    final totalBookingPrice = widget.totalBookingPrice * 4;
+    final remaining =  widget.remainingPaymentToOwner * 4;
 
     showDialog(
       context: context,
@@ -115,13 +112,13 @@ final hours = endTime.difference(startTime).inHours.toDouble().clamp(1, double.i
           "booking_date": widget.date.toIso8601String().split('T').first,
           "start_time": "${startTime.hour.toString().padLeft(2, '0')}:00",
           "end_time": "${endTime.hour.toString().padLeft(2, '0')}:00",
-          "total_price": totalPrice,
+          "booking_price": totalBookingPrice,
           "remaining_price": remaining,
           "notes": note,
-          "frequency": "monthly",
           "client_id": widget.field["field_client_id"],
           "field_name": widget.field["field_name"],
         }),
+
       );
 
       Navigator.pop(context);
@@ -190,17 +187,9 @@ final hours = endTime.difference(startTime).inHours.toDouble().clamp(1, double.i
   @override
   Widget build(BuildContext context) {
     final mergedRanges = _mergeConsecutiveSlots();
-    final firstRange = mergedRanges.isNotEmpty ? mergedRanges.first : null;
-    final startTime = firstRange?['start'];
-    final endTime = firstRange?['end'];
-    final hours =
-        startTime != null && endTime != null ? endTime.difference(startTime).inHours : 1;
 
-    final totalPrice = widget.hourlyBookingPrice * hours * 30;
-    final profitPercentage =
-        (widget.field['monthly_profit_price'] ?? 4).toDouble();
-    final profit = totalPrice * profitPercentage / 100;
-    final remaining = totalPrice - profit;
+    final totalBookingPrice = widget.totalBookingPrice * 4;
+    final remaining =  widget.remainingPaymentToOwner * 4;
 
     final endDate = widget.date.add(const Duration(days: 29));
 
@@ -230,7 +219,7 @@ final hours = endTime.difference(startTime).inHours.toDouble().clamp(1, double.i
                     const Text("سعر الحجز",
                         style: TextStyle(fontSize: 16)),
                     Text(
-                      "${profit.toStringAsFixed(2)} د.ل",
+                      "${totalBookingPrice.toStringAsFixed(2)} د.ل",
                       style: const TextStyle(fontSize: 16, color: Colors.red),
                     ),
                   ],

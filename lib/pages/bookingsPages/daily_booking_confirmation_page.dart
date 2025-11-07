@@ -190,7 +190,6 @@ Future<void> _bookField() async {
     );
   }
   
-  // --- NEW METHOD FOR MIDNIGHT WARNING ---
   void _showMidnightInfoDialog(BuildContext context) {
     showDialog(
       context: context,

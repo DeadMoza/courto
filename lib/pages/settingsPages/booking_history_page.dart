@@ -122,8 +122,8 @@ String creationDate = "";
 try {
   final rawDate = booking["booking_creation_date"];
   if (rawDate != null && rawDate.isNotEmpty) {
-    final parsedDate = DateTime.parse(rawDate);
-
+    // Parse as UTC, then convert to local
+    final parsedDate = DateTime.parse(rawDate).toLocal();
 
     String formatted = DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
 
@@ -136,6 +136,7 @@ try {
 } catch (_) {
   creationDate = booking["booking_creation_date"] ?? "";
 }
+
 
 
 
