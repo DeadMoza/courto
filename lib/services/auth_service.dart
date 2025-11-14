@@ -16,7 +16,7 @@ class AuthService {
 
 
   /// Save session after successful signup/login
-static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) async {
+static Future<void> saveSession(Map<String, dynamic> user, String jwtToken, String? deviceId, String? platform) async {
   final prefs = await SharedPreferences.getInstance();
 
   await prefs.setString('sessionToken', jwtToken);
@@ -26,11 +26,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
   isLoggedIn = true;
 
   if (user['id'] != null) {
-    await OneSignal.login(user['id'].toString());
-
-    // Try to get playerId from OneSignal, fallback to existing value
-    final oneSignalId = await OneSignal.User.getOnesignalId();
-    playerId = oneSignalId ?? playerId; // keep main.dart value if OneSignal returns null
+    playerId = deviceId; 
     if (playerId != null) await prefs.setString('playerId', playerId!);
 
     // Detect platform (if not already set)
@@ -39,7 +35,7 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
         : Platform.isIOS
             ? 'ios'
             : 'unknown';
-    await prefs.setString('platform', platform!);
+    await prefs.setString('platform', platform);
   }
   }
 
@@ -57,23 +53,6 @@ static Future<void> saveSession(Map<String, dynamic> user, String jwtToken) asyn
       isLoggedIn = true;
 
       if (userData?['id'] != null) {
-        await OneSignal.login(userData!['id'].toString());
-
-        // refresh playerId if missing
-        if (playerId == null) {
-          final id = await OneSignal.User.getOnesignalId();
-          if (id != null) {
-            playerId = id;
-            await prefs.setString('playerId', playerId!);
-
-            platform = Platform.isAndroid
-                ? 'android'
-                : Platform.isIOS
-                    ? 'ios'
-                    : 'unknown';
-          }
-            await prefs.setString('platform', platform!);
-        }
         await refreshWalletBalance();
       }
     } else {

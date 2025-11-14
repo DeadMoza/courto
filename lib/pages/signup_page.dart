@@ -42,6 +42,23 @@ class _SignupPageState extends State<SignupPage> {
       return;
     }
 
+    // Validate full name: must be in Arabic and contain a space
+    String name = nameController.text.trim();
+    final arabicNameRegex = RegExp(r'^[\u0600-\u06FF\s]+$'); // Arabic letters and spaces
+    if (!arabicNameRegex.hasMatch(name) || !name.contains(' ')) {
+      _showError("الرجاء إدخال اسم كامل باللغة العربية");
+      return;
+    }
+
+    // Validate password: 8-16 chars, at least 1 letter, optionally numbers/symbols
+    String password = passController.text;
+    final passwordRegex = RegExp(r'^(?=.*[A-Za-z])[A-Za-z0-9!@#$%^&*()_+=-]{8,18}$');
+    if (!passwordRegex.hasMatch(password)) {
+      _showError(
+          "كلمة المرور يجب أن تكون بين 8 و 18 حرفًا وتحتوي على أحرف وأرقام أو رموز اختيارية");
+      return;
+    }
+
     // check password match
     if (passController.text != confirmPassController.text) {
       _showError("كلمتا المرور غير متطابقتين");
@@ -50,7 +67,6 @@ class _SignupPageState extends State<SignupPage> {
 
     // Normalize phone number
     String phone = phoneController.text.trim();
-
     if (phone.startsWith("09")) {
       phone = "218${phone.substring(1)}";
     } else if (phone.startsWith("9")) {
@@ -61,20 +77,19 @@ class _SignupPageState extends State<SignupPage> {
       phone = "218$phone";
     }
 
-    // Validate phone number format
-    if (phone.length != 12 || !RegExp(r'^[0-9]+$').hasMatch(phone)) {
+    // Validate phone number format (Libyan numbers starting with 2189)
+    if (!RegExp(r'^2189[0-9]{8}$').hasMatch(phone)) {
       _showError("الرجاء إدخال رقم هاتف صحيح يبدأ بـ 2189");
       return;
     }
-  
 
     final error = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => OtpPage(
           phoneNumber: phone,
-          fullName: nameController.text.trim(),
-          password: passController.text.trim(),
+          fullName: name,
+          password: password,
         ),
       ),
     );
@@ -162,7 +177,7 @@ class _SignupPageState extends State<SignupPage> {
                   // Password
                   TextField(
                     controller: passController,
-                    textAlign: TextAlign.right, 
+                    textAlign: TextAlign.right,
                     textDirection: TextDirection.ltr,
                     obscureText: !showPassword,
                     decoration: InputDecoration(
@@ -170,9 +185,7 @@ class _SignupPageState extends State<SignupPage> {
                       prefixIcon: const Icon(Icons.lock, color: Colors.red),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          showPassword ? Icons.visibility_off : Icons.visibility,
                           color: Colors.grey,
                         ),
                         onPressed: () {
@@ -192,7 +205,7 @@ class _SignupPageState extends State<SignupPage> {
                   // Confirm Password
                   TextField(
                     controller: confirmPassController,
-                    textAlign: TextAlign.right, 
+                    textAlign: TextAlign.right,
                     textDirection: TextDirection.ltr,
                     obscureText: !showConfirmPassword,
                     decoration: InputDecoration(

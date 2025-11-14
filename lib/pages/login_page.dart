@@ -1,15 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import '../services/auth_service.dart';
 import '../pages/home_page.dart';
-import 'signup_page.dart'; 
+import 'signup_page.dart';
 import 'resetPasswordPages/phone_input_page.dart';
 
-
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? successMessage;
+
+  const LoginPage({super.key, this.successMessage});
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -22,10 +25,31 @@ class _LoginPageState extends State<LoginPage> {
   bool showPassword = false;
   final apiUrl = dotenv.env['API_URL'];
 
+  @override
+  void initState() {
+    super.initState();
+
+    // Show success message if provided (e.g., after signup or password reset)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.successMessage != null && widget.successMessage!.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              widget.successMessage!,
+              textDirection: TextDirection.rtl,
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
+      }
+    });
+  }
 
   Future<void> login() async {
     String phone = phoneController.text.trim();
 
+    // Normalize Libyan phone number to 218 format
     if (phone.startsWith("09")) {
       phone = "218${phone.substring(1)}";
     } else if (phone.startsWith("9")) {
@@ -35,21 +59,26 @@ class _LoginPageState extends State<LoginPage> {
     } else if (!phone.startsWith("218")) {
       phone = "218$phone";
     }
- 
+
     FocusScope.of(context).unfocus();
     setState(() => loading = true);
 
     final url = Uri.parse("${apiUrl}users/login");
+    String? deviceId = AuthService.playerId ?? await OneSignal.User.getOnesignalId();
+    String? platform = AuthService.platform ?? (Platform.isAndroid ? 'android' : Platform.isIOS ? 'ios' : 'unknown');
 
     try {
       final res = await http.post(
         url,
-        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
+        headers: {
+          "Content-Type": "application/json",
+          'x-api-key': '${dotenv.env['API_KEY']}'
+        },
         body: json.encode({
           "phone_number": phone,
           "password": passController.text.trim(),
-          "device_id": AuthService.playerId,
-          "platform": AuthService.platform
+          "device_id": deviceId,
+          "platform": platform
         }),
       );
 
@@ -58,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
 
-        await AuthService.saveSession(data["user"], data["token"]);
+        await AuthService.saveSession(data["user"], data["token"], deviceId, platform);
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -79,12 +108,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
+        behavior: SnackBarBehavior.fixed,
       ),
     );
   }
@@ -98,7 +127,8 @@ class _LoginPageState extends State<LoginPage> {
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -115,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: "رقم الهاتف",
-                      prefixIcon: const Icon(Icons.phone, color: Colors.red),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -132,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: !showPassword,
                     decoration: InputDecoration(
                       labelText: "كلمة المرور",
-                      prefixIcon: const Icon(Icons.lock, color: Colors.red),
+                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showPassword
@@ -161,7 +191,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.redAccent,
                         disabledBackgroundColor: Colors.red[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
@@ -178,7 +208,8 @@ class _LoginPageState extends State<LoginPage> {
                             )
                           : const Text(
                               "تسجيل الدخول",
-                              style: TextStyle(fontSize: 16, color: Colors.white),
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.white),
                             ),
                     ),
                   ),
@@ -187,14 +218,18 @@ class _LoginPageState extends State<LoginPage> {
                   // Forgot password
                   TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => PhoneInputPage( phoneNumber: phoneController.text.trim(),),
-                      ),
-                    );
-                  },
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PhoneInputPage(
+                            phoneNumber: phoneController.text.trim(),
+                          ),
+                        ),
+                      );
+                    },
                     child: const Text(
                       "هل نسيت كلمة المرور؟",
-                      style: TextStyle(color: Colors.red),
+                      style: TextStyle(color: Colors.redAccent),
                     ),
                   ),
 
@@ -203,13 +238,14 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const SignupPage()),
+                        MaterialPageRoute(
+                            builder: (_) => const SignupPage()),
                       );
                     },
                     child: const Text(
                       "مستخدم جديد؟ أنشئ حساب",
                       style: TextStyle(
-                        color: Colors.red,
+                        color: Colors.redAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

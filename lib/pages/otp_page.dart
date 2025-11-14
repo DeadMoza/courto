@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:courto/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import '../services/auth_service.dart';
-import 'home_page.dart';
 
 class OtpPage extends StatefulWidget {
   final String phoneNumber;
@@ -119,9 +118,6 @@ class _OtpPageState extends State<OtpPage> {
     setState(() => loading = true);
 
     try {
-      final deviceId = AuthService.playerId;
-      final platform = AuthService.platform;
-
       final res = await http.post(
         Uri.parse("${apiUrl}users/signup"),
         headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
@@ -129,8 +125,7 @@ class _OtpPageState extends State<OtpPage> {
           "full_name": widget.fullName,
           "phone_number": widget.phoneNumber,
           "password": widget.password,
-          "device_id": deviceId,
-          "platform": platform
+
         }),
       );
 
@@ -138,12 +133,12 @@ class _OtpPageState extends State<OtpPage> {
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
-        await AuthService.saveSession(data["user"], data["token"]);
+        final message = data["message"] ?? "تم انشاء الحساب بنجاح.";
 
         if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomePage()),
+          MaterialPageRoute(builder: (_) => LoginPage(successMessage: message)),
           (route) => false,
         );
       } else {
@@ -155,7 +150,7 @@ class _OtpPageState extends State<OtpPage> {
         if (!mounted) return;
         Navigator.pop(context, message);
       }
-    } catch (_) {
+    } catch (error) {
       setState(() => loading = false);
       _showError("حدث خطأ أثناء إنشاء الحساب");
     }

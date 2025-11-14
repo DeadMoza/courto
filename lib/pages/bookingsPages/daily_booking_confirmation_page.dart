@@ -132,8 +132,8 @@ Future<void> _bookField() async {
           backgroundColor: Colors.red,
         ),
       );
-      Navigator.popUntil(context, ModalRoute.withName("/"));
-      Navigator.pushNamed(context, "/bookingHistoryPage");
+      Navigator.pushReplacementNamed(context, "/bookingHistoryPage");
+
     } else {
       final data = jsonDecode(response.body);
       final message = data['message'] ?? 'فشل تأكيد الحجز';

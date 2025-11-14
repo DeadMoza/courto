@@ -130,8 +130,8 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
             backgroundColor: Colors.red,
           ),
         );
-        Navigator.popUntil(context, ModalRoute.withName("/"));
-        Navigator.pushNamed(context, "/bookingHistoryPage");
+        Navigator.pushReplacementNamed(context, "/bookingHistoryPage");
+
       } else {
         final data = jsonDecode(response.body);
         final message = data['message'] ?? 'فشل تأكيد الحجز';
@@ -158,7 +158,7 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
           style: TextStyle(color: Colors.redAccent),
         ),
         content: const Text(
-          "هل تريد تأكيد هذا الحجز لمدة 30 يومًا؟",
+          "هل تريد تأكيد هذا الحجز لمدة 4 ايام؟",
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.center,

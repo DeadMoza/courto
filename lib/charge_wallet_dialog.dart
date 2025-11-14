@@ -56,7 +56,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                               labelText: "أدخل رقم الكرت",
                               prefixIcon: const Icon(
                                 Icons.card_membership,
-                                color: Colors.red,
+                                color: Colors.redAccent,
                               ),
                               filled: true,
                               fillColor: Colors.white,
@@ -83,7 +83,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         children: [
                           GestureDetector(
                             onTap: () {
-                              // TODO: implement bank card flow
+                            //bank card stuff
                             },
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -98,7 +98,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                                   child: const Icon(
                                     Icons.credit_card,
                                     size: 40,
-                                    color: Colors.red,
+                                    color: Colors.redAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -125,7 +125,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                                   child: const Icon(
                                     Icons.card_membership,
                                     size: 40,
-                                    color: Colors.red,
+                                    color: Colors.redAccent,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -143,81 +143,77 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                       child: const Text("إلغاء"),
                       onPressed: () => Navigator.pop(ctx),
                     ),
-                    ElevatedButton(
-                      child: const Text("تأكيد"),
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          final cardNumber = courtoCardController.text;
-                          Navigator.pop(ctx); // close dialog before showing loader
+ElevatedButton(
+  child: const Text("تأكيد"),
+  onPressed: () async {
+    if (_formKey.currentState!.validate()) {
+      final cardNumber = courtoCardController.text;
 
-                          // Show loading overlay that blocks user interaction
-                          showDialog(
-                            context: context,
-                            barrierDismissible: false,
-                            builder: (_) => const Center(
-                              child: CircularProgressIndicator(color: Colors.redAccent),
-                            ),
-                          );
+      // Show loader
+      showDialog(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: Colors.redAccent),
+        ),
+      );
 
-                          try {
-                            final response = await http.post(
-                              Uri.parse("${apiUrl}users/redeemVoucher"),
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'authorization': 'Bearer ${AuthService.token}',
-                                'x-api-key': '${dotenv.env['API_KEY']}'
-                              },
-                              body: jsonEncode({
-                                'code': cardNumber,
-                                'user_id': AuthService.userData?["id"],
-                              }),
-                            );
+      try {
+        final response = await http.post(
+          Uri.parse("${apiUrl}users/redeemVoucher"),
+          headers: {
+            'Content-Type': 'application/json',
+            'authorization': 'Bearer ${AuthService.token}',
+            'x-api-key': '${dotenv.env['API_KEY']}'
+          },
+          body: jsonEncode({
+            'code': cardNumber,
+            'user_id': AuthService.userData?["id"],
+          }),
+        );
 
-                            Navigator.pop(context); // close the loading dialog
+        Navigator.pop(ctx); // close loader
 
-                            final data = jsonDecode(response.body);
+        final data = jsonDecode(response.body);
 
-                            if (data['success'] == true) {
-                              // Update wallet balance locally
-                              AuthService.userData?['wallet_balance'] = data['wallet_balance'];
+        if (data['success'] == true) {
+          courtoCardController.clear();
+          AuthService.userData?['wallet_balance'] = data['wallet_balance'];
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('userData', jsonEncode(AuthService.userData));
 
-                              // Save updated user data in SharedPreferences
-                              final prefs = await SharedPreferences.getInstance();
-                              await prefs.setString('userData', jsonEncode(AuthService.userData));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. "
+                "الرصيد الحالي: ${data['wallet_balance']} دينار.",
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+          setState(() {}); // refresh UI
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. "
-                                    "الرصيد الحالي: ${data['wallet_balance']} دينار.",
-                                  ),
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                              );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(data['message'] ?? "حدث خطأ"),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
+      } catch (e) {
+        Navigator.pop(ctx); // close loader if error
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقًا."),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  },
+),
 
-                              // Optional: refresh global UI state
-                              setState(() {});
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(data['message'] ?? "حدث خطأ"),
-                                  backgroundColor: Colors.redAccent,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            Navigator.pop(context); // ensure loader closes on error
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("حدث خطأ أثناء الاتصال بالخادم. يرجى المحاولة لاحقًا."),
-                                backgroundColor: Colors.redAccent,
-                              ),
-                            );
-                          }
-                        }
-                      },
-
-                    ),
                   ]
                 : [
                     TextButton(
