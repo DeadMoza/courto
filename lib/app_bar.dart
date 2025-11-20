@@ -5,7 +5,7 @@ import 'charge_wallet_dialog.dart';
 PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool isHome = false}) {
   return AppBar(
     elevation: 0,
-    backgroundColor: Colors.red,
+    backgroundColor: Colors.redAccent,
     automaticallyImplyLeading: false,
     // FIX: Restructure the title Row to prevent overflow
     title: Row(
@@ -23,7 +23,7 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
               borderRadius: BorderRadius.circular(5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.3),
+                  color: Colors.redAccent.withOpacity(0.3),
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 )
@@ -33,11 +33,11 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
               mainAxisSize: MainAxisSize.min, // Essential to keep the Row small
               children: [
                 const Icon(Icons.account_balance_wallet,
-                    color: Colors.red, size: 22),
+                    color: Colors.redAccent, size: 22),
                 const SizedBox(width: 4),
                 Text(
                   AuthService.walletBalance.toStringAsFixed(2),
-                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
                 )
               ],
             ),

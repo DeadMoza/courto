@@ -103,7 +103,7 @@ class _SignupPageState extends State<SignupPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -134,7 +134,7 @@ class _SignupPageState extends State<SignupPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.redAccent,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -144,7 +144,7 @@ class _SignupPageState extends State<SignupPage> {
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: "الاسم الكامل",
-                      prefixIcon: const Icon(Icons.person, color: Colors.red),
+                      prefixIcon: const Icon(Icons.person, color: Colors.redAccent),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -163,7 +163,7 @@ class _SignupPageState extends State<SignupPage> {
                     textDirection: TextDirection.ltr,
                     decoration: InputDecoration(
                       labelText: "رقم الهاتف",
-                      prefixIcon: const Icon(Icons.phone, color: Colors.red),
+                      prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
                       filled: true,
                       fillColor: Colors.white,
                       border: OutlineInputBorder(
@@ -182,7 +182,7 @@ class _SignupPageState extends State<SignupPage> {
                     obscureText: !showPassword,
                     decoration: InputDecoration(
                       labelText: "كلمة المرور",
-                      prefixIcon: const Icon(Icons.lock, color: Colors.red),
+                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showPassword ? Icons.visibility_off : Icons.visibility,
@@ -211,7 +211,7 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "تأكيد كلمة المرور",
                       prefixIcon:
-                          const Icon(Icons.lock_outline, color: Colors.red),
+                          const Icon(Icons.lock_outline, color: Colors.redAccent),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showConfirmPassword
@@ -241,8 +241,8 @@ class _SignupPageState extends State<SignupPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _goToOtp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        disabledBackgroundColor: Colors.red[300],
+                        backgroundColor: Colors.redAccent,
+                        disabledBackgroundColor: Colors.redAccent[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -266,7 +266,7 @@ class _SignupPageState extends State<SignupPage> {
                     child: const Text(
                       "لديك حساب من قبل؟ تسجيل الدخول",
                       style: TextStyle(
-                        color: Colors.red,
+                        color: Colors.redAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

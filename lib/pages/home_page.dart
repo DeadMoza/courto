@@ -1,4 +1,5 @@
 import 'package:courto/app_bar.dart';
+import 'package:courto/pages/landing_page.dart';
 import 'package:courto/pages/store_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -9,6 +10,7 @@ import 'settings_page.dart';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -29,6 +31,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _fields = [];
+  List<Map<String, dynamic>> _discountedFields = [];
   bool _loadingFields = true;
   String? _fieldsErrorMessage;
   final apiUrl = dotenv.env['API_URL'];
@@ -38,7 +41,7 @@ class _HomePageState extends State<HomePage> {
   final child = _screens[index];
 
   // Don't animate the map page (index 1)
-  if (index == 1) return child;
+  if (index == 2) return child;
 
   return AnimatedSwitcher(
     duration: const Duration(milliseconds: 200),
@@ -65,6 +68,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _fetchDiscountedFields();
     _detectCity();
   }
   
@@ -179,8 +183,52 @@ class _HomePageState extends State<HomePage> {
     _initScreens();
   }
 
+    Future<void> _fetchDiscountedFields() async {
+    try {
+      final url = Uri.parse("${apiUrl}users/getDiscountedFields");
+      final res = await http.get(
+        url,
+        headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data["fields"] != null && data["fields"] is List) {
+          _discountedFields = List<Map<String, dynamic>>.from(data["fields"]);
+          
+        } else {
+          _discountedFields = [];
+        }
+      }
+    } catch (e) {
+      print("Error fetching discounted fields: $e");
+      
+    }
+    // // Must call _initScreens *again* to pass the final data and update the UI
+    // _initScreens();
+  }
+
+    void goToFieldsPage() {
+    setState(() {
+      _selectedIndex = 1;
+    });
+  }
+  
+
   void _initScreens() {
+    print(_discountedFields);
+    print("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+
     _screens = [
+      LandingPage(
+        hasUpcomingBooking: false,
+        discountedFields: _discountedFields,
+        featuredText1: 'مرحبا بكم في كورتو!',
+        featuredText2: 'من مكانك اشحن احجز العب',
+        onGoToFieldsPage: goToFieldsPage,
+        matchesPlayedCount: 0,
+
+      ),
       FieldsListPage(
         key: ValueKey('FieldsListPage_$_cityId'), // Key changed to use city ID for full widget rebuild on city change
         cityId: _cityId,
@@ -212,7 +260,7 @@ class _HomePageState extends State<HomePage> {
     if (_loadingCity || _screens.isEmpty) {
       return const Scaffold(
         body: Center(
-          child: CircularProgressIndicator(color: Colors.red),
+          child: CircularProgressIndicator(color: Colors.redAccent),
         ),
       );
     }
@@ -220,7 +268,7 @@ class _HomePageState extends State<HomePage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[100],
+        backgroundColor: Colors.redAccent[100],
         appBar: buildHomeAppBar(context, isHome: true),
 
 body: Stack(
@@ -242,7 +290,7 @@ body: Stack(
 
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: Colors.red,
+            color: Colors.redAccent,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.15),
@@ -255,28 +303,32 @@ body: Stack(
             type: BottomNavigationBarType.fixed,
             items: [
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.stadium, 0),
+                icon: _buildIcon(Icons.home_rounded, 0),
+                label: "الرئيسية",
+              ),
+              BottomNavigationBarItem(
+                icon: _buildIcon(Icons.stadium, 1),
                 label: "الملاعب",
               ),
               BottomNavigationBarItem(
-                icon: _buildIconImage("assets/images/courto.png", 1),
+                icon: _buildIconImage("assets/images/courto.png", 2),
                 label: "الخريطة",
               ),
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.storefront, 2),
+                icon: _buildIcon(Icons.storefront, 3),
                 label: "المتجر",
               ),
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.menu, 3),
+                icon: _buildIcon(Icons.menu, 4),
                 label: "الإعدادات",
               ),
             ],
             currentIndex: _selectedIndex,
             selectedItemColor: Colors.white,
             unselectedItemColor: Colors.white54,
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.redAccent,
             onTap: (i) {
-              if (i == 2) return; // disable store tab for now
+              if (i == 3) return; // disable store tab for now
               setState(() => _selectedIndex = i);
             },
             showUnselectedLabels: true,

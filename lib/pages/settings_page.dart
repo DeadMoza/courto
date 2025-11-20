@@ -1,5 +1,6 @@
 import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/settingsPages/policy_page.dart';
+import 'package:courto/pages/settingsPages/support_page.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:courto/pages/settingsPages/about_page.dart';
@@ -39,7 +40,7 @@ class SettingsPage extends StatelessWidget {
             ),
             TextButton(
               // Highlight the affirmative action
-              child: const Text('نعم', style: TextStyle(color: Colors.red)),
+              child: const Text('نعم', style: TextStyle(color: Colors.redAccent)),
               onPressed: () {
                 Navigator.of(context).pop(); // Close dialog first
                 _logout(context);
@@ -56,7 +57,7 @@ class SettingsPage extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      color: Colors.red[50],
+      color: Colors.redAccent[50],
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween, 
         children: [
@@ -132,14 +133,14 @@ class SettingsPage extends StatelessWidget {
               icon: Icons.support_agent,
               title: "الدعم",
               onTap: () {
-                // TODO: navigate to support page
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportPage()));
               },
             ),
             const Divider(height: 1),
 
             SettingsTile(
               icon: Icons.policy,
-              title: "سياسة الخصوصية",
+              title: "شروط الاستخدام",
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (_) => const PolicyPage()));
               },
@@ -160,14 +161,14 @@ class SettingsPage extends StatelessWidget {
               SettingsTile(
                 icon: Icons.logout,
                 title: "تسجيل الخروج",
-                iconColor: Colors.red,
+                iconColor: Colors.redAccent,
                 onTap: () => _showLogoutConfirmation(context),
               )
             else
               SettingsTile(
                 icon: Icons.login,
                 title: "تسجيل الدخول",
-                iconColor: Colors.red,
+                iconColor: Colors.redAccent,
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -193,7 +194,7 @@ class SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
-    this.iconColor = Colors.red,
+    this.iconColor = Colors.redAccent,
     super.key,
   });
 

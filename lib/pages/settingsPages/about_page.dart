@@ -16,41 +16,50 @@ class AboutAppPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 40),
+
+              /// LOGO AREA
+              Center(
+    
+                  child: Image.asset(
+                    "assets/images/courtoFull.png",
+                    width: 150,
+                    height: 150,
+                  ),
+              
+              ),
+
+              const SizedBox(height: 20),
+
+              /// VERSION
               Text(
-                "واااااااااااااااااااااااااااااااااااااااااك\n"
-                "تطبيق كورتو هو تطبيق لحجز ملاعب كرة القدم عبر الهاتف المحمول. "
-                "يتيح التطبيق للمستخدمين حجز الملعب المختار لمدة تصل إلى 3 ساعات متتالية عن طريق دفع رسوم حجز صغيرة، "
-                "ومن ثم يتم إكمال بقية الدفع مباشرة مع مالك الملعب بعد اللعب.",
+                "الإصدار 1.0.0",
                 style: TextStyle(
                   fontSize: 16,
-                  height: 1.5,
-                  color: Colors.black87,
+                  color: Colors.red[700],
                 ),
               ),
-              SizedBox(height: 16),
-              Text(
-                "ميزات التطبيق:",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
+
+              const SizedBox(height: 20),
+
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "تطبيق مخصص لحجز الملاعب الرياضية بسهولة وسرعة. "
+                  "يمكنك استعراض الملاعب المتاحة، معرفة أوقات الشغور، "
+                  "وإتمام الحجز مباشرة عبر التطبيق دون أي تعقيد.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.5,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
-              SizedBox(height: 8),
-              Text(
-                "• حجز الملاعب بسهولة عبر الهاتف المحمول.\n"
-                "• إمكانية حجز حتى 3 ساعات متتالية.\n"
-                "• دفع رسوم الحجز مسبقاً.\n"
-                "• إتمام الدفع النهائي مباشرة مع مالك الملعب بعد اللعب.\n"
-                "• تجربة سلسة ومريحة للمستخدمين.",
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                  color: Colors.black87,
-                ),
-              ),
+
+              const SizedBox(height: 40),
             ],
           ),
         ),

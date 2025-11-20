@@ -401,7 +401,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
 
   Widget _buildPermissionMessage() {
     return Scaffold(
-      backgroundColor: Colors.red[50],
+      backgroundColor: Colors.redAccent[50],
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -442,7 +442,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     // 4. Map failed to initialize/load assets
     if (!_mapAvailable) {
       return Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Colors.redAccent[50],
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),

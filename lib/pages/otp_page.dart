@@ -160,7 +160,7 @@ class _OtpPageState extends State<OtpPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -201,10 +201,10 @@ class _OtpPageState extends State<OtpPage> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Colors.redAccent[50],
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
         ),
         body: SafeArea(
           child: Center(
@@ -219,7 +219,7 @@ class _OtpPageState extends State<OtpPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.redAccent,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -245,8 +245,8 @@ class _OtpPageState extends State<OtpPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        disabledBackgroundColor: Colors.red[300],
+                        backgroundColor: Colors.redAccent,
+                        disabledBackgroundColor: Colors.redAccent[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -277,7 +277,7 @@ class _OtpPageState extends State<OtpPage> {
                           ? "إعادة الإرسال خلال ${secondsRemaining}ث"
                           : "إعادة إرسال الرمز",
                       style: TextStyle(
-                        color: secondsRemaining > 0 ? Colors.grey : Colors.red,
+                        color: secondsRemaining > 0 ? Colors.grey : Colors.redAccent,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

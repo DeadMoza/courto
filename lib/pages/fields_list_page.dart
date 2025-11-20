@@ -123,6 +123,11 @@ class _FieldsListPageState extends State<FieldsListPage> {
       case 2: return "basketball";
       case 3: return "tennis";
       case 4: return "padel";
+      case 5: return "padbol";
+      case 6: return "carting";
+      case 7: return "paintball";
+      case 8: return "golf";
+      case 9: return "vollyball";
       default: return "";
     }
   }
@@ -133,6 +138,11 @@ class _FieldsListPageState extends State<FieldsListPage> {
       case 2: return "كرة السلة";
       case 3: return "تنس";
       case 4: return "بادل";
+      case 5: return "بادبول";
+      case 6: return "كارت";
+      case 7: return "بينت بول";
+      case 8: return "قولف";
+      case 9: return "كرة الطائرة";
       default: return "الكل";
     }
   }
@@ -205,39 +215,146 @@ class _FieldsListPageState extends State<FieldsListPage> {
                       const Divider(),
 
                       // --- Field Type Filter Section ---
-                      const Text("اختر نوع الملعب", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const Text("اختر نوع الملعب", 
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       const SizedBox(height: 12),
-                      Wrap(
-                        alignment: WrapAlignment.center, // Centering the type boxes
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: [
-                          _buildTypeBox(icon: Icons.sports_soccer, label: "كرة القدم", typeId: 1, selected: tempSelectedTypeId == 1, onTap: () {
-                            // TYPE CHANGE: Update dialog state, main state, close dialog, apply filter
-                            setDialogState(() => tempSelectedTypeId = 1);
-                            setState(() => _selectedTypeId = tempSelectedTypeId);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                          _buildTypeBox(icon: Icons.sports_basketball, label: "كرة السلة", typeId: 2, selected: tempSelectedTypeId == 2, onTap: () {
-                            setDialogState(() => tempSelectedTypeId = 2);
-                            setState(() => _selectedTypeId = tempSelectedTypeId);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                          _buildTypeBox(icon: Icons.sports_baseball, label: "تنس", typeId: 3, selected: tempSelectedTypeId == 3, onTap: () {
-                            setDialogState(() => tempSelectedTypeId = 3);
-                            setState(() => _selectedTypeId = tempSelectedTypeId);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                          _buildTypeBox(icon: Icons.sports_tennis, label: "بادل", typeId: 4, selected: tempSelectedTypeId == 4, onTap: () {
-                            setDialogState(() => tempSelectedTypeId = 4);
-                            setState(() => _selectedTypeId = tempSelectedTypeId);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                        ],
+
+                      SizedBox(
+                        height: 120, // Enough height for the boxes
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_soccer,
+                                label: "كرة القدم",
+                                typeId: 1,
+                                selected: tempSelectedTypeId == 1,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 1);
+                                  setState(() => _selectedTypeId = 1);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_basketball,
+                                label: "كرة السلة",
+                                typeId: 2,
+                                selected: tempSelectedTypeId == 2,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 2);
+                                  setState(() => _selectedTypeId = 2);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_baseball,
+                                label: "تنس",
+                                typeId: 3,
+                                selected: tempSelectedTypeId == 3,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 3);
+                                  setState(() => _selectedTypeId = 3);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_tennis,
+                                label: "بادل",
+                                typeId: 4,
+                                selected: tempSelectedTypeId == 4,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 4);
+                                  setState(() => _selectedTypeId = 4);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_soccer, // Replace if you want custom icon
+                                label: "بادبول",
+                                typeId: 5,
+                                selected: tempSelectedTypeId == 5,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 5);
+                                  setState(() => _selectedTypeId = 5);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.airline_seat_recline_extra_rounded,
+                                label: "كارت",
+                                typeId: 6,
+                                selected: tempSelectedTypeId == 6,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 6);
+                                  setState(() => _selectedTypeId = 6);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.format_paint_rounded,
+                                label: "بينت بول",
+                                typeId: 7,
+                                selected: tempSelectedTypeId == 7,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 7);
+                                  setState(() => _selectedTypeId = 7);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.golf_course,
+                                label: "قولف",
+                                typeId: 8,
+                                selected: tempSelectedTypeId == 8,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 8);
+                                  setState(() => _selectedTypeId = 8);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+
+                              _buildTypeBox(
+                                icon: Icons.sports_volleyball,
+                                label: "كرة الطائرة",
+                                typeId: 9,
+                                selected: tempSelectedTypeId == 9,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 9);
+                                  setState(() => _selectedTypeId = 9);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                        ),
                       ),
 
                       const SizedBox(height: 20),
@@ -313,7 +430,7 @@ Widget _buildCityChip({
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(5),
           side: BorderSide(
-            color: selected ? Colors.red : Colors.grey[300]!,
+            color: selected ? Colors.redAccent : Colors.grey[300]!,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -354,7 +471,7 @@ Widget _buildCityChip({
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: selected ? Colors.redAccent : Colors.red, size: 40),
+            Icon(icon, color: selected ? Colors.redAccent : Colors.redAccent, size: 40),
             const SizedBox(height: 6),
             Text(label, style: TextStyle(color: selected ? Colors.redAccent : Colors.black)),
           ],
@@ -443,7 +560,7 @@ Widget _buildCityChip({
                   height: 150,
                   color: Colors.grey[300],
                   child: const Center(
-                    child: Icon(Icons.sports_soccer, size: 40, color: Colors.red),
+                    child: Icon(Icons.sports_soccer, size: 40, color: Colors.redAccent),
                   ),
                 ),
               ),
@@ -466,7 +583,7 @@ Widget _buildCityChip({
                           Text(distanceText, style: const TextStyle(color: Colors.black54)),
                         ],
                       ),
-                      Text("د.ل. ${totalPrice.toStringAsFixed(2)} / الساعة", style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold)),
+                      Text("د.ل. ${totalPrice.toStringAsFixed(2)} / الساعة", style: const TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -477,11 +594,11 @@ Widget _buildCityChip({
                       Text(
                         // AppFormat is assumed to be available
                         "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
-                        style: const TextStyle(fontSize: 14, color: Colors.red),
+                        style: const TextStyle(fontSize: 14, color: Colors.redAccent),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.red, size: 16),
+                          const Icon(Icons.people, color: Colors.redAccent, size: 16),
                           Text(" $capacity", style: const TextStyle(color: Colors.black)),
                         ],
                       ),
@@ -518,7 +635,7 @@ Widget _buildCityChip({
                     onTap: _showFilterDialog,
                     child: Chip(
                       label: Text("المدينة: ${cityName}", style: const TextStyle(color: Colors.white)),
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.redAccent,
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                     ),
                   ),
@@ -576,13 +693,13 @@ Widget _buildCityChip({
           child: Builder(
             builder: (context) {
               if (widget.loading) {
-                return const Center(child: CircularProgressIndicator(color: Colors.red));
+                return const Center(child: CircularProgressIndicator(color: Colors.redAccent));
               }
 
               if (widget.errorMessage != null) {
                 return Center(
                     child: Text('حدث خطأ: ${widget.errorMessage}',
-                        style: const TextStyle(color: Colors.red)));
+                        style: const TextStyle(color: Colors.redAccent)));
               }
 
               if (_filteredFields.isEmpty) {
@@ -590,7 +707,7 @@ Widget _buildCityChip({
                     child: Padding(
                       padding: const EdgeInsets.all(24.0),
                       child: Text(
-                          "لا توجد ملاعب متاحة حالياً لنوع '${_getTypeLabel(_selectedTypeId)}' في مدينة '${_getCityName(_selectedCityId)}'.",
+                          "لا توجد ملاعب ${_getTypeLabel(_selectedTypeId)} متاحة حالياً في مدينة ${_getCityName(_selectedCityId)}",
                           textAlign: TextAlign.center,
                           style: const TextStyle(fontSize: 16)),
                     ));

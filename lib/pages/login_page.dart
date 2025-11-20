@@ -192,7 +192,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: loading ? null : login,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
-                        disabledBackgroundColor: Colors.red[300],
+                        disabledBackgroundColor: Colors.redAccent[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
