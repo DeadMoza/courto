@@ -83,31 +83,6 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         children: [
                           GestureDetector(
                             onTap: () {
-                            //bank card stuff
-                            },
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 80,
-                                  height: 80,
-                                  decoration: BoxDecoration(
-                                    color: Colors.red[100],
-                                    borderRadius: BorderRadius.circular(5),
-                                  ),
-                                  child: const Icon(
-                                    Icons.credit_card,
-                                    size: 40,
-                                    color: Colors.redAccent,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                const Text("بطاقة مصرفية"),
-                              ],
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () {
                               setState(() {
                                 selectedMethod = "courto"; 
                               });

@@ -180,10 +180,12 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   }
 
   double get _bookingPricePerHour => double.tryParse(widget.field['field_calculated_booking_price'].toString()) ?? 0.0;
-  double get _remainingToOwnerPerHour => double.tryParse(widget.field['field_calculated_remaining_price'].toString()) ?? 0.0;
+  double? get _remainingToOwnerPerHour => widget.field["field_has_discount"]
+  ? double.tryParse(widget.field["field_calculated_remaining_price_after_discount"].toString())
+  : double.tryParse(widget.field['field_calculated_remaining_price'].toString());
 
   double get _currentTotalBookingPrice => _selectedSlots.length * _bookingPricePerHour;
-  double get _remainingPaymentToOwner => _selectedSlots.length * _remainingToOwnerPerHour;
+  double get _remainingPaymentToOwner => _selectedSlots.length * _remainingToOwnerPerHour!;
 
   Future<void> _onContinuePressed() async {
     if (_selectedSlots.isEmpty) return;

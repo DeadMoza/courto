@@ -306,6 +306,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     }
 
     final double totalPrice = double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
+    final double? totalPriceAfterDiscount = double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0");
 
 
     return GestureDetector(
@@ -350,22 +351,43 @@ class _FieldsMapPageState extends State<FieldsMapPage>
                         fontFamily: "Changa",
                         fontSize: 18,
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (field["field_price"] != null)
-                      Text(
-                        "$totalPrice / الساعة",
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontFamily: "Changa",
-                          fontSize: 16,
-                          color: Colors.white70,
-                        ),
-                      ),
-                  ],
-                ),
+                    if (field["field_has_discount"])
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "د.ل. $totalPriceAfterDiscount / الساعة |",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              totalPrice.toStringAsFixed(2),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        )
+                       else Text(
+                          "د.ل. ${totalPrice.toStringAsFixed(2)} / الساعة",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+
+                    ],
+                  ),
               ),
               Positioned(
                 top: 0,

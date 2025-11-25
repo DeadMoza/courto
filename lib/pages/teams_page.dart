@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 
-class StorePage extends StatelessWidget {
-  const StorePage({super.key});
+class TeamsPage extends StatelessWidget {
+  const TeamsPage({super.key});
 
   @override
   Widget build(BuildContext context) {

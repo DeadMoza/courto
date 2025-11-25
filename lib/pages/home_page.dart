@@ -1,6 +1,6 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/pages/landing_page.dart';
-import 'package:courto/pages/store_page.dart';
+import 'package:courto/pages/teams_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/location_service.dart';
@@ -36,6 +36,11 @@ class _HomePageState extends State<HomePage> {
   String? _fieldsErrorMessage;
   final apiUrl = dotenv.env['API_URL'];
 
+  List<String> _carouselImages = [];
+  String _carouselText1 = '';
+  String _carouselText2 = '';
+
+
   List<Widget> _screens = [];
   Widget _buildPageTransition(int index) {
   final child = _screens[index];
@@ -70,6 +75,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _fetchDiscountedFields();
     _detectCity();
+    _fetchCarouselItems();
   }
   
   void _handleCityChanged(int newCityId) {
@@ -101,6 +107,32 @@ class _HomePageState extends State<HomePage> {
       // Handle network or parsing error
     }
   }
+
+Future<void> _fetchCarouselItems() async {
+  try {
+    final url = Uri.parse("${apiUrl}users/getCarouselItems");
+    final res = await http.get(url, headers: {
+      'x-api-key': '${dotenv.env['API_KEY']}'
+    });
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      if (data["images"] != null && data["images"] is List) {
+        _carouselImages = List<String>.from(
+          data["images"].map((img) => "${apiUrl}${img['carousel_image_url']}")
+        );
+      }
+
+      if (data["text"] != null && data["text"] is List) {
+        final texts = data["text"];
+        _carouselText1 = texts.length > 0 ? texts[0]['carousel_text'] : '';
+        _carouselText2 = texts.length > 1 ? texts[1]['carousel_text'] : '';
+      }
+    }
+  } catch (e) {
+    print("Error fetching carousel items: $e");
+  }
+}
 
   Future<void> _detectCity() async {
     final position = await LocationService.getUserLocation();
@@ -204,8 +236,6 @@ class _HomePageState extends State<HomePage> {
       print("Error fetching discounted fields: $e");
       
     }
-    // // Must call _initScreens *again* to pass the final data and update the UI
-    // _initScreens();
   }
 
     void goToFieldsPage() {
@@ -216,19 +246,17 @@ class _HomePageState extends State<HomePage> {
   
 
   void _initScreens() {
-    print(_discountedFields);
-    print("HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
-
     _screens = [
       LandingPage(
         hasUpcomingBooking: false,
         discountedFields: _discountedFields,
-        featuredText1: 'مرحبا بكم في كورتو!',
-        featuredText2: 'من مكانك اشحن احجز العب',
+        featuredText1: _carouselText1,
+        featuredText2: _carouselText2,
+        carouselImages: _carouselImages,
         onGoToFieldsPage: goToFieldsPage,
         matchesPlayedCount: 0,
-
       ),
+      
       FieldsListPage(
         key: ValueKey('FieldsListPage_$_cityId'), // Key changed to use city ID for full widget rebuild on city change
         cityId: _cityId,
@@ -240,6 +268,7 @@ class _HomePageState extends State<HomePage> {
         onCityChanged: _handleCityChanged, 
         cities: _cities,
       ),
+
       FieldsMapPage(
         key: const PageStorageKey('FieldsMapPage'),
         initialLat: _userLat ?? 32.8872,
@@ -249,7 +278,7 @@ class _HomePageState extends State<HomePage> {
         fields: _fields,
         loading: _loadingFields,
       ),
-      const StorePage(),
+      const TeamsPage(),
       const SettingsPage(key: PageStorageKey('SettingsPage')),
     ];
     setState(() {}); // rebuild UI after initializing screens
@@ -315,8 +344,8 @@ body: Stack(
                 label: "الخريطة",
               ),
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.storefront, 3),
-                label: "المتجر",
+                icon: _buildIcon(Icons.people_alt_rounded, 3),
+                label: "الفريق",
               ),
               BottomNavigationBarItem(
                 icon: _buildIcon(Icons.menu, 4),
@@ -328,7 +357,7 @@ body: Stack(
             unselectedItemColor: Colors.white54,
             backgroundColor: Colors.redAccent,
             onTap: (i) {
-              if (i == 3) return; // disable store tab for now
+              if (i == 3) return; // disable teams tab for now
               setState(() => _selectedIndex = i);
             },
             showUnselectedLabels: true,

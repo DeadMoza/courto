@@ -27,46 +27,46 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  void _showLogoutConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("تسجيل الخروج؟"),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('لا'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            TextButton(
-              // Highlight the affirmative action
-              child: const Text('نعم', style: TextStyle(color: Colors.redAccent)),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close dialog first
-                _logout(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+void _showLogoutConfirmation(BuildContext parentContext) {
+  showDialog(
+    context: parentContext,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("تسجيل الخروج؟"),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('لا'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          TextButton(
+            child: const Text('نعم', style: TextStyle(color: Colors.redAccent)),
+            onPressed: () {
+              Navigator.of(context).pop(); // close dialog
+              _logout(parentContext);      // USE PARENT CONTEXT
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   Widget _buildUserHeader(BuildContext context, String userName, bool isLoggedIn) {
     final userPhoneNumber = AuthService.userData?["phone_number"] ?? "لا يتوفر رقم";
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      color: Colors.redAccent[50],
+      color: Colors.red[50],
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween, 
         children: [
           CircleAvatar(
             radius: 30,
-            backgroundColor: Colors.redAccent.withOpacity(0.2),
+            backgroundColor: Colors.red.withOpacity(0.2),
             child: Icon(
               isLoggedIn ? Icons.person : Icons.person_off, 
-              color: Colors.redAccent, 
+              color: Colors.red, 
               size: 30,
             ),
           ),

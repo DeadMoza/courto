@@ -191,7 +191,9 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
     final totalBookingPrice = widget.totalBookingPrice * 4;
     final remaining =  widget.remainingPaymentToOwner * 4;
 
-    final endDate = widget.date.add(const Duration(days: 29));
+    final date2 = widget.date.add(const Duration(days: 7));
+    final date3 = widget.date.add(const Duration(days: 14));
+    final date4 = widget.date.add(const Duration(days: 21));
 
     return Directionality(
       textDirection: ui.TextDirection.rtl,
@@ -289,7 +291,7 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          "من ${AppFormat.formatDateArabic(widget.date)} إلى ${AppFormat.formatDateArabic(endDate)}",
+                          "${AppFormat.formatDateArabic(widget.date)} - ${AppFormat.formatDateArabic(date2)} - ${AppFormat.formatDateArabic(date3)} - ${AppFormat.formatDateArabic(date4)}",
                           style: const TextStyle(
                             fontSize: 15,
                             color: Colors.black87,

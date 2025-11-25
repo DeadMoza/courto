@@ -301,11 +301,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final List<dynamic> images = widget.field["field_images"] ?? [];
-
-    final double fieldPrice = double.tryParse(widget.field["field_price"]?.toString() ?? "0") ?? 0;
-    final double dailyProfit =
-        double.tryParse(widget.field["field_daily_profit_price"]?.toString() ?? "0") ?? 0;
-    final double totalPrice = fieldPrice + dailyProfit;
+  
+    final double? totalPrice = widget.field["field_has_discount"]
+     ? double.tryParse(widget.field["field_calculated_total_price_after_discount"].toString())
+     : double.tryParse(widget.field["field_calculated_total_price"].toString());
 
     return Directionality(
       textDirection: ui.TextDirection.rtl,
@@ -335,7 +334,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                     ),
                     const SizedBox(height: 15),
 
-                    _buildPriceAndFavoriteCard(totalPrice),
+                    _buildPriceAndFavoriteCard(totalPrice!),
                     
                     const SizedBox(height: 25),
 

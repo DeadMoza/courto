@@ -88,8 +88,17 @@ class _FieldsListPageState extends State<FieldsListPage> {
       return {
         ...f,
         'calculated_distance': distance,
-        'calculated_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
-      };
+        'calculated_total_price': double.tryParse(
+                                  f["field_has_discount"] == true
+                                      ? f["field_calculated_total_price_after_discount"]?.toString() ?? "0"
+                                      : f["field_calculated_total_price"]?.toString() ?? "0"
+                                ) ?? 0,
+
+                                  'original_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
+                                  'discount_price': double.tryParse(f["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0,
+                                  'has_discount': f["field_has_discount"] == true,
+
+                                };
 
     }).toList();
 
@@ -516,7 +525,13 @@ Widget _buildCityChip({
   Widget _buildFieldCard(Map<String, dynamic> field) {
     final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
     final fieldName = field["field_name"] ?? 'ملعب غير مسمى';
-    final totalPrice = field['calculated_total_price'] as double;
+    final hasDiscount = field['has_discount'] == true;
+    final originalPrice = field['original_total_price'] as double;
+    final discountPrice = field['discount_price'] as double;
+    final discountPercent = hasDiscount
+        ? (((originalPrice - discountPrice) / originalPrice) * 100).round()
+        : 0;
+
     final openTime = field["field_open_time"] ?? '';
     final closeTime = field["field_close_time"] ?? '';
     final capacity = field["field_capacity"] ?? 0;
@@ -549,22 +564,47 @@ Widget _buildCityChip({
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
-              child: Image.network(
-                imageUrl,
-                width: double.infinity,
-                height: 120,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 150,
-                  color: Colors.grey[300],
-                  child: const Center(
-                    child: Icon(Icons.sports_soccer, size: 40, color: Colors.redAccent),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
+                  child: Image.network(
+                    imageUrl,
+                    width: double.infinity,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 150,
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(Icons.sports_soccer, size: 40, color: Colors.redAccent),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+
+                if (hasDiscount)
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        "-$discountPercent%",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
+
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -583,7 +623,37 @@ Widget _buildCityChip({
                           Text(distanceText, style: const TextStyle(color: Colors.black54)),
                         ],
                       ),
-                      Text("د.ل. ${totalPrice.toStringAsFixed(2)} / الساعة", style: const TextStyle(color: Colors.redAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+                      hasDiscount
+                      ? Row(
+                          children: [
+                            Text(
+                              "د.ل. ${discountPrice.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              originalPrice.toStringAsFixed(2),
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                                decoration: TextDecoration.lineThrough,
+                              ),
+                            ),
+                          ],
+                        )
+                      : Text(
+                          "د.ل. ${originalPrice.toStringAsFixed(2)} / الساعة",
+                          style: const TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+
                     ],
                   ),
                   const SizedBox(height: 8),

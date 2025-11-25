@@ -189,7 +189,7 @@ Future<void> _bookField() async {
       ),
     );
   }
-  
+
   void _showMidnightInfoDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -202,7 +202,7 @@ Future<void> _bookField() async {
               Flexible( 
                 child: Text(
                   "تنبيه بخصوص التوقيت",
-                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.redAccent, fontSize: 20,),
                   textAlign: TextAlign.right,
                 ),
               ),
@@ -275,7 +275,7 @@ Future<void> _bookField() async {
                     const Text(
                       "المبلغ المتبقي:",
                       style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold,),
                     ),
                     Text(
                       "${widget.remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
@@ -398,31 +398,55 @@ Future<void> _bookField() async {
                                 color: Colors.amber, size: 20),
                             const SizedBox(width: 5),
                             Flexible(
-                              child: Text(
-"يمكنك إلغاء الحجز بعد مرور ساعة واحدة بالضبط إذا لم يجيب صاحب الملعب على طلبك. \nولا يمكنك حجز ملعب آخر أثناء وجود حجز معلق. \n\nسيقوم صاحب الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم دفع هذا المبلغ الآن كرسوم حجز فقط، وسيتعين عليك دفع المبلغ المتبقي لصاحب الملعب بعد او قبل الانتهاء من اللعب.",
-                                style: const TextStyle(
-                                  fontSize: 14.5,
-                                  height: 1.5,
-                                  color: Colors.black87,
-                                ),
-                              ),
+                              child: RichText(
+  text: TextSpan(
+    style: const TextStyle(
+      fontSize: 14.5,
+      height: 1.5,
+      color: Colors.black87,
+      fontFamily: "Changa"
+    ),
+    children: [
+      const TextSpan(
+        text:
+            "يمكنك إلغاء الحجز فقط بعد مرور ساعة واحدة بالضبط في حالة عدم اجابة مدير الملعب على طلبك.\n"
+            "ولا يمكنك حجز ملعب آخر أثناء وجود حجز قيد الانتظار.\n\n"
+            "سيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\n"
+            "سيتم خصم مبلغ الحجز ",
+      ),
+      TextSpan(
+        text: "${widget.totalBookingPrice.toStringAsFixed(2)} د.ل",
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const TextSpan(
+        text: " في لحظة قبول طلبك، وسيتعين عليك دفع ",
+      ),
+      TextSpan(
+        text: "${widget.remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const TextSpan(
+        text: " لمدير الملعب بعد او قبل الانتهاء من اللعب.",
+      ),
+    ],
+  ),
+)
+
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "المبلغ المتبقي: ${widget.remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
-                          style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.redAccent),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    "ملاحظات لصاحب الملعب:",
+                    "ملاحظات لمدير الملعب:",
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

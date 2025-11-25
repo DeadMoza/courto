@@ -20,9 +20,7 @@ class LandingPage extends StatelessWidget {
 
   LandingPage({
     super.key,
-    this.carouselImages = const [
-      "assets/images/courtoDefaultField.jpg",
-    ],
+    required this.carouselImages,
     required this.hasUpcomingBooking,
     required this.discountedFields,
     required this.featuredText1,
@@ -45,6 +43,20 @@ class LandingPage extends StatelessWidget {
       return baseUrl!.endsWith('/') ? '$baseUrl$url' : '$baseUrl/$url';
     }
   }
+String normalizeUrl(String url) {
+  if (url.startsWith("http")) {
+    final uri = Uri.parse(url);
+    final normalizedPath = uri.path.replaceAll(RegExp(r'/{2,}'), '/');
+    return "${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}$normalizedPath";
+  }
+
+  // If relative, prepend API_URL and normalize
+  final base = apiUrl?.endsWith('/') == true ? apiUrl!.substring(0, apiUrl!.length - 1) : apiUrl ?? '';
+  final path = url.startsWith('/') ? url : '/$url';
+  return "$base$path".replaceAll(RegExp(r'/{2,}'), '/');
+}
+
+
   Icon _getFieldTypeIcon(String? type) {
   switch (type) {
     case "tennis":
@@ -90,8 +102,8 @@ Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext contex
 
 
   // Prices
-  final originalPrice = double.tryParse(field["field_price"]?.toString() ?? "0") ?? 0;
-  final discountPrice = double.tryParse(field["field_price_after_discount"]?.toString() ?? "0") ?? 0;
+  final originalPrice = double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
+  final discountPrice = double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0;
 
   final hasDiscount = field["field_has_discount"] == true;
 
@@ -124,7 +136,6 @@ Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext contex
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ---------------- IMAGE + DISCOUNT BADGE ----------------
 Stack(
   children: [
     ClipRRect(
@@ -279,26 +290,38 @@ Stack(
                 children: [
                   CarouselSlider(
                     options: CarouselOptions(
-                      height: 200,
+                      height: 220,
                       viewportFraction: 1,
                       autoPlay: true,
                       autoPlayInterval: const Duration(seconds: 4),
-                      autoPlayCurve: Curves.easeInOut,
+                      autoPlayCurve: Curves.easeInBack,
                       enableInfiniteScroll: true,
                     ),
-                    items: carouselImages.map((img) {
-                      return Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                            image: img.startsWith('http')
-                                ? NetworkImage(img) as ImageProvider
-                                : AssetImage(img),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                    items: (carouselImages.isNotEmpty ? carouselImages : ["assets/images/courtoDefaultField.jpg"]).map((img) {
+                      final imageUrl = normalizeUrl(img);
+                      return ClipRRect(
+                        child: imageUrl.startsWith('http')
+                            ? Image.network(
+                                imageUrl,
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) => Image.asset(
+                                  "assets/images/courtoDefaultField.jpg",
+                                  width: double.infinity,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Image.asset(
+                                imageUrl,
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
                       );
                     }).toList(),
+
                   ),
                   Positioned.fill(
                     child: Container(
@@ -477,69 +500,106 @@ Stack(
   /// Logged in buttons → history + count (left) | book field (right)
   Widget _loggedInButtons(BuildContext context) {
     const double buttonHeight = 110.0;
-    const double smallButtonHeight = (buttonHeight - 4) / 2;
+    // const double smallButtonHeight = (buttonHeight - 4) / 2;
 
     return Row(
       children: [
         /// LEFT SIDE (History + Count)
+        // Expanded(
+        //   child: Column(
+        //     children: [
+        //       GestureDetector(
+        //         onTap: () {
+        //           Navigator.pushNamed(context, "/bookingHistoryPage");
+        //         },
+        //         child: Container(
+        //           height: smallButtonHeight,
+        //           width: double.infinity,
+        //           decoration: _smallBoxDecoration(),
+        //           child: const Column(
+        //             mainAxisAlignment: MainAxisAlignment.center,
+        //             children: [
+        //               Icon(Icons.history, color: Colors.white, size: 24),
+        //               SizedBox(height: 4),
+        //               Text(
+        //                 "سجل الحجوزات",
+        //                 style: TextStyle(
+        //                   color: Colors.white,
+        //                   fontSize: 12,
+        //                   fontWeight: FontWeight.bold,
+        //                 ),
+        //               )
+        //             ],
+        //           ),
+        //         ),
+        //       ),
+
+        //       const SizedBox(height: 4),
+
+        //       Container(
+        //         height: smallButtonHeight,
+        //         width: double.infinity,
+        //         decoration: _smallBoxDecoration(),
+        //         child: Column(
+        //           mainAxisAlignment: MainAxisAlignment.center,
+        //           children: [
+        //             Text(
+        //               "$matchesPlayedCount",
+        //               style: const TextStyle(
+        //                 color: Colors.white,
+        //                 fontSize: 24,
+        //                 fontWeight: FontWeight.bold,
+        //               ),
+        //             ),
+          
+        //             const Text(
+        //               "مباراة لعبت",
+        //               style: TextStyle(
+        //                 color: Colors.white,
+        //                 fontSize: 12,
+        //               ),
+        //             )
+        //           ],
+        //         ),
+        //       ),
+        //     ],
+        //   ),
+        // ),
         Expanded(
-          child: Column(
-            children: [
-              GestureDetector(
-                onTap: () {
+          child: GestureDetector(
+            onTap: () {
                   Navigator.pushNamed(context, "/bookingHistoryPage");
                 },
-                child: Container(
-                  height: smallButtonHeight,
-                  width: double.infinity,
-                  decoration: _smallBoxDecoration(),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.history, color: Colors.white, size: 24),
-                      SizedBox(height: 4),
-                      Text(
-                        "سجل الحجوزات",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    ],
-                  ),
-                ),
+            child: Container(
+              height: buttonHeight,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  )
+                ],
               ),
-
-              const SizedBox(height: 4),
-
-              Container(
-                height: smallButtonHeight,
-                width: double.infinity,
-                decoration: _smallBoxDecoration(),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "$matchesPlayedCount",
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.history, color: Colors.white, size: 40),
+                  SizedBox(height: 8),
+                  Text(
+                    "سجل الحجوزات",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
-          
-                    const Text(
-                      "مباراة لعبت",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                      ),
-                    )
-                  ],
-                ),
+                  )
+                ],
               ),
-            ],
+            ),
           ),
         ),
 
@@ -585,19 +645,19 @@ Stack(
     );
   }
 
-  BoxDecoration _smallBoxDecoration() {
-    return BoxDecoration(
-      color: Colors.redAccent,
-      borderRadius: BorderRadius.circular(5),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withOpacity(0.15),
-          blurRadius: 6,
-          offset: const Offset(0, 3),
-        ),
-      ],
-    );
-  }
+  // BoxDecoration _smallBoxDecoration() {
+  //   return BoxDecoration(
+  //     color: Colors.redAccent,
+  //     borderRadius: BorderRadius.circular(5),
+  //     boxShadow: [
+  //       BoxShadow(
+  //         color: Colors.black.withOpacity(0.15),
+  //         blurRadius: 6,
+  //         offset: const Offset(0, 3),
+  //       ),
+  //     ],
+  //   );
+  // }
 }
 
 class _FeaturedTextMarquee extends StatefulWidget {
