@@ -20,8 +20,7 @@ void main() async {
 
   // Load user session
   await AuthService.loadSession();
-  print("STARTED APP:");
-  print(AuthService.playerId);
+
 
   runApp(const MyApp());
 }

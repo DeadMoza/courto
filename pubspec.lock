@@ -469,6 +469,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.3.4"
+  package_rename:
+    dependency: "direct main"
+    description:
+      name: package_rename
+      sha256: "5dbef9f2f0849a7b5d237733a898bcdab917e5b7e16d662e91e095b6278d9af9"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.10.0"
   path:
     dependency: transitive
     description:
