@@ -306,6 +306,8 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   }
 
   Widget _buildSlotTile(TimeSlot slot) {
+    print(widget.field);
+
     final isConfirmed = _isConfirmed(slot);
     final isSelected = _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
 

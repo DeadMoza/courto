@@ -116,6 +116,16 @@ void _showLogoutConfirmation(BuildContext parentContext) {
                 },
               ),
               const Divider(height: 1),
+
+              SettingsTile(
+                icon: Icons.favorite,
+                title: "المفضلة",
+                onTap: () {
+                  
+                },
+              ),
+
+              const Divider(height: 1),
               
               SettingsTile(
                 icon: Icons.account_balance_wallet,

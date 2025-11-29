@@ -243,32 +243,50 @@ Future<void> _fetchCarouselItems() async {
       _selectedIndex = 1;
     });
   }
+
+  Future<void> _refreshApp() async {
+  await _fetchCities();
+  await _fetchFields();
+  await _fetchDiscountedFields();
+  await _fetchCarouselItems();
+}
+
   
 
   void _initScreens() {
     _screens = [
-      LandingPage(
-        hasUpcomingBooking: false,
-        discountedFields: _discountedFields,
-        featuredText1: _carouselText1,
-        featuredText2: _carouselText2,
-        carouselImages: _carouselImages,
-        onGoToFieldsPage: goToFieldsPage,
-        matchesPlayedCount: 0,
-      ),
       
-      FieldsListPage(
-        key: ValueKey('FieldsListPage_$_cityId'), // Key changed to use city ID for full widget rebuild on city change
-        cityId: _cityId,
-        fields: _fields,
-        user_lat: _userLat,
-        user_long: _userLng,
-        loading: _loadingFields,
-        errorMessage: _fieldsErrorMessage,
-        onCityChanged: _handleCityChanged, 
-        cities: _cities,
+      // HOME PAGE (with refresh)
+      RefreshIndicator(
+        onRefresh: _refreshApp,
+        child: LandingPage(
+          hasUpcomingBooking: false,
+          discountedFields: _discountedFields,
+          featuredText1: _carouselText1,
+          featuredText2: _carouselText2,
+          carouselImages: _carouselImages,
+          onGoToFieldsPage: goToFieldsPage,
+          matchesPlayedCount: 0,
+        ),
       ),
 
+      // FIELDS LIST PAGE (with refresh)
+      RefreshIndicator(
+        onRefresh: _refreshApp,
+        child: FieldsListPage(
+          key: ValueKey('FieldsListPage_$_cityId'),
+          cityId: _cityId,
+          fields: _fields,
+          user_lat: _userLat,
+          user_long: _userLng,
+          loading: _loadingFields,
+          errorMessage: _fieldsErrorMessage,
+          onCityChanged: _handleCityChanged,
+          cities: _cities,
+        ),
+      ),
+
+      // MAP PAGE — NO REFRESH (keep it as is)
       FieldsMapPage(
         key: const PageStorageKey('FieldsMapPage'),
         initialLat: _userLat ?? 32.8872,
@@ -278,11 +296,14 @@ Future<void> _fetchCarouselItems() async {
         fields: _fields,
         loading: _loadingFields,
       ),
+
       const TeamsPage(),
       const SettingsPage(key: PageStorageKey('SettingsPage')),
     ];
-    setState(() {}); // rebuild UI after initializing screens
+
+    setState(() {});
   }
+
 
   @override
   Widget build(BuildContext context) {

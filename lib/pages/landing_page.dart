@@ -13,8 +13,8 @@ class LandingPage extends StatelessWidget {
   final List<String> carouselImages;
   final bool hasUpcomingBooking;
   final List<Map<String, dynamic>> discountedFields;
-  final String featuredText1;
-  final String featuredText2;
+  final String? featuredText1;
+  final String? featuredText2;
   final VoidCallback onGoToFieldsPage;
   final int matchesPlayedCount;
 
@@ -284,6 +284,7 @@ Stack(
       child: Scaffold(
         backgroundColor: Colors.redAccent[50],
         body: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
               Stack(
@@ -353,8 +354,8 @@ Stack(
               const SizedBox(height: 30),
 
               _FeaturedTextMarquee(
-                text1: featuredText1,
-                text2: featuredText2,
+                text1: featuredText1!.isEmpty ? "مرحبا بكم في كورتو!" : featuredText1,
+                text2: featuredText2!.isEmpty ? "اشحن احجز العب" : featuredText2,
               ),
 
               const SizedBox(height: 30),
@@ -661,8 +662,8 @@ Stack(
 }
 
 class _FeaturedTextMarquee extends StatefulWidget {
-  final String text1;
-  final String text2;
+  final String? text1;
+  final String? text2;
 
   const _FeaturedTextMarquee({
     required this.text1,
@@ -742,7 +743,7 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
     );
   }
 
-  Widget _text(String text, Color color) {
+  Widget _text(String? text, Color color) {
     return Text(
       "$text  |  ",
       style: TextStyle(

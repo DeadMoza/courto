@@ -118,24 +118,24 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
     final remainingPrice = booking["booking_remaining_price"] ?? 0;
     final status = booking["booking_status_fmt"] ?? "غير معروف";
     final rawStatus = booking["booking_status"] ?? "";
-String creationDate = "";
-try {
-  final rawDate = booking["booking_creation_date"];
-  if (rawDate != null && rawDate.isNotEmpty) {
-    // Parse as UTC, then convert to local
-    final parsedDate = DateTime.parse(rawDate).toLocal();
+    String creationDate = "";
+    try {
+      final rawDate = booking["booking_creation_date"];
+      if (rawDate != null && rawDate.isNotEmpty) {
+        // Parse as UTC, then convert to local
+        final parsedDate = DateTime.parse(rawDate).toLocal();
 
-    String formatted = DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
+        String formatted = DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
 
-    // Replace Arabic-Indic digits with Latin digits
-    creationDate = formatted.replaceAllMapped(
-      RegExp(r'[٠١٢٣٤٥٦٧٨٩]'),
-      (m) => '٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!).toString(),
-    );
-  }
-} catch (_) {
-  creationDate = booking["booking_creation_date"] ?? "";
-}
+        // Replace Arabic-Indic digits with Latin digits
+        creationDate = formatted.replaceAllMapped(
+          RegExp(r'[٠١٢٣٤٥٦٧٨٩]'),
+          (m) => '٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!).toString(),
+        );
+      }
+    } catch (_) {
+      creationDate = booking["booking_creation_date"] ?? "";
+    }
 
 
 
@@ -215,7 +215,7 @@ try {
               // Date
               Row(
                 children: [
-                  const Icon(Icons.calendar_month_outlined,
+                  const Icon(Icons.calendar_month,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(
@@ -229,7 +229,7 @@ try {
               // Time
               Row(
                 children: [
-                  const Icon(Icons.access_time,
+                  const Icon(Icons.access_time_filled,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(
@@ -243,7 +243,7 @@ try {
               // Price
               Row(
                 children: [
-                  const Icon(Icons.payments_outlined,
+                  const Icon(Icons.payments_rounded,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(
@@ -259,7 +259,7 @@ try {
               // Creation date
                             Row(
                 children: [
-                  const Icon(Icons.schedule_send_outlined,
+                  const Icon(Icons.history,
                       color: Colors.redAccent, size: 18),
                   const SizedBox(width: 6),
                   Text(

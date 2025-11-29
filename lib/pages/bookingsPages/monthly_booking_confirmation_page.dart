@@ -339,21 +339,53 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Row(
+                        Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(Icons.info_outline,
+                            const Icon(Icons.info_outline,
                                 color: Colors.amber, size: 20),
-                            SizedBox(width: 5),
-                            Flexible(
-                              child: Text(
-"يمكنك إلغاء الحجز بعد مرور ساعة واحدة بالضبط إذا لم يجيب صاحب الملعب على طلبك. \nولا يمكنك حجز ملعب آخر أثناء وجود حجز معلق. \n\nسيقوم صاحب الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم دفع هذا المبلغ الآن كرسوم حجز فقط، وسيتعين عليك دفع المبلغ المتبقي لصاحب الملعب بعد او قبل الانتهاء من اللعب.",
-                                style: TextStyle(
-                                  fontSize: 14.5,
-                                  height: 1.5,
-                                  color: Colors.black87,
-                                ),
-                              ),
+                            const SizedBox(width: 5),
+Flexible(
+                              child: RichText(
+  text:  TextSpan(
+    style: const TextStyle(
+      fontSize: 14.5,
+      height: 1.5,
+      color: Colors.black87,
+      fontFamily: "Changa"
+    ),
+    children: [
+      const TextSpan(
+        text:
+            "في حالة بقاء حجزك قيد الانتظار فيمكنك الغاء الحجز بعد مرور 20 دقيقة بالضبط.\n"
+            "ولا يمكنك حجز ملعب آخر أثناء وجود حجز قيد الانتظار.\n\n"
+            "سيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\n"
+            "سيتم خصم مبلغ الحجز ",
+      ),
+      TextSpan(
+        text: "$totalBookingPrice د.ل",
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const TextSpan(
+        text: " في لحظة قبول مدير الملعب لطلبك، وسيتعين عليك دفع ",
+      ),
+      TextSpan(
+        text: "${remaining.toStringAsFixed(2)} د.ل",
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      const TextSpan(
+        text: " لمدير الملعب بعد او قبل الانتهاء من اللعب.",
+      ),
+    ],
+  ),
+)
+
                             ),
                           ],
                         ),
