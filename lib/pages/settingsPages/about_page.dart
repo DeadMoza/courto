@@ -8,7 +8,7 @@ class AboutAppPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("حول التطبيق"),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
       ),
       backgroundColor: Colors.red[50],

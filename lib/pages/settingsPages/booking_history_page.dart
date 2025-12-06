@@ -35,6 +35,7 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
     await fetchBookings(userId);
   }
 
+
   Future<void> fetchBookings(int userId) async {
     try {
       final response = await http.get(
@@ -44,12 +45,13 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
           'x-api-key': '${dotenv.env['API_KEY']}'
         },
       );
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+
         if (data["success"] == true) {
           List<Map<String, dynamic>> rawBookings =
               List<Map<String, dynamic>>.from(data["data"]);
+              print(rawBookings);
 
       // Format & sort bookings
       rawBookings = rawBookings.map((b) {
@@ -110,173 +112,233 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
     }
   }
 
-  Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final fieldName = booking["field_name"] ?? "";
-    final bookingDate = booking["booking_date_fmt"] ?? "";
-    final startTime = booking["booking_start_time_fmt"] ?? "";
-    final endTime = booking["booking_end_time_fmt"] ?? "";
-    final remainingPrice = booking["booking_remaining_price"] ?? 0;
-    final status = booking["booking_status_fmt"] ?? "غير معروف";
-    final rawStatus = booking["booking_status"] ?? "";
-    String creationDate = "";
+
+  
+
+Widget _buildBookingCard(Map<String, dynamic> booking) {
+  bool isBookingFinished() {
     try {
-      final rawDate = booking["booking_creation_date"];
-      if (rawDate != null && rawDate.isNotEmpty) {
-        // Parse as UTC, then convert to local
-        final parsedDate = DateTime.parse(rawDate).toLocal();
+      final date = DateTime.parse(booking["booking_date"]);
+      final end = booking["booking_end_time"]; 
 
-        String formatted = DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
+      final endParts = end.split(":");
+      final endTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        int.parse(endParts[0]),
+        int.parse(endParts[1]),
+      );
 
-        // Replace Arabic-Indic digits with Latin digits
-        creationDate = formatted.replaceAllMapped(
-          RegExp(r'[٠١٢٣٤٥٦٧٨٩]'),
-          (m) => '٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!).toString(),
-        );
-      }
+      return DateTime.now().isAfter(endTime) &&
+             booking["booking_status"] == "confirmed";
     } catch (_) {
-      creationDate = booking["booking_creation_date"] ?? "";
+      return false;
     }
+  }
 
+  final showReviewBanner =
+      isBookingFinished() && booking["booking_is_reviewed"] == false;
 
+  final fieldName = booking["field_name"] ?? "";
+  final bookingDate = booking["booking_date_fmt"] ?? "";
+  final startTime = booking["booking_start_time_fmt"] ?? "";
+  final endTime = booking["booking_end_time_fmt"] ?? "";
+  final remainingPrice = booking["booking_remaining_price"] ?? 0;
+  final status = booking["booking_status_fmt"] ?? "غير معروف";
+  final rawStatus = booking["booking_status"] ?? "";
+  String creationDate = "";
 
+  try {
+    final rawDate = booking["booking_creation_date"];
+    if (rawDate != null && rawDate.isNotEmpty) {
+      final parsedDate = DateTime.parse(rawDate).toLocal();
+      String formatted =
+          DateFormat("d MMMM y, HH:mm", "ar").format(parsedDate);
 
-    Color statusColor;
-    switch (rawStatus) {
-      case "confirmed":
-        statusColor = Colors.red;
-        break;
-      case "pending":
-        statusColor = Colors.orange;
-        break;
-      default:
-        statusColor = Colors.grey;
+      creationDate = formatted.replaceAllMapped(
+        RegExp(r'[٠١٢٣٤٥٦٧٨٩]'),
+        (m) => '٠١٢٣٤٥٦٧٨٩'.indexOf(m[0]!).toString(),
+      );
     }
+  } catch (_) {
+    creationDate = booking["booking_creation_date"] ?? "";
+  }
 
-    return InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-            builder: (_) => BookingDetailsPage(booking: booking),
-            ),
-          );
-        },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(5),
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.red.withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            )
-          ],
+  Color statusColor;
+  switch (rawStatus) {
+    case "confirmed":
+      statusColor = Colors.red;
+      break;
+    case "pending":
+      statusColor = Colors.orange;
+      break;
+    default:
+      statusColor = Colors.grey;
+  }
+
+  return InkWell(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookingDetailsPage(booking: booking),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Field name + status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      fieldName,
-                      style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: statusColor),
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-      
-              // Date
-              Row(
-                children: [
-                  const Icon(Icons.calendar_month,
-                      color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    bookingDate,
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-      
-              // Time
-              Row(
-                children: [
-                  const Icon(Icons.access_time_filled,
-                      color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    "$startTime - $endTime",
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-      
-              // Price
-              Row(
-                children: [
-                  const Icon(Icons.payments_rounded,
-                      color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    "$remainingPrice د.ل",
-                    style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Creation date
-                            Row(
-                children: [
-                  const Icon(Icons.history,
-                      color: Colors.redAccent, size: 18),
-                  const SizedBox(width: 6),
-                  Text(
-                    creationDate,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
+      );
+    },
+    child: Stack(
+      children: [
+        // CARD
+        Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(5),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.red.withOpacity(0.15),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              )
             ],
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        fieldName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.redAccent,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: statusColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(5),
+                        border: Border.all(color: statusColor),
+                      ),
+                      child: Text(
+                        status,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                Row(
+                  children: [
+                    const Icon(Icons.calendar_month,
+                        color: Colors.redAccent, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      bookingDate,
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_filled,
+                        color: Colors.redAccent, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      "$startTime - $endTime",
+                      style:
+                          const TextStyle(fontSize: 14, color: Colors.black54),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                Row(
+                  children: [
+                    const Icon(Icons.payments_rounded,
+                        color: Colors.redAccent, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      "$remainingPrice د.ل",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    const Icon(Icons.history,
+                        color: Colors.redAccent, size: 18),
+                    const SizedBox(width: 6),
+                    Text(
+                      creationDate,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
-    );
-  }
+
+        if (showReviewBanner)
+          Positioned(
+            left: 12,
+            bottom: 28,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: Colors.orange),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.rate_review, size: 18, color: Colors.orange),
+                  SizedBox(width: 6),
+                  Text(
+                    "تقييمك!",
+                    style: TextStyle(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+      ],
+    ),
+  );
+}
+
 
   Widget _buildContent() {
     if (loading) {
@@ -329,7 +391,7 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
         backgroundColor: Colors.red[50],
         appBar: AppBar(
           title: const Text("سجل الحجوزات",),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
           foregroundColor: Colors.white,
         ),
         body: SafeArea(child: _buildContent()),

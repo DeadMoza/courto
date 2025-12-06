@@ -5,7 +5,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'pages/home_page.dart';
-import 'pages/settings_page.dart';
 import 'services/auth_service.dart';
 
 void main() async {
@@ -59,7 +58,6 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const HomePage(),
-        '/settingsPage': (context) => const SettingsPage(),
         '/bookingHistoryPage': (context) => const BookingsHistoryPage(),
       },
     );

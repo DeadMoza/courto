@@ -298,7 +298,7 @@ Future<void> _fetchCarouselItems() async {
       ),
 
       const TeamsPage(),
-      const SettingsPage(key: PageStorageKey('SettingsPage')),
+      SettingsPage(key: PageStorageKey('SettingsPage'), fields: _fields),
     ];
 
     setState(() {});

@@ -1,4 +1,5 @@
 import 'package:courto/pages/login_page.dart';
+import 'package:courto/pages/settingsPages/favorites_page.dart';
 import 'package:courto/pages/settingsPages/policy_page.dart';
 import 'package:courto/pages/settingsPages/support_page.dart';
 import 'package:courto/pages/signup_page.dart';
@@ -8,12 +9,17 @@ import '../charge_wallet_dialog.dart';
 import '../services/auth_service.dart';
 import 'settingsPages/booking_history_page.dart';
 
-// Note: Assuming a separate page for Policy exists or will be created
-// import 'settingsPages/policy_page.dart'; 
-
 
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+    final List<Map<String, dynamic>> fields;
+
+  
+  const SettingsPage(
+    {
+      super.key,
+      required this.fields,
+    }
+  );
 
   void _logout(BuildContext context) async {
     // Perform session clear
@@ -93,6 +99,7 @@ void _showLogoutConfirmation(BuildContext parentContext) {
 
   @override
   Widget build(BuildContext context) {
+    print(fields);
     final isLoggedIn = AuthService.isLoggedIn;
     final String userName = isLoggedIn ? AuthService.fullName : "يرجى تسجيل الدخول"; 
 
@@ -119,9 +126,19 @@ void _showLogoutConfirmation(BuildContext parentContext) {
 
               SettingsTile(
                 icon: Icons.favorite,
-                title: "المفضلة",
+                title: "الملاعب المفضلة",
                 onTap: () {
-                  
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => FavoritesPage(fields: fields)));
+                },
+              ),
+
+              const Divider(height: 1),
+
+              SettingsTile(
+                icon: Icons.support_agent,
+                title: "الدعم و المساعدة",
+                onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportPage()));
                 },
               ),
 
@@ -134,19 +151,10 @@ void _showLogoutConfirmation(BuildContext parentContext) {
                   showChargeWalletDialog(context);
                 },
               ),
+              const Divider(height: 1),
             ],
             
         
-            const Divider(height: 1),
-
-            SettingsTile(
-              icon: Icons.support_agent,
-              title: "الدعم",
-              onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SupportPage()));
-              },
-            ),
-            const Divider(height: 1),
 
             SettingsTile(
               icon: Icons.policy,
