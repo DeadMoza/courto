@@ -24,7 +24,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   // Placeholder state for the favorite button
   bool _isFavorite = false; // FAVORITE STATUS
   bool _loadingFavorite = false; // avoid spam tapping
-  final userId = AuthService.userData!["id"];
+  int? userId = AuthService.userData?["id"];
   final apiKey = dotenv.env['API_KEY'];
 
   // New state variables for reviews
@@ -46,8 +46,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       }
     });
     mapFieldTypes();
-    checkFavorite();
-    fetchFieldReviews(); // Call the new fetch method
+    if (AuthService.isLoggedIn) {
+      checkFavorite();
+    }
+      fetchFieldReviews();
   }
 
   // --- New Review Fetch Method ---
@@ -485,7 +487,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                 color: _isFavorite ? Colors.redAccent : Colors.grey[700],
                 size: 30,
               ),
-              onPressed: toggleFavorite,
+              onPressed:  AuthService.isLoggedIn ? toggleFavorite : null,
             ),
           ),
         ],

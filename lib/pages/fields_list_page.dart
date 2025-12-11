@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:ui' as ui;
 import 'dart:math' show cos, sqrt, asin;
-import '../constants.dart';
+import '../constants.dart'; 
 import 'bookingsPages/field_details_page.dart';
 
 
@@ -17,6 +17,7 @@ class FieldsListPage extends StatefulWidget {
 
   final Function(int newCityId) onCityChanged;
   final List<Map<String, dynamic>> cities;
+  final int defaultSelectedTypeId;
 
   const FieldsListPage({
     super.key,
@@ -28,6 +29,7 @@ class FieldsListPage extends StatefulWidget {
     this.errorMessage,
     required this.onCityChanged,
     required this.cities,
+    required this.defaultSelectedTypeId,
   });
 
   @override
@@ -38,11 +40,11 @@ class _FieldsListPageState extends State<FieldsListPage> {
   final ScrollController _scrollController = ScrollController();
 
   List<Map<String, dynamic>> _filteredFields = [];
-  int _selectedTypeId = 1; // Default to Football
   int _selectedSort = 1; // 1 = closest, 2 = cheapest
-
-  // New State for City Filter
   
+  // NOTE: This variable is initialized in _applyDefaultSelectionAndFilters
+  late int _selectedTypeId; 
+
   late int _selectedCityId; // Holds the currently selected City ID
 
   late double _userLat;
@@ -56,27 +58,43 @@ class _FieldsListPageState extends State<FieldsListPage> {
     _userLng = widget.user_long ?? 0;
     _selectedCityId = widget.cityId; 
 
-    _applyFilters();
+    // Use the combined method for initial setup
+    _applyDefaultSelectionAndFilters();
   }
 
   @override
   void didUpdateWidget(covariant FieldsListPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     
-    if (oldWidget.fields != widget.fields || oldWidget.cityId != widget.cityId) {
-     
+    // Check if the data, city, or the default selection type has changed
+    if (oldWidget.fields != widget.fields || 
+        oldWidget.cityId != widget.cityId || 
+        oldWidget.defaultSelectedTypeId != widget.defaultSelectedTypeId) { // <-- Crucial check for navigation
+      
       if (oldWidget.cityId != widget.cityId) {
         _selectedCityId = widget.cityId;
       }
-      _applyFilters();
+      
+      _applyDefaultSelectionAndFilters();
     }
   }
+  
+  // New method to apply the initial filter selected from the home screen
+  void _applyDefaultSelectionAndFilters() {
+    // 1. Set the correct category ID from the parent widget before filtering
+    _selectedTypeId = widget.defaultSelectedTypeId; 
 
-  // API Call to fetch Cities
-
-
+    // 2. Now apply the filters
+    _applyFilters();
+  }
 
   void _applyFilters() {
+    // Check if the widget fields list is null or empty before proceeding
+    if (widget.fields.isEmpty) {
+      setState(() => _filteredFields = []);
+      return;
+    }
+    
     List<Map<String, dynamic>> result = List.from(widget.fields);
 
     // 1. Pre-calculate and store distance (Performance optimization)
@@ -89,20 +107,19 @@ class _FieldsListPageState extends State<FieldsListPage> {
         ...f,
         'calculated_distance': distance,
         'calculated_total_price': double.tryParse(
-                                  f["field_has_discount"] == true
-                                      ? f["field_calculated_total_price_after_discount"]?.toString() ?? "0"
-                                      : f["field_calculated_total_price"]?.toString() ?? "0"
-                                ) ?? 0,
+                                    f["field_has_discount"] == true
+                                        ? f["field_calculated_total_price_after_discount"]?.toString() ?? "0"
+                                        : f["field_calculated_total_price"]?.toString() ?? "0"
+                                  ) ?? 0,
 
-                                  'original_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
-                                  'discount_price': double.tryParse(f["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0,
-                                  'has_discount': f["field_has_discount"] == true,
+        'original_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
+        'discount_price': double.tryParse(f["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0,
+        'has_discount': f["field_has_discount"] == true,
 
-                                };
+                              };
 
     }).toList();
 
-    // 2. Filter by type
     String typeName = _getTypeName(_selectedTypeId);
     result = result.where((f) {
       return f["field_type"]?.toString() == typeName;
@@ -137,7 +154,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
       case 7: return "paintball";
       case 8: return "golf";
       case 9: return "vollyball";
-      default: return "";
+      default: return ""; // Should ideally not happen if typeId is controlled
     }
   }
 
@@ -148,8 +165,8 @@ class _FieldsListPageState extends State<FieldsListPage> {
       case 3: return "تنس";
       case 4: return "بادل";
       case 5: return "بادبول";
-      case 6: return "كارت";
-      case 7: return "بينت بول";
+      case 6: return "كارتينج";
+      case 7: return "بينتبول";
       case 8: return "قولف";
       case 9: return "كرة الطائرة";
       default: return "الكل";
@@ -163,7 +180,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
     )['city_name'] as String;
   }
 
-  // Haversine formula remains the same
+  // Haversine formula
   double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
     if (lat1 == 0 || lon1 == 0 || lat2 == 0 || lon2 == 0) return double.infinity;
     const p = 0.017453292519943295;
@@ -184,213 +201,109 @@ class _FieldsListPageState extends State<FieldsListPage> {
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-              content: SingleChildScrollView(
-                // Ensure scrollability and center the content
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center, // Center columns content
-                    children: [
-                      // --- City Filter Section ---
-                      const Text("اختر المدينة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 6),
-                      if (widget.cities.isEmpty)
-                        const Center(child: Text("جاري تحميل المدن...", style: TextStyle(color: Colors.grey)))
-                      else
-                        Wrap(
-                          alignment: WrapAlignment.start, 
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: widget.cities.map((city) {
-                            final cityId = city['city_id'] as int;
-                            final cityName = city['city_name'] as String;
-                            return _buildCityChip(
-                              label: cityName,
-                              cityId: cityId,
-                              selected: tempSelectedCityId == cityId,
-                              onTap: () {
-                                setState(() => _selectedCityId = cityId);
-                                Navigator.pop(context);
-                                widget.onCityChanged(cityId); 
-                              },
-                            );
-                          }).toList(),
-
-                        ),
-
-                      const SizedBox(height: 5),
-                      const Divider(),
-
-                      // --- Field Type Filter Section ---
-                      const Text("اختر نوع الملعب", 
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 12),
-
-                      SizedBox(
-                        height: 120, // Enough height for the boxes
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              const SizedBox(width: 8),
-
-                              _buildTypeBox(
-                                icon: Icons.sports_soccer,
-                                label: "كرة القدم",
-                                typeId: 1,
-                                selected: tempSelectedTypeId == 1,
+            return Directionality(
+              textDirection: ui.TextDirection.rtl, // Apply RTL to dialog content
+              child: AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+                content: SingleChildScrollView(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center, 
+                      children: [
+                        // --- City Filter Section ---
+                        const Text("اختر المدينة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 6),
+                        if (widget.cities.isEmpty)
+                          const Center(child: Text("جاري تحميل المدن...", style: TextStyle(color: Colors.grey)))
+                        else
+                          Wrap(
+                            alignment: WrapAlignment.start, 
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: widget.cities.map((city) {
+                              final cityId = city['city_id'] as int;
+                              final cityName = city['city_name'] as String;
+                              return _buildCityChip(
+                                label: cityName,
+                                cityId: cityId,
+                                selected: tempSelectedCityId == cityId,
                                 onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 1);
-                                  setState(() => _selectedTypeId = 1);
+                                  // City change is special: update main state, trigger new fetch in HomePage, close dialog
+                                  setState(() => _selectedCityId = cityId);
                                   Navigator.pop(context);
-                                  _applyFilters();
+                                  widget.onCityChanged(cityId); // Triggers Home to fetch new fields
                                 },
-                              ),
-                              const SizedBox(width: 12),
+                              );
+                            }).toList(),
 
-                              _buildTypeBox(
-                                icon: Icons.sports_basketball,
-                                label: "كرة السلة",
-                                typeId: 2,
-                                selected: tempSelectedTypeId == 2,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 2);
-                                  setState(() => _selectedTypeId = 2);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
+                          ),
 
-                              _buildTypeBox(
-                                icon: Icons.sports_baseball,
-                                label: "تنس",
-                                typeId: 3,
-                                selected: tempSelectedTypeId == 3,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 3);
-                                  setState(() => _selectedTypeId = 3);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
+                        const SizedBox(height: 5),
+                        const Divider(),
 
-                              _buildTypeBox(
-                                icon: Icons.sports_tennis,
-                                label: "بادل",
-                                typeId: 4,
-                                selected: tempSelectedTypeId == 4,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 4);
-                                  setState(() => _selectedTypeId = 4);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
+                        // --- Field Type Filter Section ---
+                        const Text("اختر نوع الملعب", 
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
 
-                              _buildTypeBox(
-                                icon: Icons.sports_soccer, // Replace if you want custom icon
-                                label: "بادبول",
-                                typeId: 5,
-                                selected: tempSelectedTypeId == 5,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 5);
-                                  setState(() => _selectedTypeId = 5);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
+                        SizedBox(
+                          height: 120, // Enough height for the boxes
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                const SizedBox(width: 8),
 
-                              _buildTypeBox(
-                                icon: Icons.airline_seat_recline_extra_rounded,
-                                label: "كارت",
-                                typeId: 6,
-                                selected: tempSelectedTypeId == 6,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 6);
-                                  setState(() => _selectedTypeId = 6);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
-
-                              _buildTypeBox(
-                                icon: Icons.format_paint_rounded,
-                                label: "بينت بول",
-                                typeId: 7,
-                                selected: tempSelectedTypeId == 7,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 7);
-                                  setState(() => _selectedTypeId = 7);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
-
-                              _buildTypeBox(
-                                icon: Icons.golf_course,
-                                label: "قولف",
-                                typeId: 8,
-                                selected: tempSelectedTypeId == 8,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 8);
-                                  setState(() => _selectedTypeId = 8);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 12),
-
-                              _buildTypeBox(
-                                icon: Icons.sports_volleyball,
-                                label: "كرة الطائرة",
-                                typeId: 9,
-                                selected: tempSelectedTypeId == 9,
-                                onTap: () {
-                                  setDialogState(() => tempSelectedTypeId = 9);
-                                  setState(() => _selectedTypeId = 9);
-                                  Navigator.pop(context);
-                                  _applyFilters();
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                            ],
+                                // Category Boxes - Use lambda functions to update state
+                                _buildTypeBox(icon: Icons.sports_soccer, label: "كرة القدم", typeId: 1, selected: tempSelectedTypeId == 1, onTap: () { setDialogState(() => tempSelectedTypeId = 1); setState(() => _selectedTypeId = 1); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.sports_basketball, label: "كرة السلة", typeId: 2, selected: tempSelectedTypeId == 2, onTap: () { setDialogState(() => tempSelectedTypeId = 2); setState(() => _selectedTypeId = 2); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.sports_baseball, label: "تنس", typeId: 3, selected: tempSelectedTypeId == 3, onTap: () { setDialogState(() => tempSelectedTypeId = 3); setState(() => _selectedTypeId = 3); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.sports_tennis, label: "بادل", typeId: 4, selected: tempSelectedTypeId == 4, onTap: () { setDialogState(() => tempSelectedTypeId = 4); setState(() => _selectedTypeId = 4); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.sports_soccer, label: "بادبول", typeId: 5, selected: tempSelectedTypeId == 5, onTap: () { setDialogState(() => tempSelectedTypeId = 5); setState(() => _selectedTypeId = 5); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.airline_seat_recline_extra_rounded, label: "كارت", typeId: 6, selected: tempSelectedTypeId == 6, onTap: () { setDialogState(() => tempSelectedTypeId = 6); setState(() => _selectedTypeId = 6); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.format_paint_rounded, label: "بينت بول", typeId: 7, selected: tempSelectedTypeId == 7, onTap: () { setDialogState(() => tempSelectedTypeId = 7); setState(() => _selectedTypeId = 7); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.golf_course, label: "قولف", typeId: 8, selected: tempSelectedTypeId == 8, onTap: () { setDialogState(() => tempSelectedTypeId = 8); setState(() => _selectedTypeId = 8); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 12),
+                                _buildTypeBox(icon: Icons.sports_volleyball, label: "كرة الطائرة", typeId: 9, selected: tempSelectedTypeId == 9, onTap: () { setDialogState(() => tempSelectedTypeId = 9); setState(() => _selectedTypeId = 9); Navigator.pop(context); _applyFilters(); }),
+                                const SizedBox(width: 8),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
-                      const SizedBox(height: 20),
-                      const Divider(),
+                        const SizedBox(height: 20),
+                        const Divider(),
 
-                      // --- Sorting Section ---
-                      const Text("ترتيب حسب", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildSortBox(label: "الأقرب", selected: tempSelectedSort == 1, onTap: () {
-                            // SORT CHANGE: Update dialog state, main state, close dialog, apply filter
-                            setDialogState(() => tempSelectedSort = 1);
-                            setState(() => _selectedSort = tempSelectedSort);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                          _buildSortBox(label: "الأرخص", selected: tempSelectedSort == 2, onTap: () {
-                            setDialogState(() => tempSelectedSort = 2);
-                            setState(() => _selectedSort = tempSelectedSort);
-                            Navigator.pop(context);
-                            _applyFilters();
-                          }),
-                        ],
-                      ),
-                    ],
+                        // --- Sorting Section ---
+                        const Text("ترتيب حسب", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _buildSortBox(label: "الأقرب", selected: tempSelectedSort == 1, onTap: () {
+                              setDialogState(() => tempSelectedSort = 1);
+                              setState(() => _selectedSort = tempSelectedSort);
+                              Navigator.pop(context);
+                              _applyFilters();
+                            }),
+                            _buildSortBox(label: "الأرخص", selected: tempSelectedSort == 2, onTap: () {
+                              setDialogState(() => tempSelectedSort = 2);
+                              setState(() => _selectedSort = tempSelectedSort);
+                              Navigator.pop(context);
+                              _applyFilters();
+                            }),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -409,44 +322,46 @@ class _FieldsListPageState extends State<FieldsListPage> {
 
     final baseUrl = apiUrl;
     try {
+      // Handles both absolute and relative path resolution
       return Uri.parse(baseUrl!).resolve(url).toString();
     } catch (e) {
+      // Fallback for non-standard path
       return baseUrl!.endsWith('/') ? '$baseUrl$url' : '$baseUrl/$url';
     }
   }
 
-Widget _buildCityChip({
-  required String label,
-  required int cityId,
-  required bool selected,
-  required VoidCallback onTap,
-}) {
-  // Disable non-Tripoli cities
-  bool isTripoli = label == 'طرابلس' || label.toLowerCase() == 'tripoli';
-  bool isDisabled = !isTripoli;
+  Widget _buildCityChip({
+    required String label,
+    required int cityId,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    // Disable non-Tripoli cities based on your business logic
+    bool isTripoli = label == 'طرابلس' || label.toLowerCase() == 'tripoli';
+    bool isDisabled = !isTripoli;
 
-  return GestureDetector(
-    onTap: isDisabled ? null : onTap, // disable tap if not Tripoli
-    child: Opacity(
-      opacity: isDisabled ? 0.4 : 1.0, // dim other cities
-      child: Chip(
-        label: Text(
-          label,
-          style: TextStyle(color: selected ? Colors.white : Colors.black87),
-        ),
-        backgroundColor:
-            selected ? Colors.redAccent : Colors.grey[200],
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(5),
-          side: BorderSide(
-            color: selected ? Colors.redAccent : Colors.grey[300]!,
-            width: selected ? 1.5 : 1,
+    return GestureDetector(
+      onTap: isDisabled ? null : onTap, // disable tap if not Tripoli
+      child: Opacity(
+        opacity: isDisabled ? 0.4 : 1.0, // dim other cities
+        child: Chip(
+          label: Text(
+            label,
+            style: TextStyle(color: selected ? Colors.white : Colors.black87),
+          ),
+          backgroundColor:
+              selected ? Colors.redAccent : Colors.grey[200],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+            side: BorderSide(
+              color: selected ? Colors.redAccent : Colors.grey[300]!,
+              width: selected ? 1.5 : 1,
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
 
   Widget _buildTypeBox({
@@ -698,19 +613,17 @@ Widget _buildCityChip({
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: Row( // Use Row for an inline, scrollable list of chips
+              child: Row( 
                 children: [
-                  // Added GestureDetector to open filter dialog
                   GestureDetector(
                     onTap: _showFilterDialog,
                     child: Chip(
-                      label: Text("المدينة: ${cityName}", style: const TextStyle(color: Colors.white)),
+                      label: Text("المدينة: $cityName", style: const TextStyle(color: Colors.white)),
                       backgroundColor: Colors.redAccent,
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Added GestureDetector to open filter dialog
                   GestureDetector(
                     onTap: _showFilterDialog,
                     child: Chip(
@@ -724,7 +637,6 @@ Widget _buildCityChip({
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Added GestureDetector to open filter dialog
                   GestureDetector(
                     onTap: _showFilterDialog,
                     child: Chip(
@@ -768,8 +680,12 @@ Widget _buildCityChip({
 
               if (widget.errorMessage != null) {
                 return Center(
-                    child: Text('حدث خطأ: ${widget.errorMessage}',
-                        style: const TextStyle(color: Colors.redAccent)));
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Text('حدث خطأ: ${widget.errorMessage}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.redAccent)),
+                    ));
               }
 
               if (_filteredFields.isEmpty) {

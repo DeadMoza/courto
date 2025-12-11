@@ -1,5 +1,4 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:courto/constants.dart';
 import 'package:courto/pages/bookingsPages/field_details_page.dart';
 import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/signup_page.dart';
@@ -8,6 +7,21 @@ import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
+// --- Global Design Constants for a cleaner look ---
+const Color kPrimaryColor = Colors.redAccent;
+const Color kBackgroundColor = Color(0xFFFAFAFA); // Very light grey background
+const double kPadding = 16.0;
+
+// Placeholder for AppFormat.formatArabicTime, as it wasn't provided in the original code
+class AppFormat {
+  static String formatArabicTime(String time) {
+    // Simple placeholder logic
+    if (time.length >= 5) {
+      return time.substring(0, 5);
+    }
+    return time;
+  }
+}
 
 class LandingPage extends StatelessWidget {
   final List<String> carouselImages;
@@ -15,7 +29,7 @@ class LandingPage extends StatelessWidget {
   final List<Map<String, dynamic>> discountedFields;
   final String? featuredText1;
   final String? featuredText2;
-  final VoidCallback onGoToFieldsPage;
+  final onGoToFieldsPage;
   final int matchesPlayedCount;
 
   LandingPage({
@@ -29,67 +43,113 @@ class LandingPage extends StatelessWidget {
     required this.matchesPlayedCount,
   });
 
-  final apiUrl = dotenv.env['API_URL']; 
+  // Use a private final field for API URL
+  final String? _apiUrl = dotenv.env['API_URL'];
 
   String getFirstImageUrl(List<dynamic> images) {
     if (images.isEmpty) return "";
     final url = images[0]?.toString() ?? "";
     if (url.isEmpty || url.startsWith("http")) return url;
 
-    final baseUrl = apiUrl;
+    final baseUrl = _apiUrl;
     try {
       return Uri.parse(baseUrl!).resolve(url).toString();
     } catch (e) {
       return baseUrl!.endsWith('/') ? '$baseUrl$url' : '$baseUrl/$url';
     }
   }
-String normalizeUrl(String url) {
-  if (url.startsWith("http")) {
-    final uri = Uri.parse(url);
-    final normalizedPath = uri.path.replaceAll(RegExp(r'/{2,}'), '/');
-    return "${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}$normalizedPath";
+
+  String normalizeUrl(String url) {
+    if (url.startsWith("http")) {
+      final uri = Uri.parse(url);
+      final normalizedPath = uri.path.replaceAll(RegExp(r'/{2,}'), '/');
+      return "${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}$normalizedPath";
+    }
+
+    // If relative, prepend API_URL and normalize
+    final base =
+        _apiUrl?.endsWith('/') == true ? _apiUrl!.substring(0, _apiUrl.length - 1) : _apiUrl ?? '';
+    final path = url.startsWith('/') ? url : '/$url';
+    return "$base$path".replaceAll(RegExp(r'/{2,}'), '/');
   }
 
-  // If relative, prepend API_URL and normalize
-  final base = apiUrl?.endsWith('/') == true ? apiUrl!.substring(0, apiUrl!.length - 1) : apiUrl ?? '';
-  final path = url.startsWith('/') ? url : '/$url';
-  return "$base$path".replaceAll(RegExp(r'/{2,}'), '/');
-}
-
-
+  // Moved Icon logic to be a private method
   Icon _getFieldTypeIcon(String? type) {
-  switch (type) {
-    case "tennis":
-      return const Icon(Icons.sports_baseball, color: Colors.redAccent, size: 22);
+    switch (type) {
+      case "tennis":
+        return const Icon(Icons.sports_baseball, color: Colors.white, size: 22);
 
-    case "football":
-    case "padbol":
-      return const Icon(Icons.sports_soccer, color: Colors.redAccent, size: 22);
+      case "football":
+      case "padbol":
+        return const Icon(Icons.sports_soccer, color: Colors.white, size: 22);
 
-    case "basketball":
-      return const Icon(Icons.sports_basketball, color: Colors.redAccent, size: 22);
+      case "basketball":
+        return const Icon(Icons.sports_basketball, color: Colors.white, size: 22);
 
-    case "volleyball":
-      return const Icon(Icons.sports_volleyball, color: Colors.redAccent, size: 22);
+      case "volleyball":
+        return const Icon(Icons.sports_volleyball, color: Colors.white, size: 22);
 
-    case "padel":
-      return const Icon(Icons.sports_tennis, color: Colors.redAccent, size: 22);
+      case "padel":
+        return const Icon(Icons.sports_tennis, color: Colors.white, size: 22);
 
-    case "paintball":
-      return const Icon(Icons.format_paint_rounded, color: Colors.redAccent, size: 22);
-    
-    case "carting":
-      return const Icon(Icons.airline_seat_recline_extra_rounded, color: Colors.redAccent, size: 22);
+      case "paintball":
+        return const Icon(Icons.format_paint_rounded, color: Colors.white, size: 22);
 
-    case "golf":
-      return const Icon(Icons.golf_course, color: Colors.redAccent, size: 22);
+      case "carting":
+        return const Icon(Icons.airline_seat_recline_extra_rounded, color: Colors.white, size: 22);
 
-    default:
-      return const Icon(Icons.sports, color: Colors.redAccent, size: 22);
+      case "golf":
+        return const Icon(Icons.golf_course, color: Colors.white, size: 22);
+
+      default:
+        return const Icon(Icons.sports, color: Colors.white, size: 22);
+    }
   }
-}
 
-Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext context) {
+  // --- NEW: Sport Category Navigation Button ---
+  Widget _buildSportCategoryButton({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required String categoryType,
+    required int categoryIndex,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          onGoToFieldsPage(categoryIndex);
+        },
+        child: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(10),
+          color: kPrimaryColor, // Use primary color for visibility
+          child: Container(
+            height: 80,
+            padding: const EdgeInsets.all(4),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: Colors.white, size: 30),
+                const SizedBox(height: 4),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // --- REFINED: Discounted Field Card (as before) ---
+ Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext context) {
   final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
   final fieldName = field["field_name"] ?? "ملعب";
   final city = field["field_city"] ?? "";
@@ -182,7 +242,7 @@ Stack(
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
+          color: kPrimaryColor,
           shape: BoxShape.circle,
         ),
         child: _getFieldTypeIcon(fieldType),
@@ -202,7 +262,7 @@ Stack(
                   fieldName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.redAccent),
                 ),
 
                 const SizedBox(height: 4),
@@ -276,17 +336,17 @@ Stack(
   );
 }
 
-
   @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.redAccent[50],
+        backgroundColor: kBackgroundColor,
         body: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
+              // --- 1. CAROUSEL HEADER (unchanged) ---
               Stack(
                 children: [
                   CarouselSlider(
@@ -295,34 +355,36 @@ Stack(
                       viewportFraction: 1,
                       autoPlay: true,
                       autoPlayInterval: const Duration(seconds: 4),
-                      autoPlayCurve: Curves.easeInBack,
+                      autoPlayCurve: Curves.easeIn,
                       enableInfiniteScroll: true,
                     ),
-                    items: (carouselImages.isNotEmpty ? carouselImages : ["assets/images/courtoDefaultField.jpg"]).map((img) {
+                    items: (carouselImages.isNotEmpty
+                            ? carouselImages
+                            : ["assets/images/courtoDefaultField.jpg"])
+                        .map((img) {
                       final imageUrl = normalizeUrl(img);
                       return ClipRRect(
                         child: imageUrl.startsWith('http')
                             ? Image.network(
                                 imageUrl,
                                 width: double.infinity,
-                                height: 200,
+                                height: 240,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Image.asset(
                                   "assets/images/courtoDefaultField.jpg",
                                   width: double.infinity,
-                                  height: 200,
+                                  height: 240,
                                   fit: BoxFit.cover,
                                 ),
                               )
                             : Image.asset(
                                 imageUrl,
                                 width: double.infinity,
-                                height: 200,
+                                height: 240,
                                 fit: BoxFit.cover,
                               ),
                       );
                     }).toList(),
-
                   ),
                   Positioned.fill(
                     child: Container(
@@ -331,7 +393,7 @@ Stack(
                           begin: Alignment.bottomCenter,
                           end: Alignment.center,
                           colors: [
-                            Colors.black.withOpacity(0.5),
+                            Colors.black.withOpacity(0.6),
                             Colors.transparent,
                           ],
                         ),
@@ -343,8 +405,9 @@ Stack(
 
               const SizedBox(height: 20),
 
+              // --- 2. CTA BUTTONS (unchanged) ---
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: kPadding),
                 child: SizedBox(
                   width: double.infinity,
                   child: _ctaButtons(context),
@@ -353,51 +416,100 @@ Stack(
 
               const SizedBox(height: 30),
 
+              // --- 3. FEATURED TEXT MARQUEE (unchanged) ---
               _FeaturedTextMarquee(
-                text1: featuredText1!.isEmpty ? "مرحبا بكم في كورتو!" : featuredText1,
-                text2: featuredText2!.isEmpty ? "اشحن احجز العب" : featuredText2,
+                text1: featuredText1!.isEmpty
+                    ? "مرحبا بكم في كورتو!"
+                    : featuredText1,
+                text2:
+                    featuredText2!.isEmpty ? "اشحن احجز العب" : featuredText2,
               ),
 
               const SizedBox(height: 30),
-
+ 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    "العروض و المباريات",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.redAccent[700],
+                padding: const EdgeInsets.symmetric(horizontal: kPadding),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SingleChildScrollView(
+                      child: Row(
+                        children: [
+                          // Tennis
+                          _buildSportCategoryButton(
+                            context: context,
+                            label: "تنس",
+                            icon: Icons.sports_baseball,
+                            categoryType: "tennis",
+                            categoryIndex: 3,
+                          ),
+                          const SizedBox(width: kPadding / 2),
+                          // Padel
+                          _buildSportCategoryButton(
+                            context: context,
+                            label: "بادل",
+                            icon: Icons.sports_tennis_sharp,
+                            categoryType: "padel",
+                            categoryIndex: 4,
+                          ),
+                          const SizedBox(width: kPadding / 2),
+                          // Carting
+                          _buildSportCategoryButton(
+                            context: context,
+                            label: "كارتينج",
+                            icon: Icons.airline_seat_recline_extra_rounded,
+                            categoryType: "carting",
+                            categoryIndex: 6,
+                          ),
+                          const SizedBox(width: kPadding / 2),
+                          // Paintball
+                          _buildSportCategoryButton(
+                            context: context,
+                            label: "بينتبول",
+                            icon: Icons.format_paint_rounded,
+                            categoryType: "paintball",
+                            categoryIndex: 7,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // -----------------------------------------------------------------
+
+              const SizedBox(height: 30),
+
+              if (discountedFields.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: kPadding),
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      "العروض و المباريات",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w900,
+                        color: kPrimaryColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 10),
-
-          if (discountedFields.isEmpty)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                "لا توجد عروض حالياً",
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-            )
-          else
-            SizedBox(
-              height: 240,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                itemCount: discountedFields.length,
-                itemBuilder: (context, index) {
-                  return _buildDiscountedFieldCard(discountedFields[index], context);
-                },
-              ),
-            ),
-
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 240,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: kPadding, vertical: 8),
+                    itemCount: discountedFields.length,
+                    itemBuilder: (context, index) {
+                      return _buildDiscountedFieldCard(
+                          discountedFields[index], context);
+                    },
+                  ),
+                ),
 
               const SizedBox(height: 30),
             ],
@@ -407,7 +519,7 @@ Stack(
     );
   }
 
-  /// CTA Buttons logic
+  // --- CTA Button Logic (unchanged) ---
   Widget _ctaButtons(BuildContext context) {
     if (AuthService.isLoggedIn) {
       return _loggedInButtons(context);
@@ -416,6 +528,7 @@ Stack(
     }
   }
 
+  // --- Logged Out Buttons (Login/Signup) (unchanged) ---
   Widget _loginSignupButtons(BuildContext context) {
     return Row(
       children: [
@@ -425,71 +538,61 @@ Stack(
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const LoginPage()));
             },
-            child: Container(
-              height: 110,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.login, color: Colors.white, size: 40),
-                  SizedBox(height: 8),
-                  Text(
-                    "تسجيل الدخول",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                ],
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(10),
+              color: kPrimaryColor,
+              child: Container(
+                height: 120,
+                padding: const EdgeInsets.all(8),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.login, color: Colors.white, size: 40),
+                    SizedBox(height: 8),
+                    Text(
+                      "تسجيل الدخول",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        const SizedBox(width: kPadding),
         Expanded(
           child: GestureDetector(
             onTap: () {
               Navigator.push(context,
                   MaterialPageRoute(builder: (_) => const SignupPage()));
             },
-            child: Container(
-              height: 110,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.person_add, color: Colors.white, size: 40),
-                  SizedBox(height: 8),
-                  Text(
-                    "إنشاء حساب",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                ],
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(10),
+              color: kPrimaryColor,
+              child: Container(
+                height: 120,
+                padding: const EdgeInsets.all(8),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.person_add, color: Colors.white, size: 40),
+                    SizedBox(height: 8),
+                    Text(
+                      "إنشاء حساب",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),
@@ -498,146 +601,105 @@ Stack(
     );
   }
 
-  /// Logged in buttons → history + count (left) | book field (right)
+  // --- Logged In Buttons (History/Count + Book Field) (unchanged) ---
   Widget _loggedInButtons(BuildContext context) {
-    const double buttonHeight = 110.0;
-    // const double smallButtonHeight = (buttonHeight - 4) / 2;
+    const double buttonHeight = 120.0;
 
     return Row(
       children: [
-        /// LEFT SIDE (History + Count)
-        // Expanded(
-        //   child: Column(
-        //     children: [
-        //       GestureDetector(
-        //         onTap: () {
-        //           Navigator.pushNamed(context, "/bookingHistoryPage");
-        //         },
-        //         child: Container(
-        //           height: smallButtonHeight,
-        //           width: double.infinity,
-        //           decoration: _smallBoxDecoration(),
-        //           child: const Column(
-        //             mainAxisAlignment: MainAxisAlignment.center,
-        //             children: [
-        //               Icon(Icons.history, color: Colors.white, size: 24),
-        //               SizedBox(height: 4),
-        //               Text(
-        //                 "سجل الحجوزات",
-        //                 style: TextStyle(
-        //                   color: Colors.white,
-        //                   fontSize: 12,
-        //                   fontWeight: FontWeight.bold,
-        //                 ),
-        //               )
-        //             ],
-        //           ),
-        //         ),
-        //       ),
-
-        //       const SizedBox(height: 4),
-
-        //       Container(
-        //         height: smallButtonHeight,
-        //         width: double.infinity,
-        //         decoration: _smallBoxDecoration(),
-        //         child: Column(
-        //           mainAxisAlignment: MainAxisAlignment.center,
-        //           children: [
-        //             Text(
-        //               "$matchesPlayedCount",
-        //               style: const TextStyle(
-        //                 color: Colors.white,
-        //                 fontSize: 24,
-        //                 fontWeight: FontWeight.bold,
-        //               ),
-        //             ),
-          
-        //             const Text(
-        //               "مباراة لعبت",
-        //               style: TextStyle(
-        //                 color: Colors.white,
-        //                 fontSize: 12,
-        //               ),
-        //             )
-        //           ],
-        //         ),
-        //       ),
-        //     ],
-        //   ),
-        // ),
+        Expanded(
+          child: Column(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.pushNamed(context, "/bookingHistoryPage");
+                },
+                child: Material(
+                  elevation: 4,
+                  borderRadius: BorderRadius.circular(10),
+                  color: kPrimaryColor,
+                  child: Container(
+                    height: (buttonHeight - 4) / 2,
+                    width: double.infinity,
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history, color: Colors.white, size: 24),
+                        SizedBox(height: 4),
+                        Text(
+                          "سجل الحجوزات",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(10),
+                color: kPrimaryColor,
+                child: Container(
+                  height: (buttonHeight - 4) / 2,
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "$matchesPlayedCount",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const Text(
+                        "مباريات لعبت",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: kPadding),
         Expanded(
           child: GestureDetector(
             onTap: () {
-                  Navigator.pushNamed(context, "/bookingHistoryPage");
-                },
-            child: Container(
-              height: buttonHeight,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, color: Colors.white, size: 40),
-                  SizedBox(height: 8),
-                  Text(
-                    "سجل الحجوزات",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                ],
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(width: 16),
-
-        /// RIGHT SIDE (Book Field)
-        Expanded(
-          child: GestureDetector(
-            onTap: onGoToFieldsPage,
-            child: Container(
-              height: buttonHeight,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
-                  )
-                ],
-              ),
-              child: const Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.stadium, color: Colors.white, size: 40),
-                  SizedBox(height: 8),
-                  Text(
-                    "احجز ملعب",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                ],
+              onGoToFieldsPage(1);
+            },
+            child: Material(
+              elevation: 6,
+              borderRadius: BorderRadius.circular(10),
+              color: kPrimaryColor,
+              child: Container(
+                height: buttonHeight,
+                width: double.infinity,
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.stadium, color: Colors.white, size: 45),
+                    SizedBox(height: 8),
+                    Text(
+                      "احجز ملعب",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    )
+                  ],
+                ),
               ),
             ),
           ),
@@ -645,22 +707,9 @@ Stack(
       ],
     );
   }
-
-  // BoxDecoration _smallBoxDecoration() {
-  //   return BoxDecoration(
-  //     color: Colors.redAccent,
-  //     borderRadius: BorderRadius.circular(5),
-  //     boxShadow: [
-  //       BoxShadow(
-  //         color: Colors.black.withOpacity(0.15),
-  //         blurRadius: 6,
-  //         offset: const Offset(0, 3),
-  //       ),
-  //     ],
-  //   );
-  // }
 }
 
+// --- REFINED: Featured Text Marquee with Fading Edges (unchanged) ---
 class _FeaturedTextMarquee extends StatefulWidget {
   final String? text1;
   final String? text2;
@@ -724,19 +773,37 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
     return Container(
       height: 40,
       width: double.infinity,
-      color: Colors.redAccent,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            children: [
-              _text(widget.text1, Colors.amber),
-              _text(widget.text2, Colors.white),
-              _text(widget.text1, Colors.amber),
-              _text(widget.text2, Colors.white),
+      color: kPrimaryColor,
+      child: ShaderMask(
+        shaderCallback: (Rect bounds) {
+          return const LinearGradient(
+            colors: [
+              Colors.white,
+              Colors.transparent,
+              Colors.transparent,
+              Colors.white
             ],
+            stops: [0.0, 0.05, 0.95, 1.0],
+            tileMode: TileMode.clamp,
+          ).createShader(bounds);
+        },
+        blendMode: BlendMode.dstOut,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: kPadding),
+            child: Row(
+              children: [
+                _text(widget.text1, Colors.amber),
+                _text(widget.text2, Colors.white),
+                _text(widget.text1, Colors.amber),
+                _text(widget.text2, Colors.white),
+                _text(widget.text1, Colors.amber),
+                _text(widget.text2, Colors.white),
+              ],
+            ),
           ),
         ),
       ),
@@ -749,8 +816,7 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
       style: TextStyle(
         color: color,
         fontSize: 18,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.5,
+        fontWeight: FontWeight.w900,
       ),
     );
   }

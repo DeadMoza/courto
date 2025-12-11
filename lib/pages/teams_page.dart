@@ -17,7 +17,7 @@ class TeamsPage extends StatelessWidget {
               Icon(Icons.storefront, size: 80, color: Colors.grey),
               SizedBox(height: 16),
               Text(
-                "قريباً سيتم فتح المتجر",
+                "قريباً سيتم فتح الجيهة",
                 style: TextStyle(
                   fontSize: 20,
                   color: Colors.grey,

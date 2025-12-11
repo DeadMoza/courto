@@ -1,6 +1,7 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/pages/landing_page.dart';
 import 'package:courto/pages/teams_page.dart';
+import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/location_service.dart';
@@ -39,13 +40,16 @@ class _HomePageState extends State<HomePage> {
   List<String> _carouselImages = [];
   String _carouselText1 = '';
   String _carouselText2 = '';
+  // ignore: unused_field
+  int _selectedTypeId = 1;
+  int _matchesPlayedCount = 0;
 
 
   List<Widget> _screens = [];
   Widget _buildPageTransition(int index) {
   final child = _screens[index];
 
-  // Don't animate the map page (index 1)
+  // Don't animate the map page (index 2)
   if (index == 2) return child;
 
   return AnimatedSwitcher(
@@ -76,6 +80,7 @@ class _HomePageState extends State<HomePage> {
     _fetchDiscountedFields();
     _detectCity();
     _fetchCarouselItems();
+    // _initScreens will be called at the end of _detectCity
   }
   
   void _handleCityChanged(int newCityId) {
@@ -170,9 +175,19 @@ Future<void> _fetchCarouselItems() async {
       _loadingCity = false;
     });
 
-    // Fetch fields after detecting the city
+    // Fetch city list and fields first
     await _fetchCities();
-    await _fetchFields();
+    await _fetchFields(); 
+    
+    // Fetch user-specific data
+    if (AuthService.isLoggedIn) {
+      // getMatchCount() has its own setState
+      await getMatchCount(); 
+    }
+
+    // FIX: This final call to _initScreens/setState ensures the LandingPage 
+    // is rebuilt with the matchesPlayedCount after it has been fetched.
+    _initScreens();
   }
 
   Future<void> _fetchFields() async {
@@ -211,7 +226,7 @@ Future<void> _fetchCarouselItems() async {
       _loadingFields = false;
     }
 
-    // Must call _initScreens *again* to pass the final data and update the UI
+    // Call _initScreens/setState to pass the field data and update the UI
     _initScreens();
   }
 
@@ -238,18 +253,51 @@ Future<void> _fetchCarouselItems() async {
     }
   }
 
-    void goToFieldsPage() {
+  Future<void> getMatchCount() async {
+    try {
+      final userId = AuthService.userData!["id"].toString();
+      final response = await http.get(
+        Uri.parse("${apiUrl}users/getMatchCount/$userId"),
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": "Bearer ${AuthService.token}",
+          'x-api-key': '${dotenv.env['API_KEY']}'
+        }
+      );
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final count = int.tryParse(data['count'].toString()) ?? 0;
+
+        // FIX: setState is necessary here to update the state variable
+        setState(() {
+          _matchesPlayedCount = count;
+        });
+      } 
+    // ignore: empty_catches
+    } catch (e) {
+
+    }
+  }
+
+    void goToFieldsPage(int index) {
     setState(() {
       _selectedIndex = 1;
+      _selectedTypeId = index;
     });
+    _initScreens();
   }
 
   Future<void> _refreshApp() async {
-  await _fetchCities();
-  await _fetchFields();
-  await _fetchDiscountedFields();
-  await _fetchCarouselItems();
-}
+    await _fetchCities();
+    await _fetchFields();
+    await _fetchDiscountedFields();
+    await _fetchCarouselItems();
+    if (AuthService.isLoggedIn) {
+      await getMatchCount();
+    }
+    // Ensure one final rebuild after all data is refreshed
+    _initScreens(); 
+  }
 
   
 
@@ -266,7 +314,7 @@ Future<void> _fetchCarouselItems() async {
           featuredText2: _carouselText2,
           carouselImages: _carouselImages,
           onGoToFieldsPage: goToFieldsPage,
-          matchesPlayedCount: 0,
+          matchesPlayedCount: _matchesPlayedCount, // The value passed here will be updated on the next build
         ),
       ),
 
@@ -274,7 +322,7 @@ Future<void> _fetchCarouselItems() async {
       RefreshIndicator(
         onRefresh: _refreshApp,
         child: FieldsListPage(
-          key: ValueKey('FieldsListPage_$_cityId'),
+          key: ValueKey('FieldsListPage_${_cityId}_$_selectedTypeId'),
           cityId: _cityId,
           fields: _fields,
           user_lat: _userLat,
@@ -283,6 +331,7 @@ Future<void> _fetchCarouselItems() async {
           errorMessage: _fieldsErrorMessage,
           onCityChanged: _handleCityChanged,
           cities: _cities,
+          defaultSelectedTypeId: _selectedTypeId
         ),
       ),
 
@@ -380,6 +429,7 @@ body: Stack(
             onTap: (i) {
               if (i == 3) return; // disable teams tab for now
               setState(() => _selectedIndex = i);
+              _initScreens(); 
             },
             showUnselectedLabels: true,
           ),
