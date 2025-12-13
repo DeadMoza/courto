@@ -35,7 +35,7 @@ class AboutAppPage extends StatelessWidget {
 
               /// VERSION
               Text(
-                "الإصدار 1.0.0",
+                "الإصدار 1.5.0",
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.red[700],
