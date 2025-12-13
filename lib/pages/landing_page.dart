@@ -346,7 +346,6 @@ Stack(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // --- 1. CAROUSEL HEADER (unchanged) ---
               Stack(
                 children: [
                   CarouselSlider(
@@ -451,24 +450,6 @@ Stack(
                             icon: Icons.sports_tennis_sharp,
                             categoryType: "padel",
                             categoryIndex: 4,
-                          ),
-                          const SizedBox(width: kPadding / 2),
-                          // Carting
-                          _buildSportCategoryButton(
-                            context: context,
-                            label: "كارتينج",
-                            icon: Icons.airline_seat_recline_extra_rounded,
-                            categoryType: "carting",
-                            categoryIndex: 6,
-                          ),
-                          const SizedBox(width: kPadding / 2),
-                          // Paintball
-                          _buildSportCategoryButton(
-                            context: context,
-                            label: "بينتبول",
-                            icon: Icons.format_paint_rounded,
-                            categoryType: "paintball",
-                            categoryIndex: 7,
                           ),
                         ],
                       ),

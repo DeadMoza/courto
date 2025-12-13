@@ -14,7 +14,7 @@ class TeamsPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.storefront, size: 80, color: Colors.grey),
+              Icon(Icons.groups, size: 80, color: Colors.grey),
               SizedBox(height: 16),
               Text(
                 "قريباً سيتم فتح الجيهة",

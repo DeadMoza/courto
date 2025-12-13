@@ -414,7 +414,7 @@ body: Stack(
                 label: "الخريطة",
               ),
               BottomNavigationBarItem(
-                icon: _buildIcon(Icons.people_alt_rounded, 3),
+                icon: _buildIcon(Icons.groups, 3),
                 label: "الفريق",
               ),
               BottomNavigationBarItem(
@@ -427,7 +427,6 @@ body: Stack(
             unselectedItemColor: Colors.white54,
             backgroundColor: Colors.redAccent,
             onTap: (i) {
-              if (i == 3) return; // disable teams tab for now
               setState(() => _selectedIndex = i);
               _initScreens(); 
             },

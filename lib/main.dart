@@ -19,8 +19,6 @@ void main() async {
 
   // Load user session
   await AuthService.loadSession();
-
-
   runApp(const MyApp());
 }
 
