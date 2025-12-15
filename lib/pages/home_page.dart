@@ -1,6 +1,6 @@
 import 'package:courto/app_bar.dart';
 import 'package:courto/pages/landing_page.dart';
-import 'package:courto/pages/teams_page.dart';
+// import 'package:courto/pages/teams_page.dart';
 import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -346,7 +346,7 @@ Future<void> _fetchCarouselItems() async {
         loading: _loadingFields,
       ),
 
-      const TeamsPage(),
+      // const TeamsPage(),
       SettingsPage(key: PageStorageKey('SettingsPage'), fields: _fields),
     ];
 
@@ -413,10 +413,10 @@ body: Stack(
                 icon: _buildIconImage("assets/images/courto.png", 2),
                 label: "الخريطة",
               ),
-              BottomNavigationBarItem(
-                icon: _buildIcon(Icons.groups, 3),
-                label: "الفريق",
-              ),
+              // BottomNavigationBarItem(
+              //   icon: _buildIcon(Icons.groups, 3),
+              //   label: "الفريق",
+              // ),
               BottomNavigationBarItem(
                 icon: _buildIcon(Icons.menu, 4),
                 label: "الإعدادات",
