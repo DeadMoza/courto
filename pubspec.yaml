@@ -49,12 +49,11 @@ flutter:
     - .env
     - assets/images/courtoFull.png
     - assets/images/courto.png
-    - assets/images/courtoFieldSprite.png
-    - assets/images/courtoStadiumSprite.png
+    - assets/images/courtoFootballSprite.png
     - assets/images/courtoBasketballSprite.png
     - assets/images/courtoTennisSprite.png
     - assets/images/courtoPadelSprite.png
-    - assets/images/courtoDefaultField.jpg
+    - assets/images/courtoDefaultHeader.jpg
   fonts:
     - family: Changa
       fonts:

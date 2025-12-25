@@ -119,9 +119,9 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   Future<void> _loadCustomMarkers() async {
     try {
       _cachedIcons[_fieldIconKey] =
-          await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 110);
+          await _bitmapDescriptorFromAsset("assets/images/courtoFootballSprite.png", 110);
       _cachedIcons[_fieldSelectedIconKey] =
-          await _bitmapDescriptorFromAsset("assets/images/courtoFieldSprite.png", 130);
+          await _bitmapDescriptorFromAsset("assets/images/courtoFootballSprite.png", 130);
 
       _cachedIcons[_tennisIconKey] =
           await _bitmapDescriptorFromAsset("assets/images/courtoTennisSprite.png", 110);

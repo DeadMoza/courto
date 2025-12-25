@@ -359,7 +359,7 @@ Stack(
                     ),
                     items: (carouselImages.isNotEmpty
                             ? carouselImages
-                            : ["assets/images/courtoDefaultField.jpg"])
+                            : ["assets/images/courtoDefaultHeader.jpg"])
                         .map((img) {
                       final imageUrl = normalizeUrl(img);
                       return ClipRRect(
@@ -370,7 +370,7 @@ Stack(
                                 height: 240,
                                 fit: BoxFit.cover,
                                 errorBuilder: (_, __, ___) => Image.asset(
-                                  "assets/images/courtoDefaultField.jpg",
+                                  "assets/images/courtoDefaultHeader.jpg",
                                   width: double.infinity,
                                   height: 240,
                                   fit: BoxFit.cover,
