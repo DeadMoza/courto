@@ -4,7 +4,7 @@ description: "courto app"
 publish_to: 'none' 
 
 
-version: 1.8.0+3
+version: 2.0.0+5
 
 environment:
   sdk: ^3.8.1
@@ -31,6 +31,7 @@ dependencies:
   latlong2: ^0.9.0
   carousel_slider: ^5.1.1
   package_rename: ^1.10.0
+  moamalat_payment: ^2.0.0
 
 dev_dependencies:
   flutter_test:

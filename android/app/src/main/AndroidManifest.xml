@@ -1,11 +1,16 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
     <application
         android:label="courto"
-        android:name="${applicationName}"
+        android:name="androidx.multidex.MultiDexApplication"
+        tools:replace="android:name"
         android:icon="@mipmap/ic_launcher">
-        
-        <meta-data android:name="com.google.android.geo.API_KEY"
-                   android:value="REDACTED_GOOGLE_MAPS_API_KEY"/>
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="REDACTED_GOOGLE_MAPS_API_KEY"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -17,14 +22,12 @@
             android:windowSoftInputMode="adjustResize">
 
             <meta-data
-              android:name="io.flutter.embedding.android.NormalTheme"
-              android:resource="@style/NormalTheme"
-              />
-              
-              <meta-data
-                android:name="com.onesignal.NotificationIcon"
-                android:resource="@drawable/ic_stat_onesignal_default" />
+                android:name="io.flutter.embedding.android.NormalTheme"
+                android:resource="@style/NormalTheme"/>
 
+            <meta-data
+                android:name="com.onesignal.NotificationIcon"
+                android:resource="@drawable/ic_stat_onesignal_default"/>
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -34,8 +37,7 @@
 
         <meta-data
             android:name="flutterEmbedding"
-            android:value="2" />
-            
+            android:value="2"/>
     </application>
 
     <queries>
@@ -44,6 +46,7 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
