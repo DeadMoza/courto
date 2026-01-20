@@ -4,7 +4,7 @@ description: "courto app"
 publish_to: 'none' 
 
 
-version: 2.0.0+5
+version: 2.1.1+5
 
 environment:
   sdk: ^3.8.1
