@@ -48,7 +48,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("يرجى إدخال رقم الهاتف"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
         ),
       );
       return;
@@ -80,7 +80,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
           if (data["error"] != null) msg = data["error"];
         } catch (_) {}
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.red),
+          SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
         );
       }
     } catch (e) {
@@ -88,7 +88,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("خطأ في الاتصال بالشبكة"),
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
@@ -99,9 +99,9 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.red,
+          backgroundColor: Colors.redAccent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
@@ -118,7 +118,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.red,
+                  color: Colors.redAccent,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -134,9 +134,8 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
                   labelText: "رقم الهاتف",
-                  prefixIcon: const Icon(Icons.phone, color: Colors.red),
+                  prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
                   filled: true,
-                  fillColor: Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5),
                     borderSide: BorderSide.none,
@@ -150,7 +149,7 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
                 child: ElevatedButton(
                   onPressed: loading ? null : _submitPhone,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: Colors.redAccent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),

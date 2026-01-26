@@ -8,10 +8,10 @@ class AboutAppPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("حول التطبيق"),
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
-      backgroundColor: Colors.red[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -35,26 +35,26 @@ class AboutAppPage extends StatelessWidget {
 
               /// VERSION
               Text(
-                "الإصدار 2.0.0 ",
+                "الإصدار 2.1.2 ",
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.red[700],
+                  color: Colors.redAccent,
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              const Padding(
+               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "تطبيق مخصص لحجز الملاعب الرياضية بسهولة وسرعة. "
-                  "يمكنك استعراض الملاعب المتاحة، معرفة أوقات الشغور، "
+                  "يمكنك عرض الملاعب المتاحة، معرفة أوقات اللعب "
                   "وإتمام الحجز مباشرة عبر التطبيق دون أي تعقيد.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
                     height: 1.5,
-                    color: Colors.black87,
+                    color: Theme.of(context).colorScheme.onSecondary,
                   ),
                 ),
               ),

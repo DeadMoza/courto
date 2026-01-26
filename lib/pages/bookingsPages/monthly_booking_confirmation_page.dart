@@ -77,6 +77,38 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
 
   return merged;
 }
+  void _showMidnightInfoDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Flexible( 
+                child: Text(
+                  "تنبيه بخصوص التوقيت",
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18,),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            "إذا كانت فترة الحجز تمتد إلى ما بعد منتصف الليل (12:00 ص)، فإن تلك الساعات تقع فعليًا في اليوم التالي للتاريخ المحدد في الأعلى، وليس في التاريخ الحالي.",
+            textAlign: TextAlign.right,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text("حسناً", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
 
   Future<void> _bookField() async {
@@ -152,10 +184,10 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: const Text(
+        title: Text(
           "تأكيد الحجز الشهري",
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.redAccent),
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
         ),
         content: const Text(
           "هل تريد تأكيد هذا الحجز لمدة 4 ايام؟",
@@ -165,11 +197,11 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("إلغاء", style: TextStyle(color: Colors.black)),
+            child: Text("إلغاء", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape:
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             ),
@@ -199,11 +231,11 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         bottomNavigationBar: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -234,7 +266,7 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                         style: TextStyle(fontSize: 16)),
                     Text(
                       "${remaining.toStringAsFixed(2)} د.ل",
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
+                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
                     ),
                   ],
                 ),
@@ -243,7 +275,7 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -263,7 +295,7 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Card(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             elevation: 3,
@@ -273,28 +305,28 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(widget.field['field_name'] ?? 'ملعب غير معروف',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.redAccent)),
+                          color: Theme.of(context).colorScheme.primary)),
                   const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                   decoration: BoxDecoration(
-                    color: Colors.redAccent.withOpacity(0.05),
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.calendar_today, size: 20, color: Colors.redAccent),
+                     Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           "${AppFormat.formatDateArabic(widget.date)} - ${AppFormat.formatDateArabic(date2)} - ${AppFormat.formatDateArabic(date3)} - ${AppFormat.formatDateArabic(date4)}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            color: Colors.black87,
+                            color: Theme.of(context).colorScheme.onSecondary,
                             height: 1.4,
                           ),
                           overflow: TextOverflow.visible,
@@ -306,35 +338,57 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                 ),
 
                   const SizedBox(height: 8),
-                  if (mergedRanges.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: mergedRanges.map((r) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 14),
-                          decoration: BoxDecoration(
-                            color: Colors.redAccent.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
-                            style: const TextStyle(
-                                fontSize: 15, color: Colors.black87),
-                          ),
-                        );
-                      }).toList(),
-                    ),
+if (mergedRanges.isNotEmpty)
+  Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Times on the left (takes remaining width)
+      Expanded(
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: mergedRanges.map((r) {
+            return Container(
+              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text(
+                "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.onSecondary,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+
+      const SizedBox(width: 8),
+
+      // Midnight info icon on the right
+      IconButton(
+        icon: Icon(Icons.nights_stay,
+            color: Theme.of(context).colorScheme.primary, size: 24),
+        onPressed: () => _showMidnightInfoDialog(context),
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(),
+        tooltip: "تنبيه بخصوص التوقيت",
+      ),
+    ],
+  ),
+
                   const Divider(height: 30, thickness: 1.2),
                   Column(
                     children: [
                                         Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.yellow.shade50,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Colors.amber.shade200),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,16 +396,16 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.info_outline,
-                                color: Colors.amber, size: 20),
+                           Icon(Icons.info_outline,
+                                color: Theme.of(context).colorScheme.primary, size: 20),
                             const SizedBox(width: 5),
 Flexible(
                               child: RichText(
   text:  TextSpan(
-    style: const TextStyle(
+    style: TextStyle(
       fontSize: 14.5,
       height: 1.5,
-      color: Colors.black87,
+      color: Theme.of(context).colorScheme.onSecondary,
       fontFamily: "Changa"
     ),
     children: [
@@ -364,8 +418,8 @@ Flexible(
       ),
       TextSpan(
         text: "$totalBookingPrice د.ل",
-        style: const TextStyle(
-          color: Colors.redAccent,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -374,8 +428,8 @@ Flexible(
       ),
       TextSpan(
         text: "${remaining.toStringAsFixed(2)} د.ل",
-        style: const TextStyle(
-          color: Colors.redAccent,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -395,12 +449,12 @@ Flexible(
                     ],
                   ),
                   const SizedBox(height: 10),
-                      const Text(
+                       Text(
                         "ملاحظات لصاحب الملعب:",
                         style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87),
+                            color: Theme.of(context).colorScheme.onSecondary),
                       ),
                   const SizedBox(height: 8),
                   TextField(
@@ -411,8 +465,8 @@ Flexible(
                           borderRadius: BorderRadius.circular(5)),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
-                        borderSide: const BorderSide(
-                            color: Colors.redAccent, width: 1.5),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary, width: 1.5),
                       ),
                     ),
                   ),

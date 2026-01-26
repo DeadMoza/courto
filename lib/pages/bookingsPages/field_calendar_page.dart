@@ -83,7 +83,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     Color? textColor,
     bool isSelected = false,
   }) {
-    final numberColor = textColor ?? (fill != Colors.transparent ? Colors.white : Colors.black);
+    final numberColor = textColor ?? (fill != Colors.transparent ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSecondary);
 
     return Center(
       child: Container(
@@ -118,7 +118,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: loading
             ? const Center(child: CircularProgressIndicator(color: Colors.red))
             : ListView(
@@ -195,7 +195,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
                           return _buildDayCell(
                             day,
                             fill: fill,
-                            border: Colors.grey,
+                            border: Theme.of(context).colorScheme.onSecondary,
                             isSelected: isSameDay(day, selectedDay),
                           );
                         },

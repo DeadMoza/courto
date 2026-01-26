@@ -38,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
               widget.successMessage!,
               textDirection: TextDirection.rtl,
             ),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.fixed,
           ),
         );
@@ -112,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.fixed,
       ),
     );
@@ -123,7 +123,7 @@ class _LoginPageState extends State<LoginPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFEBEE),
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -145,9 +145,9 @@ class _LoginPageState extends State<LoginPage> {
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
                       labelText: "رقم الهاتف",
-                      prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
+                      prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -162,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
                     obscureText: !showPassword,
                     decoration: InputDecoration(
                       labelText: "كلمة المرور",
-                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
+                      prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showPassword
@@ -175,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
                         },
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -191,18 +191,18 @@ class _LoginPageState extends State<LoginPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : login,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        disabledBackgroundColor: Colors.redAccent[300],
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       child: loading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 strokeWidth: 2.5,
                               ),
                             )
@@ -227,9 +227,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       "هل نسيت كلمة المرور؟",
-                      style: TextStyle(color: Colors.redAccent),
+                      style: TextStyle(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
 
@@ -242,10 +242,10 @@ class _LoginPageState extends State<LoginPage> {
                             builder: (_) => const SignupPage()),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       "مستخدم جديد؟ أنشئ حساب",
                       style: TextStyle(
-                        color: Colors.redAccent,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

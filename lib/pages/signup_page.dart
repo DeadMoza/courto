@@ -105,7 +105,7 @@ class _SignupPageState extends State<SignupPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -220,7 +220,7 @@ class _SignupPageState extends State<SignupPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -241,9 +241,9 @@ class _SignupPageState extends State<SignupPage> {
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: "الاسم الكامل",
-                      prefixIcon: const Icon(Icons.person, color: Colors.redAccent),
+                      prefixIcon: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -260,9 +260,9 @@ class _SignupPageState extends State<SignupPage> {
                     textDirection: TextDirection.ltr,
                     decoration: InputDecoration(
                       labelText: "رقم الهاتف",
-                      prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
+                      prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -279,7 +279,7 @@ class _SignupPageState extends State<SignupPage> {
                     obscureText: !showPassword,
                     decoration: InputDecoration(
                       labelText: "كلمة المرور",
-                      prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
+                      prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).colorScheme.primary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showPassword ? Icons.visibility_off : Icons.visibility,
@@ -290,7 +290,7 @@ class _SignupPageState extends State<SignupPage> {
                         },
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -308,7 +308,7 @@ class _SignupPageState extends State<SignupPage> {
                     decoration: InputDecoration(
                       labelText: "تأكيد كلمة المرور",
                       prefixIcon:
-                          const Icon(Icons.lock_outline, color: Colors.redAccent),
+                         Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                       suffixIcon: IconButton(
                         icon: Icon(
                           showConfirmPassword
@@ -322,7 +322,7 @@ class _SignupPageState extends State<SignupPage> {
                         },
                       ),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide.none,
@@ -335,16 +335,16 @@ class _SignupPageState extends State<SignupPage> {
                       textAlign: TextAlign.center,
                       textDirection: TextDirection.rtl,
                       text: TextSpan(
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: Colors.black54,
+                          color: Theme.of(context).colorScheme.onSecondary,
                         ),
                         children: [
                           const TextSpan(text: "بإنشاء حساب، فإنك توافق على ", style: TextStyle(fontFamily: "Changa")),
                           TextSpan(
                             text: "شروط الاستخدام",
-                            style: const TextStyle(
-                              color: Colors.redAccent,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline,
                               fontFamily: "Changa"
@@ -363,8 +363,8 @@ class _SignupPageState extends State<SignupPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _goToOtp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        disabledBackgroundColor: Colors.redAccent[300],
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -385,10 +385,10 @@ class _SignupPageState extends State<SignupPage> {
                         MaterialPageRoute(builder: (_) => const LoginPage()),
                       );
                     },
-                    child: const Text(
+                    child: Text(
                       "لديك حساب من قبل؟ تسجيل الدخول",
                       style: TextStyle(
-                        color: Colors.redAccent,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

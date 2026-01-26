@@ -58,7 +58,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                             color: Colors.redAccent,
                           ),
                           filled: true,
-                          fillColor: Colors.white,
+                          fillColor: Theme.of(context).colorScheme.onPrimary,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(5),
                             borderSide: BorderSide.none,
@@ -86,13 +86,13 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                             controller: amountController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              labelText: "ادخل القيمة",
+                              labelText: "ادخل المبلغ",
                               prefixIcon: const Icon(
                                 Icons.credit_card,
                                 color: Colors.redAccent,
                               ),
                               filled: true,
-                              fillColor: Colors.white,
+                              fillColor: Theme.of(context).colorScheme.onPrimary,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(5),
                                 borderSide: BorderSide.none,
@@ -227,7 +227,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                                 content: Text(
                                   "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. الرصيد الحالي: ${data['wallet_balance']} دينار.",
                                 ),
-                                backgroundColor: Colors.green,
+                                backgroundColor: Colors.redAccent,
                               ),
                             );
                             setState(() {});

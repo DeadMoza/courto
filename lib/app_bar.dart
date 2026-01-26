@@ -5,7 +5,8 @@ import 'charge_wallet_dialog.dart';
 PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool isHome = false}) {
   return AppBar(
     elevation: 0,
-    backgroundColor: Colors.redAccent,
+    backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+    foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
     automaticallyImplyLeading: false,
     // FIX: Restructure the title Row to prevent overflow
     title: Row(
@@ -19,25 +20,25 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).appBarTheme.foregroundColor,
               borderRadius: BorderRadius.circular(5),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.redAccent.withOpacity(0.3),
+                  color: Colors.redAccent,
                   blurRadius: 6,
                   offset: const Offset(0, 3),
                 )
               ],
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min, // Essential to keep the Row small
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.account_balance_wallet,
-                    color: Colors.redAccent, size: 22),
+                Icon(Icons.account_balance_wallet,
+                    color: Theme.of(context).appBarTheme.shadowColor, size: 22),
                 const SizedBox(width: 4),
                 Text(
                   AuthService.walletBalance.toStringAsFixed(2),
-                  style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Theme.of(context).appBarTheme.shadowColor, fontWeight: FontWeight.bold),
                 )
               ],
             ),
@@ -46,12 +47,12 @@ PreferredSizeWidget buildHomeAppBar(BuildContext context, {String? title, bool i
           const Spacer(),
 
           Text(
-            title ?? "courto",
+            title ?? "Courto",
             maxLines: 1, 
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 30,
-              color: Colors.white,
+              color: Theme.of(context).appBarTheme.foregroundColor,
             ),
           )
       ],

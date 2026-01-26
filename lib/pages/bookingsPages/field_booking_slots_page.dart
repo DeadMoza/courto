@@ -124,7 +124,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
     if (_isBooked(slot)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.redAccent),
       );
       return;
     }
@@ -142,7 +142,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         setState(() {});
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.red),
+          const SnackBar(content: Text('لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.redAccent),
         );
       }
       return;
@@ -162,14 +162,14 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
     if (!isAdjacent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.redAccent),
       );
       return;
     }
 
     if (_selectedSlots.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.red),
+        const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.redAccent),
       );
       return;
     }
@@ -315,14 +315,14 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     TextStyle textStyle;
 
     if (isConfirmed) {
-      bg = Colors.redAccent;
-      textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
+      bg = Theme.of(context).colorScheme.primary;
+      textStyle = TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold);
     } else if (isSelected) {
       bg = Colors.amber;
-      textStyle = const TextStyle(color: Colors.white, fontWeight: FontWeight.bold);
+      textStyle = TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold);
     } else {
-      bg = Colors.white;
-      textStyle = const TextStyle(color: Colors.black, fontWeight: FontWeight.bold);
+      bg = Theme.of(context).colorScheme.onPrimary;
+      textStyle = TextStyle(color: Theme.of(context).colorScheme.onSecondary, fontWeight: FontWeight.bold);
     }
 
     return Container(
@@ -330,7 +330,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.onPrimary),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 4),
@@ -343,11 +343,11 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         ),
         subtitle: Center(
           child: isConfirmed
-              ? const Text("محجوز", style: TextStyle(color: Colors.white))
+              ?  Text("محجوز", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary))
               : (isSelected
                   ? Text(
                       "${_selectedSlots.indexWhere((s) => s.start.isAtSameMomentAs(slot.start)) + 1} / ${_selectedSlots.length}",
-                      style: const TextStyle(color: Colors.white))
+                      style: TextStyle(color: Theme.of(context).colorScheme.onPrimary))
                   : null),
         ),
       ),
@@ -360,7 +360,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Stack(
           children: [
             ListView.builder(
@@ -380,7 +380,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -409,7 +409,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                           ElevatedButton(
                             onPressed: _onContinuePressed,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent,
+                              backgroundColor: Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),

@@ -162,7 +162,7 @@ class _SupportPageState extends State<SupportPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         duration: const Duration(seconds: 3),
       ),
     );
@@ -172,22 +172,19 @@ class _SupportPageState extends State<SupportPage> {
     return InputDecoration(
       labelText: label,
       counterText: counterText, // Hide default counter
-      labelStyle: TextStyle(color: Colors.redAccent),
+      labelStyle: TextStyle(color: Theme.of(context).colorScheme.primary),
       floatingLabelBehavior: FloatingLabelBehavior.always,
       filled: true,
-      fillColor: Colors.grey.shade50,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade400),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 2),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
       ),
     );
   }
@@ -202,14 +199,14 @@ class _SupportPageState extends State<SupportPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text("الدعم والمساعدة", style: TextStyle(fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.redAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         ),
         body: loading
-            ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
             : SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
                 child: Column(
@@ -221,12 +218,12 @@ class _SupportPageState extends State<SupportPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
+                         Text(
                             "تواصل معنا لحل مشكلتك",
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.redAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -235,7 +232,7 @@ class _SupportPageState extends State<SupportPage> {
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 14,
-                              color: Colors.grey.shade700,
+                              color: Theme.of(context).colorScheme.onSecondary,
                             ),
                           ),
                         ],
@@ -245,13 +242,13 @@ class _SupportPageState extends State<SupportPage> {
                     const SizedBox(height: 15),
 
                     // ---------------- CATEGORY SELECT ----------------
-                    Text("فئة المشكلة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
+                    Text("فئة المشكلة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSecondary)),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<Map<String, dynamic>>(
                       value: selectedCategory,
                       isExpanded: true,
                       decoration: _inputDecoration(label: "اختر الفئة"),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.redAccent),
+                      icon: Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.primary),
                       items: categories.map<DropdownMenuItem<Map<String, dynamic>>>(
                         (item) {
                           return DropdownMenuItem(
@@ -269,13 +266,13 @@ class _SupportPageState extends State<SupportPage> {
 
                     // ---------------- ISSUE SELECT ----------------
                     if (selectedCategory != null) ...[
-                      Text("المشكلة المحددة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
+                      Text("المشكلة المحددة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSecondary)),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<Map<String, dynamic>>(
                         value: selectedIssue,
                         isExpanded: true,
                         decoration: _inputDecoration(label: "اختر المشكلة"),
-                        icon: const Icon(Icons.arrow_drop_down, color: Colors.redAccent),
+                        icon: Icon(Icons.arrow_drop_down, color: Theme.of(context).colorScheme.primary),
                         items: issues.map<DropdownMenuItem<Map<String, dynamic>>>(
                           (item) {
                             return DropdownMenuItem(
@@ -297,7 +294,7 @@ class _SupportPageState extends State<SupportPage> {
 
                     // ---------------- MESSAGE INPUT ----------------
                     if (selectedIssue != null) ...[
-                      Text("وصف المشكلة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700)),
+                      Text("وصف المشكلة:", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSecondary)),
                       const SizedBox(height: 8),
                       TextField(
                         controller: messageController,
@@ -323,23 +320,23 @@ class _SupportPageState extends State<SupportPage> {
                         // Button is enabled only if an issue is selected, message is valid, and not currently sending
                         onPressed: isButtonEnabled ? sendSupportRequest : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           disabledBackgroundColor: Colors.grey.shade400, // Styling for disabled state
                         ),
                         child: isSending
-                            ? const SizedBox(
+                            ? SizedBox(
                                 height: 20,
                                 width: 20,
                                 child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onPrimary,
                                   strokeWidth: 3,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 "إرسال طلب الدعم",
-                                style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontSize: 18, color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold),
                               ),
                       ),
                     ),

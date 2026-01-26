@@ -118,8 +118,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (_loadingCity) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+      return Scaffold(
+        body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
       );
     }
 
@@ -128,7 +128,7 @@ class _HomePageState extends State<HomePage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.redAccent[100],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: buildHomeAppBar(context, isHome: true),
 
         body: Stack(
@@ -142,7 +142,7 @@ class _HomePageState extends State<HomePage> {
 
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           selectedItemColor: Colors.white,
           unselectedItemColor: Colors.white54,
           showUnselectedLabels: true,

@@ -83,7 +83,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("لا يمكن إلغاء الحجز إلا بعد 20 دقيقة من إنشائه."),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       return;
@@ -124,20 +124,20 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
       if (response.statusCode == 200 && data["message"] != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data["message"]), backgroundColor: Colors.redAccent),
+          SnackBar(content: Text(data["message"]), backgroundColor: Theme.of(context).colorScheme.primary),
         );
         Navigator.popUntil(context, ModalRoute.withName('/'));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(data["error"] ?? "حدث خطأ غير معروف"),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("خطأ في الاتصال: ${e.toString()}"), backgroundColor: Colors.red),
+        SnackBar(content: Text("خطأ في الاتصال: ${e.toString()}"), backgroundColor: Theme.of(context).colorScheme.primary),
       );
     } finally {
       setState(() => isCancelling = false);
@@ -173,7 +173,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(data["message"] ?? "تم إرسال التقييم"),
-          backgroundColor: data["success"] == true ? Colors.redAccent : Colors.redAccent,
+          backgroundColor: data["success"] == true ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary,
         ),
       );
 
@@ -185,7 +185,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("خطأ في إرسال التقييم: ${e.toString()}"), backgroundColor: Colors.red),
+        SnackBar(content: Text("خطأ في إرسال التقييم: ${e.toString()}"), backgroundColor: Colors.redAccent),
       );
     } finally {
       setState(() => isReviewSubmitting = false);
@@ -247,10 +247,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text("تفاصيل الحجز", style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: SafeArea(
@@ -258,7 +259,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             padding: const EdgeInsets.all(16),
             physics: const BouncingScrollPhysics(),
             child: Card(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.onPrimary,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
               elevation: 8,
               child: Padding(
@@ -271,7 +272,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
-                        color: Colors.red,
+                        color: Colors.redAccent,
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -282,7 +283,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           children: [
                             Icon(
                               status == "pending" ? Icons.hourglass_bottom : Icons.check_circle,
-                              color: status == "pending" ? Colors.orange.shade700 : Colors.redAccent,
+                              color: status == "pending" ? Colors.orange.shade700 : Theme.of(context).colorScheme.primary,
                               size: 20,
                             ),
                             const SizedBox(width: 8),
@@ -290,45 +291,26 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               status == "pending" ? "قيد الانتظار" : "مؤكد",
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: status == "pending" ? Colors.orange.shade700 : Colors.redAccent,
+                                color: status == "pending" ? Colors.orange.shade700 : Theme.of(context).colorScheme.primary,
                               ),
                             ),
                           ],
                         ),
                         Text(
                           "رمز الحجز: ${booking["booking_id"] ?? '--'}",
-                          style: const TextStyle(color: Colors.black54, fontSize: 13),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSecondary, fontSize: 13),
                         ),
                       ],
                     ),
                     const Divider(height: 30, thickness: 1),
 
-                    if (isMonthly)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: Colors.red.shade50,
-                            border: Border.all(color: Colors.redAccent.shade100),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: const Text(
-                            "هذا الحجز شهري متكرر",
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.redAccent),
-                          ),
-                        ),
-                      ),
-
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       decoration: BoxDecoration(
-                        color: Colors.red.shade50,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: Colors.red.shade100)
+                        border: Border.all(color: Theme.of(context).colorScheme.primary)
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -347,14 +329,13 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               children: [
                                 const Text(
                                   "مواعيد الحجز:", 
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.red)
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.redAccent)
                                 ),
                                 const SizedBox(height: 10),
                                 ...monthlyDates.map((d) => _buildIconTextRow(
                                   icon: Icons.event_repeat,
                                   text: d,
                                   isCentered: true,
-                                  color: Colors.black87,
                                   size: 14,
                                   padding: const EdgeInsets.only(bottom: 4)
                                 )),
@@ -380,27 +361,26 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     _buildDetailRow(
                       label: "سعر الحجز",
                       value: "$bookingPrice د.ل",
-                      valueColor: Colors.black54
+                      valueColor: Theme.of(context).colorScheme.onSecondary
                     ),
                     _buildDetailRow(
                       label: "السعر المتبقي للدفع",
                       value: "$remainingPrice د.ل",
-                      valueColor: Colors.red,
+                      valueColor: Colors.redAccent,
                       isBold: true,
                       size: 18,
                     ),
 
                     const Divider(height: 30, thickness: 1),
 
-                    const Text(
+                   Text(
                       "تاريخ إنشاء الحجز:", 
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87)
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).colorScheme.onSecondary)
                     ),
                     const SizedBox(height: 5),
                     _buildIconTextRow(
                       icon: Icons.history, 
                       text: creationDate, 
-                      color: Colors.black54
                     ),
 
 // --- Inline Review Section with Animation and 5px Border Radius ---
@@ -419,13 +399,13 @@ if (showLeaveReviewButton)
             onPressed: () {
               setState(() => showRatingForm = !showRatingForm);
             },
-            icon: Icon(showRatingForm ? Icons.rate_review : Icons.keyboard_arrow_down, color: showRatingForm ? Colors.white : Colors.black54),
+            icon: Icon(showRatingForm ? Icons.rate_review : Icons.keyboard_arrow_down, color: showRatingForm ? Colors.white : Theme.of(context).colorScheme.onSecondary),
             label: Text(
               showRatingForm ? "إغلاق التقييم" : "ترك تقييم",
-              style: TextStyle(color: showRatingForm ? Colors.white : Colors.black54, fontFamily: 'Changa'),
+              style: TextStyle(color: showRatingForm ? Colors.white : Theme.of(context).colorScheme.onSecondary, fontFamily: 'Changa'),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: showRatingForm ? Colors.redAccent : Colors.orangeAccent,
+              backgroundColor: showRatingForm ? Theme.of(context).colorScheme.primary : Colors.orangeAccent,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               textStyle: const TextStyle(
                 fontWeight: FontWeight.bold,
@@ -449,7 +429,7 @@ if (showLeaveReviewButton)
                   return IconButton(
                     icon: Icon(
                       index < selectedScore ? Icons.star : Icons.star_border,
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.primary,
                       size: 36,
                     ),
                     onPressed: () {
@@ -464,24 +444,24 @@ if (showLeaveReviewButton)
                     ? null
                     : () => submitReview(selectedScore),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(5), // 5px radius
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
                 child: isReviewSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           strokeWidth: 2.5,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         "إرسال التقييم",
-                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold),
                       ),
               ),
             ],
@@ -505,22 +485,22 @@ if (showLeaveReviewButton)
                 onPressed: isCancelling
                     ? null
                     : () => cancelBooking(),
-                backgroundColor: canCancel ? Colors.red : Colors.amber,
+                backgroundColor: canCancel ? Colors.redAccent : Colors.amber,
                 icon: isCancelling
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 18,
                         width: 18,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                           strokeWidth: 2.5,
                         ),
                       )
-                    : const Icon(Icons.cancel, color: Colors.white),
+                    : Icon(Icons.cancel, color: Theme.of(context).colorScheme.onPrimary),
                 label: Text(
                   isCancelling
                       ? "جارٍ الإلغاء..."
                       : canCancel ? "إلغاء الحجز" : "الإلغاء متاح بعد ${ _formatDuration(timeRemaining)}",
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.w600),
                 ),
               )
             : null,
@@ -543,7 +523,7 @@ if (showLeaveReviewButton)
         children: [
           Text(
             "$label:",
-            style: const TextStyle(fontSize: 16, color: Colors.black54),
+            style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
           ),
           Text(
             value,
@@ -562,8 +542,6 @@ if (showLeaveReviewButton)
   Widget _buildIconTextRow({
     required IconData icon,
     required String text,
-    Color iconColor = Colors.redAccent,
-    Color color = Colors.black,
     bool isCentered = false,
     bool bold = false,
     double size = 16,
@@ -574,11 +552,11 @@ if (showLeaveReviewButton)
       child: Row(
         mainAxisAlignment: isCentered ? MainAxisAlignment.center : MainAxisAlignment.start,
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
           const SizedBox(width: 8),
           Text(
             text,
-            style: TextStyle(color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: size),
+            style: TextStyle(fontWeight: bold ? FontWeight.bold : FontWeight.normal, fontSize: size),
             textDirection: ui.TextDirection.rtl,
           ),
         ],

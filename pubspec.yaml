@@ -4,7 +4,7 @@ description: "courto app"
 publish_to: 'none' 
 
 
-version: 2.0.0+5
+version: 2.1.2+6
 
 environment:
   sdk: ^3.8.1
@@ -32,6 +32,7 @@ dependencies:
   carousel_slider: ^5.1.1
   package_rename: ^1.10.0
   moamalat_payment: ^2.0.0
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:
@@ -55,6 +56,7 @@ flutter:
     - assets/images/courtoTennisSprite.png
     - assets/images/courtoPadelSprite.png
     - assets/images/courtoDefaultHeader.jpg
+    - assets/map_styles/dark_map.json
   fonts:
     - family: Changa
       fonts:

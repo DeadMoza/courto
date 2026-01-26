@@ -97,7 +97,7 @@ Future<void> _bookField() async {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+    builder: (_) => Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
   );
 
   try {
@@ -127,9 +127,9 @@ Future<void> _bookField() async {
 
     if (response.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text("تم ارسال طلب الحجز الى صاحب الملعب."),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
       );
       Navigator.pushReplacementNamed(context, "/bookingHistoryPage");
@@ -138,13 +138,13 @@ Future<void> _bookField() async {
       final data = jsonDecode(response.body);
       final message = data['message'] ?? 'فشل تأكيد الحجز';
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message), backgroundColor: Colors.red),
+        SnackBar(content: Text(message), backgroundColor: Theme.of(context).colorScheme.primary),
       );
     }
   } catch (e) {
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red),
+      SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Theme.of(context).colorScheme.primary),
     );
   }
 }
@@ -155,10 +155,10 @@ Future<void> _bookField() async {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: const Text(
+        title: Text(
           "تأكيد الحجز",
           textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.redAccent),
+          style: TextStyle(color: Theme.of(context).colorScheme.primary),
         ),
         content: const Text(
           "هل تريد تأكيد هذا الحجز؟",
@@ -168,11 +168,11 @@ Future<void> _bookField() async {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("إلغاء", style: TextStyle(color: Colors.black)),
+            child: Text("إلغاء", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape:
                   RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             ),
@@ -196,18 +196,16 @@ Future<void> _bookField() async {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: const Row(
+          title: Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Flexible( 
                 child: Text(
                   "تنبيه بخصوص التوقيت",
-                  style: TextStyle(color: Colors.redAccent, fontSize: 20,),
-                  textAlign: TextAlign.right,
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18,),
+                  textAlign: TextAlign.center,
                 ),
               ),
-              SizedBox(width: 8),
-              Icon(Icons.access_time, color: Colors.redAccent),
             ],
           ),
           content: const Text(
@@ -217,7 +215,7 @@ Future<void> _bookField() async {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text("حسناً", style: TextStyle(color: Colors.black)),
+              child: Text("حسناً", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
             ),
           ],
         );
@@ -234,11 +232,11 @@ Future<void> _bookField() async {
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
-        backgroundColor: Colors.red.shade50,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         bottomNavigationBar: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             boxShadow: [
               BoxShadow(
                   color: Colors.black.withOpacity(0.1),
@@ -260,9 +258,9 @@ Future<void> _bookField() async {
                     ),
                     Text(
                       "${widget.totalBookingPrice.toStringAsFixed(2)} د.ل",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
-                        color: Colors.redAccent,
+                        color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -291,7 +289,7 @@ Future<void> _bookField() async {
                   width: double.infinity,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -311,7 +309,7 @@ Future<void> _bookField() async {
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Card(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             elevation: 3,
@@ -322,10 +320,10 @@ Future<void> _bookField() async {
                 children: [
                   Text(
                     widget.field['field_name'] ?? 'ملعب غير معروف',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -357,15 +355,16 @@ Future<void> _bookField() async {
                           return Container(
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 14),
-                            decoration: BoxDecoration(
-                              color: Colors.redAccent.withOpacity(0.15),
-                              borderRadius: BorderRadius.circular(5),
-                            ),
+                                     decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary),
+                    ),
                             child: Text(
                               "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
-                                color: Colors.black87,
+                                color: Theme.of(context).colorScheme.onSecondary,
                               ),
                             ),
                           );
@@ -373,7 +372,7 @@ Future<void> _bookField() async {
                       ),
                       Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.info_outline, color: Colors.redAccent, size: 24),
+                        icon: Icon(Icons.nights_stay, color: Theme.of(context).colorScheme.primary, size: 24),
                         onPressed: () => _showMidnightInfoDialog(context),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -384,9 +383,9 @@ Future<void> _bookField() async {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.yellow.shade50,
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Colors.amber.shade200),
+                      border: Border.all(color: Theme.of(context).colorScheme.primary),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -394,16 +393,16 @@ Future<void> _bookField() async {
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.info_outline,
-                                color: Colors.amber, size: 20),
+                           Icon(Icons.info_outline,
+                                color: Theme.of(context).colorScheme.primary, size: 20),
                             const SizedBox(width: 5),
                             Flexible(
                               child: RichText(
   text: TextSpan(
-    style: const TextStyle(
+    style: TextStyle(
       fontSize: 14.5,
       height: 1.5,
-      color: Colors.black87,
+      color: Theme.of(context).colorScheme.onSecondary,
       fontFamily: "Changa"
     ),
     children: [
@@ -416,8 +415,8 @@ Future<void> _bookField() async {
       ),
       TextSpan(
         text: "${widget.totalBookingPrice.toStringAsFixed(2)} د.ل",
-        style: const TextStyle(
-          color: Colors.redAccent,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -426,8 +425,8 @@ Future<void> _bookField() async {
       ),
       TextSpan(
         text: "${widget.remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
-        style: const TextStyle(
-          color: Colors.redAccent,
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -445,12 +444,12 @@ Future<void> _bookField() async {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                   Text(
                     "ملاحظات لمدير الملعب:",
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87),
+                        color: Theme.of(context).colorScheme.onSecondary),
                   ),
                   const SizedBox(height: 8),
                   TextField(
@@ -462,8 +461,8 @@ Future<void> _bookField() async {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
-                        borderSide: const BorderSide(
-                            color: Colors.redAccent, width: 1.5),
+                        borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary, width: 1.5),
                       ),
                     ),
                   ),

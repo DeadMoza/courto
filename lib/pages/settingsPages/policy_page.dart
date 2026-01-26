@@ -8,10 +8,10 @@ class PolicyPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("شروط استخدام التطبيق"),
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
       ),
-      backgroundColor: Colors.red[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(

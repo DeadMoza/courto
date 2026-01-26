@@ -150,7 +150,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.redAccent,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
                 child: Text(
                   _isFavorite ? "إزالة" : "إضافة",
@@ -197,7 +197,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               _isFavorite ? "تمت الإضافة للمفضلة" : "تمت الإزالة من المفضلة",
               textDirection: TextDirection.rtl,
             ),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -244,9 +244,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Colors.black87,
+                color: Theme.of(context).colorScheme.onSecondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -273,7 +273,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
-        color: isCurrent ? Colors.redAccent : Colors.white.withOpacity(0.7),
+        color: isCurrent ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.7),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -313,7 +313,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           if (loadingProgress == null) return child;
                           return Center(
                             child: CircularProgressIndicator(
-                              color: Colors.redAccent,
+                              color: Theme.of(context).colorScheme.primary,
                               value: loadingProgress.expectedTotalBytes != null
                                   ? loadingProgress.cumulativeBytesLoaded /
                                       loadingProgress.expectedTotalBytes!
@@ -347,10 +347,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                 color: Colors.red[100],
                 borderRadius: BorderRadius.circular(5),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'لا توجد صور',
-                  style: TextStyle(color: Colors.redAccent, fontSize: 18),
+                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18),
                 ),
               ),
             ),
@@ -389,10 +389,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.redAccent),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
             ),
             const SizedBox(width: 8),
-            const Text('جاري التحميل...', style: TextStyle(color: Colors.black54)),
+            Text('جاري التحميل...', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
           ],
         ),
       );
@@ -406,7 +406,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           ...List.generate(totalStars.toInt(), (index) {
             double difference = rating - index;
             IconData iconData;
-            Color color = Colors.redAccent;
+            Color color = Theme.of(context).colorScheme.primary;
 
             if (difference >= 1.0) {
               iconData = Icons.star_rounded;
@@ -426,18 +426,18 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           Text(
             // Show 0.0 if rating is less than 0.1
             rating > 0.1 ? '${rating.toStringAsFixed(1)}' : '0.0', 
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSecondary,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             '(${reviewCount.toString()})',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.black54,
+              color: Theme.of(context).colorScheme.onSecondary
             ),
           ),
         ],
@@ -449,9 +449,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.onPrimary,
         borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+        border: Border.all(color: Theme.of(context).colorScheme.primary),
         boxShadow: [
           BoxShadow(
             color: Colors.red.withOpacity(0.1),
@@ -469,10 +469,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             children: [
               Text(
                 "${totalPrice.toStringAsFixed(2)} د.ل / الساعة",
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
-                    color: Colors.redAccent),
+                    color: Theme.of(context).colorScheme.primary),
               ),
               _buildStarRatingPlaceholder(), // Now uses fetched data
             ],
@@ -484,7 +484,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             child: IconButton(
               icon: Icon(
                 _isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorite ? Colors.redAccent : Colors.grey[700],
+                color: _isFavorite ? Theme.of(context).colorScheme.primary : Colors.grey[700],
                 size: 30,
               ),
               onPressed:  AuthService.isLoggedIn ? toggleFavorite : null,
@@ -508,7 +508,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: buildHomeAppBar(context),
         body: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 80),
@@ -526,10 +526,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                     // Field Name
                     Text(
                       widget.field["field_name"] ?? '',
-                      style: const TextStyle(
+                      style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
-                          color: Colors.redAccent),
+                          color: Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(height: 15),
 
@@ -541,7 +541,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                       padding: const EdgeInsets.all(12.0),
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         borderRadius: BorderRadius.circular(5),
                         boxShadow: [
                           BoxShadow(
@@ -556,7 +556,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           _buildInfoRow(
                               Icons.location_on_outlined,
                               "${widget.field["field_city"] ?? ''} / ${widget.field["field_location"]}",
-                              color: Colors.redAccent),
+                              color: Theme.of(context).colorScheme.primary),
                           _buildInfoRow(Icons.map_outlined,
                               "${widget.field["field_location_details"] ?? ''}"),
                           _buildInfoRow(Icons.stadium_outlined, "ملعب $mappedFieldType"),
@@ -594,7 +594,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               ),
             );
           },
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Theme.of(context).colorScheme.primary,
           icon: const Icon(Icons.calendar_month, color: Colors.white),
           label: const Text(
             "عرض المواعيد",

@@ -147,6 +147,8 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
   final remainingPrice = booking["booking_remaining_price"] ?? 0;
   final status = booking["booking_status_fmt"] ?? "غير معروف";
   final rawStatus = booking["booking_status"] ?? "";
+  final bool isPending = rawStatus == "pending";
+
   String creationDate = "";
 
   try {
@@ -168,7 +170,7 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
   Color statusColor;
   switch (rawStatus) {
     case "confirmed":
-      statusColor = Colors.red;
+      statusColor = Colors.redAccent;
       break;
     case "pending":
       statusColor = Colors.orange;
@@ -193,10 +195,10 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
           margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(5),
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onPrimary,
             boxShadow: [
               BoxShadow(
-                color: Colors.red.withOpacity(0.15),
+                color: Colors.redAccent.withOpacity(0.15),
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               )
@@ -213,44 +215,60 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
                     Expanded(
                       child: Text(
                         fieldName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.redAccent,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(5),
                         border: Border.all(color: statusColor),
                       ),
-                      child: Text(
-                        status,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isPending) ...[
+                            SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(statusColor),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          Text(
+                            status,
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+
                   ],
                 ),
                 const SizedBox(height: 12),
 
                 Row(
                   children: [
-                    const Icon(Icons.calendar_month,
-                        color: Colors.redAccent, size: 18),
+                   Icon(Icons.calendar_month,
+                        color: Theme.of(context).colorScheme.primary, size: 18),
                     const SizedBox(width: 6),
                     Text(
                       bookingDate,
                       style:
-                          const TextStyle(fontSize: 14, color: Colors.black54),
+                         TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSecondary),
                     ),
                   ],
                 ),
@@ -258,13 +276,13 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
 
                 Row(
                   children: [
-                    const Icon(Icons.access_time_filled,
-                        color: Colors.redAccent, size: 18),
+                   Icon(Icons.access_time_filled,
+                        color: Theme.of(context).colorScheme.primary, size: 18),
                     const SizedBox(width: 6),
                     Text(
                       "$startTime - $endTime",
                       style:
-                          const TextStyle(fontSize: 14, color: Colors.black54),
+                         TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSecondary),
                     ),
                   ],
                 ),
@@ -272,14 +290,14 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
 
                 Row(
                   children: [
-                    const Icon(Icons.payments_rounded,
-                        color: Colors.redAccent, size: 18),
+                     Icon(Icons.payments_rounded,
+                        color: Theme.of(context).colorScheme.primary, size: 18),
                     const SizedBox(width: 6),
                     Text(
                       "$remainingPrice د.ل",
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Colors.red,
+                        color: Colors.redAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -289,14 +307,14 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
 
                 Row(
                   children: [
-                    const Icon(Icons.history,
-                        color: Colors.redAccent, size: 18),
+                     Icon(Icons.history,
+                        color: Theme.of(context).colorScheme.primary, size: 18),
                     const SizedBox(width: 6),
                     Text(
                       creationDate,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black54,
+                        color: Theme.of(context).colorScheme.onSecondary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -342,7 +360,7 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
 
   Widget _buildContent() {
     if (loading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.red));
+      return const Center(child: CircularProgressIndicator(color: Colors.redAccent));
     }
 
     if (errorMessage != null) {
@@ -352,18 +370,18 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
           child: Text(
             errorMessage!,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.red, fontSize: 16),
+            style: const TextStyle(color: Colors.redAccent, fontSize: 16),
           ),
         ),
       );
     }
 
     if (bookings.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 60, color: Colors.redAccent),
+            Icon(Icons.event_busy, size: 60, color: Theme.of(context).colorScheme.primary),
             SizedBox(height: 10),
             Text(
               "لا توجد حجوزات سابقة.",
@@ -388,11 +406,11 @@ Widget _buildBookingCard(Map<String, dynamic> booking) {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text("سجل الحجوزات",),
-          backgroundColor: Colors.redAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         ),
         body: SafeArea(child: _buildContent()),
       ),

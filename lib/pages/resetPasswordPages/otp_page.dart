@@ -123,7 +123,7 @@ class OtpPageState extends State<OtpPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -143,7 +143,6 @@ class OtpPageState extends State<OtpPage> {
             decoration: InputDecoration(
               counterText: "",
               filled: true,
-              fillColor: Colors.white,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5),
@@ -165,10 +164,10 @@ class OtpPageState extends State<OtpPage> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         ),
         body: SafeArea(
           child: Center(
@@ -182,13 +181,13 @@ class OtpPageState extends State<OtpPage> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.redAccent,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
-                    style: const TextStyle(fontSize: 16, color: Colors.black87),
+                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
@@ -200,8 +199,8 @@ class OtpPageState extends State<OtpPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        disabledBackgroundColor: Colors.red[300],
+                        backgroundColor: Colors.redAccent,
+                        disabledBackgroundColor: Colors.redAccent[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -230,7 +229,7 @@ class OtpPageState extends State<OtpPage> {
                           ? "إعادة الإرسال خلال ${secondsRemaining}ث"
                           : "إعادة إرسال الرمز",
                       style: TextStyle(
-                        color: secondsRemaining > 0 ? Colors.grey : Colors.red,
+                        color: secondsRemaining > 0 ? Colors.grey : Colors.redAccent,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

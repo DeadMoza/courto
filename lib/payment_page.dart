@@ -16,16 +16,12 @@ class PaymentPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
-        title: const Text("دفع المحفظة"),
+        title: const Text("شحن المحفظة"),
         elevation: 0,
       ),
-      backgroundColor: Colors.red[50], // Page background
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Page background
       body: Center(
         child: Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -38,6 +34,7 @@ class PaymentPage extends StatelessWidget {
             ],
           ),
           child: MoamalatPaymentUnified(
+            paymentMethod: PaymentMethod.webview,
             merchantId: dotenv.env['MOAMALAT_MERCHANT_ID']!,
             terminalId: dotenv.env['MOAMALAT_TERMINAL_ID']!,
             merchantSecretKey: dotenv.env['MOAMALAT_SECRET_KEY']!,

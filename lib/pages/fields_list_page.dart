@@ -108,12 +108,12 @@ class _FieldsListPageState extends State<FieldsListPage> {
         'calculated_distance': distance,
         'calculated_total_price': double.tryParse(
                                     f["field_has_discount"] == true
-                                        ? f["field_calculated_total_price_after_discount"]?.toString() ?? "0"
-                                        : f["field_calculated_total_price"]?.toString() ?? "0"
+                                        ? f["field_calculated_remaining_price_after_discount"]?.toString() ?? "0"
+                                        : f["field_calculated_remaining_price"]?.toString() ?? "0"
                                   ) ?? 0,
 
-        'original_total_price': double.tryParse(f["field_calculated_total_price"]?.toString() ?? "0") ?? 0,
-        'discount_price': double.tryParse(f["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0,
+        'original_total_price': double.tryParse(f["field_calculated_remaining_price"]?.toString() ?? "0") ?? 0,
+        'discount_price': double.tryParse(f["field_calculated_remaining_price_after_discount"]?.toString() ?? "0") ?? 0,
         'has_discount': f["field_has_discount"] == true,
 
                               };
@@ -189,130 +189,255 @@ class _FieldsListPageState extends State<FieldsListPage> {
         cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a));
   }
+void _showFilterDialog() {
+  showDialog(
+    context: context,
+    builder: (context) {
+      // Hold the current selections temporarily
+      int tempSelectedTypeId = _selectedTypeId;
+      int tempSelectedSort = _selectedSort;
+      int tempSelectedCityId = _selectedCityId;
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        // Hold the current selections temporarily
-        int tempSelectedTypeId = _selectedTypeId;
-        int tempSelectedSort = _selectedSort;
-        int tempSelectedCityId = _selectedCityId;
+      return StatefulBuilder(
+        builder: (context, setDialogState) {
+          // ✅ Reorder cities: selected first
+          final List<Map<String, dynamic>> reorderedCities = [
+            ...widget.cities.where((c) => c['city_id'] == tempSelectedCityId),
+            ...widget.cities.where((c) => c['city_id'] != tempSelectedCityId),
+          ];
 
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return Directionality(
-              textDirection: ui.TextDirection.rtl, // Apply RTL to dialog content
-              child: AlertDialog(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                content: SingleChildScrollView(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center, 
-                      children: [
-                        // --- City Filter Section ---
-                        const Text("اختر المدينة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 6),
-                        if (widget.cities.isEmpty)
-                          const Center(child: Text("جاري تحميل المدن...", style: TextStyle(color: Colors.grey)))
-                        else
-                          Wrap(
-                            alignment: WrapAlignment.start, 
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: widget.cities.map((city) {
-                              final cityId = city['city_id'] as int;
-                              final cityName = city['city_name'] as String;
-                              return _buildCityChip(
-                                label: cityName,
-                                cityId: cityId,
-                                selected: tempSelectedCityId == cityId,
-                                onTap: () {
-                                  // City change is special: update main state, trigger new fetch in HomePage, close dialog
-                                  setState(() => _selectedCityId = cityId);
-                                  Navigator.pop(context);
-                                  widget.onCityChanged(cityId); // Triggers Home to fetch new fields
-                                },
-                              );
-                            }).toList(),
+          return Directionality(
+            textDirection: ui.TextDirection.rtl,
+            child: AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+              content: SingleChildScrollView(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // --- City Filter Section ---
+                      const Text("المدينة",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 6),
 
-                          ),
-
-                        const SizedBox(height: 5),
-                        const Divider(),
-
-                        // --- Field Type Filter Section ---
-                        const Text("اختر نوع الملعب", 
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 12),
-
+                      if (widget.cities.isEmpty)
+                        const Center(
+                          child: Text("جاري تحميل المدن...",
+                              style: TextStyle(color: Colors.grey)),
+                        )
+                      else
                         SizedBox(
-                          height: 120, // Enough height for the boxes
+                          height: 48,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
-                              children: [
-                                const SizedBox(width: 8),
+                              children: reorderedCities.map((city) {
+                                final cityId = city['city_id'] as int;
+                                final cityName = city['city_name'] as String;
 
-                                // Category Boxes - Use lambda functions to update state
-                                _buildTypeBox(icon: Icons.sports_soccer, label: "كرة القدم", typeId: 1, selected: tempSelectedTypeId == 1, onTap: () { setDialogState(() => tempSelectedTypeId = 1); setState(() => _selectedTypeId = 1); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.sports_basketball, label: "كرة السلة", typeId: 2, selected: tempSelectedTypeId == 2, onTap: () { setDialogState(() => tempSelectedTypeId = 2); setState(() => _selectedTypeId = 2); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.sports_baseball, label: "تنس", typeId: 3, selected: tempSelectedTypeId == 3, onTap: () { setDialogState(() => tempSelectedTypeId = 3); setState(() => _selectedTypeId = 3); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.sports_tennis, label: "بادل", typeId: 4, selected: tempSelectedTypeId == 4, onTap: () { setDialogState(() => tempSelectedTypeId = 4); setState(() => _selectedTypeId = 4); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.sports_soccer, label: "بادبول", typeId: 5, selected: tempSelectedTypeId == 5, onTap: () { setDialogState(() => tempSelectedTypeId = 5); setState(() => _selectedTypeId = 5); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.airline_seat_recline_extra_rounded, label: "كارت", typeId: 6, selected: tempSelectedTypeId == 6, onTap: () { setDialogState(() => tempSelectedTypeId = 6); setState(() => _selectedTypeId = 6); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.format_paint_rounded, label: "بينت بول", typeId: 7, selected: tempSelectedTypeId == 7, onTap: () { setDialogState(() => tempSelectedTypeId = 7); setState(() => _selectedTypeId = 7); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.golf_course, label: "قولف", typeId: 8, selected: tempSelectedTypeId == 8, onTap: () { setDialogState(() => tempSelectedTypeId = 8); setState(() => _selectedTypeId = 8); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 12),
-                                _buildTypeBox(icon: Icons.sports_volleyball, label: "كرة الطائرة", typeId: 9, selected: tempSelectedTypeId == 9, onTap: () { setDialogState(() => tempSelectedTypeId = 9); setState(() => _selectedTypeId = 9); Navigator.pop(context); _applyFilters(); }),
-                                const SizedBox(width: 8),
-                              ],
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: _buildCityChip(
+                                    label: cityName,
+                                    cityId: cityId,
+                                    selected: tempSelectedCityId == cityId,
+                                    onTap: () {
+                                      // ✅ update temp selection so UI updates if you ever keep dialog open
+                                      setDialogState(() => tempSelectedCityId = cityId);
+
+                                      // your original logic: close dialog + fetch
+                                      setState(() => _selectedCityId = cityId);
+                                      Navigator.pop(context);
+                                      widget.onCityChanged(cityId);
+                                    },
+                                  ),
+                                );
+                              }).toList(),
                             ),
                           ),
                         ),
 
-                        const SizedBox(height: 20),
-                        const Divider(),
+                      const SizedBox(height: 5),
+                      const Divider(),
 
-                        // --- Sorting Section ---
-                        const Text("ترتيب حسب", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _buildSortBox(label: "الأقرب", selected: tempSelectedSort == 1, onTap: () {
+                      // --- Field Type Filter Section ---
+                      const Text("نوع الملعب",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 12),
+
+                      SizedBox(
+                        height: 120,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              const SizedBox(width: 8),
+                              _buildTypeBox(
+                                icon: Icons.sports_soccer,
+                                label: "كرة القدم",
+                                typeId: 1,
+                                selected: tempSelectedTypeId == 1,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 1);
+                                  setState(() => _selectedTypeId = 1);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.sports_basketball,
+                                label: "كرة السلة",
+                                typeId: 2,
+                                selected: tempSelectedTypeId == 2,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 2);
+                                  setState(() => _selectedTypeId = 2);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.sports_baseball,
+                                label: "تنس",
+                                typeId: 3,
+                                selected: tempSelectedTypeId == 3,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 3);
+                                  setState(() => _selectedTypeId = 3);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.sports_tennis,
+                                label: "بادل",
+                                typeId: 4,
+                                selected: tempSelectedTypeId == 4,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 4);
+                                  setState(() => _selectedTypeId = 4);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.sports_soccer,
+                                label: "بادبول",
+                                typeId: 5,
+                                selected: tempSelectedTypeId == 5,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 5);
+                                  setState(() => _selectedTypeId = 5);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.airline_seat_recline_extra_rounded,
+                                label: "كارت",
+                                typeId: 6,
+                                selected: tempSelectedTypeId == 6,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 6);
+                                  setState(() => _selectedTypeId = 6);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.format_paint_rounded,
+                                label: "بينت بول",
+                                typeId: 7,
+                                selected: tempSelectedTypeId == 7,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 7);
+                                  setState(() => _selectedTypeId = 7);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.golf_course,
+                                label: "قولف",
+                                typeId: 8,
+                                selected: tempSelectedTypeId == 8,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 8);
+                                  setState(() => _selectedTypeId = 8);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildTypeBox(
+                                icon: Icons.sports_volleyball,
+                                label: "كرة الطائرة",
+                                typeId: 9,
+                                selected: tempSelectedTypeId == 9,
+                                onTap: () {
+                                  setDialogState(() => tempSelectedTypeId = 9);
+                                  setState(() => _selectedTypeId = 9);
+                                  Navigator.pop(context);
+                                  _applyFilters();
+                                },
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Divider(),
+
+                      // --- Sorting Section ---
+                      const Text("ترتيب حسب",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildSortBox(
+                            label: "البعد",
+                            selected: tempSelectedSort == 1,
+                            onTap: () {
                               setDialogState(() => tempSelectedSort = 1);
                               setState(() => _selectedSort = tempSelectedSort);
                               Navigator.pop(context);
                               _applyFilters();
-                            }),
-                            _buildSortBox(label: "الأرخص", selected: tempSelectedSort == 2, onTap: () {
+                            },
+                          ),
+                          _buildSortBox(
+                            label: "السعر",
+                            selected: tempSelectedSort == 2,
+                            onTap: () {
                               setDialogState(() => tempSelectedSort = 2);
                               setState(() => _selectedSort = tempSelectedSort);
                               Navigator.pop(context);
                               _applyFilters();
-                            }),
-                          ],
-                        ),
-                      ],
-                    ),
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
-    );
-  }
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
   // Improved URL helper
   String getFirstImageUrl(List<dynamic> images) {
@@ -343,18 +468,18 @@ class _FieldsListPageState extends State<FieldsListPage> {
     return GestureDetector(
       onTap: isDisabled ? null : onTap, // disable tap if not Tripoli
       child: Opacity(
-        opacity: isDisabled ? 0.4 : 1.0, // dim other cities
+        opacity: isDisabled ? 0.4 : 1.0, 
         child: Chip(
           label: Text(
             label,
-            style: TextStyle(color: selected ? Colors.white : Colors.black87),
+            style: TextStyle(color: selected ? Theme.of(context).colorScheme.onPrimary : Color(0xFF1E1E1E)),
           ),
           backgroundColor:
-              selected ? Colors.redAccent : Colors.grey[200],
+              selected ? Theme.of(context).colorScheme.primary : Colors.grey[200],
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(5),
             side: BorderSide(
-              color: selected ? Colors.redAccent : Colors.grey[300]!,
+              color: selected ? Theme.of(context).colorScheme.primary : Colors.grey[300]!,
               width: selected ? 1.5 : 1,
             ),
           ),
@@ -378,10 +503,10 @@ class _FieldsListPageState extends State<FieldsListPage> {
         width: 90,
         height: 100,
         decoration: BoxDecoration(
-          color: selected ? Colors.red[100] : Colors.white,
+          color: selected ? Colors.red[100] : Theme.of(context).colorScheme.onPrimary,
           borderRadius: BorderRadius.circular(5),
           border: Border.all(
-            color: selected ? Colors.redAccent : Colors.grey[300]!,
+            color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
             width: selected ? 2 : 1,
           ),
           boxShadow: [
@@ -395,9 +520,9 @@ class _FieldsListPageState extends State<FieldsListPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: selected ? Colors.redAccent : Colors.redAccent, size: 40),
+            Icon(icon, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.primary, size: 40),
             const SizedBox(height: 6),
-            Text(label, style: TextStyle(color: selected ? Colors.redAccent : Colors.black)),
+            Text(label, style: TextStyle(color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSecondary)),
           ],
         ),
       ),
@@ -419,7 +544,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
           color: selected ? Colors.red[100] : Colors.white,
           borderRadius: BorderRadius.circular(5),
           border: Border.all(
-            color: selected ? Colors.redAccent : Colors.grey[300]!,
+            color: selected ? Theme.of(context).colorScheme.primary : Colors.black,
             width: selected ? 2 : 1,
           ),
           boxShadow: [
@@ -431,7 +556,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
           ],
         ),
         child: Center(
-          child: Text(label, style: TextStyle(color: selected ? Colors.redAccent : Colors.black)),
+          child: Text(label, style: TextStyle(color: selected ? Theme.of(context).colorScheme.primary : Colors.black)),
         ),
       ),
     );
@@ -446,6 +571,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
     final discountPercent = hasDiscount
         ? (((originalPrice - discountPrice) / originalPrice) * 100).round()
         : 0;
+    final bookingPrice = field["field_calculated_booking_price"];
 
     final openTime = field["field_open_time"] ?? '';
     final closeTime = field["field_close_time"] ?? '';
@@ -467,7 +593,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
         margin: const EdgeInsets.only(bottom: 16),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(5),
-          color: Colors.white,
+          color: Theme.of(context).cardTheme.color,
           boxShadow: [
             BoxShadow(
               color: Colors.red.withOpacity(0.15),
@@ -491,8 +617,8 @@ class _FieldsListPageState extends State<FieldsListPage> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       height: 150,
                       color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.sports_soccer, size: 40, color: Colors.redAccent),
+                      child: Center(
+                        child: Icon(Icons.sports_soccer, size: 40, color: Theme.of(context).colorScheme.primary),
                       ),
                     ),
                   ),
@@ -505,12 +631,12 @@ class _FieldsListPageState extends State<FieldsListPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.redAccent,
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Text(
                         "-$discountPercent%",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -533,19 +659,19 @@ class _FieldsListPageState extends State<FieldsListPage> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.location_on, color: Colors.redAccent, size: 16),
+                         Icon(Icons.location_on, color: Theme.of(context).colorScheme.primary, size: 16),
                           const SizedBox(width: 4),
-                          Text(distanceText, style: const TextStyle(color: Colors.black54)),
+                          Text(distanceText, style:  TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
                         ],
                       ),
                       hasDiscount
                       ? Row(
                           children: [
                             Text(
-                              "د.ل. ${discountPrice.toStringAsFixed(2)}",
-                              style: const TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 15,
+                              "الحجز: ${bookingPrice} | ${discountPrice.toStringAsFixed(2)}",
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -561,9 +687,9 @@ class _FieldsListPageState extends State<FieldsListPage> {
                           ],
                         )
                       : Text(
-                          "د.ل. ${originalPrice.toStringAsFixed(2)} / الساعة",
-                          style: const TextStyle(
-                            color: Colors.redAccent,
+                          "الحجز: ${bookingPrice} | ${originalPrice.toStringAsFixed(2)}/الساعة",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -579,12 +705,12 @@ class _FieldsListPageState extends State<FieldsListPage> {
                       Text(
                         // AppFormat is assumed to be available
                         "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
-                        style: const TextStyle(fontSize: 14, color: Colors.redAccent),
+                        style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.primary),
                       ),
                       Row(
                         children: [
-                          const Icon(Icons.people, color: Colors.redAccent, size: 16),
-                          Text(" $capacity", style: const TextStyle(color: Colors.black)),
+                         Icon(Icons.people, color: Theme.of(context).colorScheme.primary, size: 16),
+                          Text(" $capacity", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary,)),
                         ],
                       ),
                     ],
@@ -601,7 +727,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
   // Updated Widget: Header showing active filters + City
   Widget _buildActiveFiltersHeader() {
     String typeLabel = _getTypeLabel(_selectedTypeId);
-    String sortLabel = _selectedSort == 1 ? "الأقرب" : "الأرخص";
+    String sortLabel = _selectedSort == 1 ? "البعد" : "السعر";
     String cityName = _getCityName(_selectedCityId);
 
     return Padding(
@@ -619,16 +745,20 @@ class _FieldsListPageState extends State<FieldsListPage> {
                     onTap: _showFilterDialog,
                     child: Chip(
                       label: Text("المدينة: $cityName", style: const TextStyle(color: Colors.white)),
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                        side: BorderSide(color: Theme.of(context).colorScheme.primary, width: 1),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: _showFilterDialog,
                     child: Chip(
-                      label: Text("النوع: ${typeLabel}", style: const TextStyle(color: Colors.black87)),
-                      backgroundColor: Colors.white,
+                      label: Text("النوع: ${typeLabel}", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+                      backgroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
@@ -640,8 +770,8 @@ class _FieldsListPageState extends State<FieldsListPage> {
                   GestureDetector(
                     onTap: _showFilterDialog,
                     child: Chip(
-                      label: Text("ترتيب: ${sortLabel}", style: const TextStyle(color: Colors.black87)),
-                      backgroundColor: Colors.white,
+                      label: Text("ترتيب: $sortLabel", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+                      backgroundColor: Theme.of(context).colorScheme.onPrimary,
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
@@ -656,7 +786,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
 
           // Filter Button (already opens dialog)
           IconButton(
-            icon: const Icon(Icons.filter_list, color: Colors.redAccent),
+            icon: Icon(Icons.filter_list, color: Theme.of(context).colorScheme.primary),
             onPressed: _showFilterDialog,
             tooltip: "فلترة",
           ),
@@ -675,7 +805,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
           child: Builder(
             builder: (context) {
               if (widget.loading) {
-                return const Center(child: CircularProgressIndicator(color: Colors.redAccent));
+                return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
               }
 
               if (widget.errorMessage != null) {
@@ -684,7 +814,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
                       padding: const EdgeInsets.all(24.0),
                       child: Text('حدث خطأ: ${widget.errorMessage}',
                           textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.redAccent)),
+                          style: TextStyle(color: Theme.of(context).colorScheme.primary)),
                     ));
               }
 
@@ -725,7 +855,7 @@ class _FieldsListPageState extends State<FieldsListPage> {
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           // The main content is built here, including the header
           child: _buildContent(),

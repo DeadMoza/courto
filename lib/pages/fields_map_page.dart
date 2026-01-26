@@ -88,6 +88,21 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         widget.initialLng != 0;
   }
   
+  // Theme helper
+  Future<void> _setMapStyle(GoogleMapController controller) async {
+  final bool isDarkMode =
+      Theme.of(context).brightness == Brightness.dark;
+
+  if (isDarkMode) {
+    final style =
+        await rootBundle.loadString('assets/map_styles/dark_map.json');
+    controller.setMapStyle(style);
+  } else {
+    controller.setMapStyle(null); // default light map
+  }
+}
+
+
   // --- Icon & Asset Loading ---
 
   BitmapDescriptor? _getIconForField({
@@ -324,7 +339,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
           width: 240,
           padding: const EdgeInsets.all(7),
           decoration: BoxDecoration(
-            color: Colors.redAccent,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(5),
             boxShadow: [
               BoxShadow(
@@ -423,14 +438,14 @@ class _FieldsMapPageState extends State<FieldsMapPage>
 
   Widget _buildPermissionMessage() {
     return Scaffold(
-      backgroundColor: Colors.redAccent[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.map, size: 60, color: Colors.redAccent),
+            children: [
+              Icon(Icons.map, size: 60, color: Theme.of(context).colorScheme.primary),
               SizedBox(height: 20),
               Text(
                 "يجب تسجيل الدخول ومنح صلاحية الوصول إلى الموقع لمشاهدة الملاعب.",
@@ -450,7 +465,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   Widget build(BuildContext context) {
     // 1. Loading from parent (HomePage)
     if (widget.loading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.redAccent));
+      return  Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
     }
 
     // 2. Permission/Auth check
@@ -458,20 +473,20 @@ class _FieldsMapPageState extends State<FieldsMapPage>
 
     // 3. Icon Loading check (Map is available, but icons/markers are not ready)
     if (!_iconsLoaded) {
-      return const Center(child: CircularProgressIndicator(color: Colors.redAccent));
+      return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
     }
 
     // 4. Map failed to initialize/load assets
     if (!_mapAvailable) {
       return Scaffold(
-        backgroundColor: Colors.redAccent[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.map, size: 60, color: Colors.redAccent),
+              children: [
+                Icon(Icons.map, size: 60, color: Theme.of(context).colorScheme.primary),
                 SizedBox(height: 20),
                 Text(
                   "الخريطة غير متوفرة حالياً. سيتم إعادة المحاولة في بداية الشهر.",
@@ -507,15 +522,17 @@ class _FieldsMapPageState extends State<FieldsMapPage>
             myLocationButtonEnabled: true,
             cameraTargetBounds: CameraTargetBounds(_cityBounds),
             minMaxZoomPreference: const MinMaxZoomPreference(11, 17),
-            onMapCreated: (controller) {
+            onMapCreated: (controller) async {
               try {
                 _mapController = controller;
                 _customInfoWindowController.googleMapController = controller;
+                await _setMapStyle(controller);
               } catch (e) {
                 print("Map failed to load: $e");
                 setState(() => _mapAvailable = false);
               }
             },
+
             onTap: (_) {
               if (_selectedMarkerId != null) {
                 _customInfoWindowController.hideInfoWindow!();

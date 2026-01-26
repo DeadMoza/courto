@@ -54,7 +54,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("تم تحديث كلمة المرور بنجاح"),
-            backgroundColor: Colors.red,
+            backgroundColor: Colors.redAccent,
           ),
         );
         // Pop all pages until LoginPage
@@ -77,7 +77,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -94,9 +94,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor:Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
@@ -117,7 +117,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: Colors.redAccent,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -130,7 +130,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   obscureText: !showPassword,
                   decoration: InputDecoration(
                     labelText: "كلمة المرور الجديدة",
-                    prefixIcon: const Icon(Icons.lock, color: Colors.red),
+                    prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
                     suffixIcon: IconButton(
                       icon: Icon(
                         showPassword ? Icons.visibility_off : Icons.visibility,
@@ -141,7 +141,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       },
                     ),
                     filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5),
                       borderSide: BorderSide.none,
@@ -156,7 +155,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   obscureText: !showConfirmPassword,
                   decoration: InputDecoration(
                     labelText: "تأكيد كلمة المرور الجديدة",
-                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.red),
+                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
                     suffixIcon: IconButton(
                       icon: Icon(
                         showConfirmPassword
@@ -169,7 +168,6 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       },
                     ),
                     filled: true,
-                    fillColor: Colors.white,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5),
                       borderSide: BorderSide.none,
@@ -185,8 +183,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   child: ElevatedButton(
                     onPressed: loading ? null : _resetPassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      disabledBackgroundColor: Colors.red[300],
+                      backgroundColor: Colors.redAccent,
+                      disabledBackgroundColor: Colors.redAccent[300],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),

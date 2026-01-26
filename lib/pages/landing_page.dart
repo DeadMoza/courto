@@ -8,8 +8,6 @@ import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // --- Global Design Constants for a cleaner look ---
-const Color kPrimaryColor = Colors.redAccent;
-const Color kBackgroundColor = Color(0xFFFAFAFA); // Very light grey background
 const double kPadding = 16.0;
 
 // Placeholder for AppFormat.formatArabicTime, as it wasn't provided in the original code
@@ -122,7 +120,7 @@ class LandingPage extends StatelessWidget {
         child: Material(
           elevation: 4,
           borderRadius: BorderRadius.circular(10),
-          color: kPrimaryColor, // Use primary color for visibility
+          color: Theme.of(context).colorScheme.primary, // Use primary color for visibility
           child: Container(
             height: 80,
             padding: const EdgeInsets.all(4),
@@ -183,7 +181,7 @@ class LandingPage extends StatelessWidget {
       height: 240, // <-- increased (solves overflow)
       margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardTheme.color,
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
@@ -221,7 +219,7 @@ Stack(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.redAccent,
+            color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -242,7 +240,7 @@ Stack(
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: kPrimaryColor,
+          color: Theme.of(context).colorScheme.primary,
           shape: BoxShape.circle,
         ),
         child: _getFieldTypeIcon(fieldType),
@@ -262,7 +260,7 @@ Stack(
                   fieldName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Colors.redAccent),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary),
                 ),
 
                 const SizedBox(height: 4),
@@ -275,15 +273,15 @@ Stack(
                       "$city - $location",
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(fontSize: 12, color: Colors.black54),
+                      style:  TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
                     ),
                     Row(
                       children: [
-                        const Icon(Icons.people, size: 14, color: Colors.redAccent),
+                       Icon(Icons.people, size: 14, color: Theme.of(context).colorScheme.primary),
                         const SizedBox(width: 4),
                         Text(
                           capacity,
-                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
                         ),
                       ],
                     ),
@@ -300,10 +298,10 @@ Stack(
                       children: [
                         Text(
                           "د.ل ${discountPrice.toStringAsFixed(1)}",
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.redAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -321,7 +319,7 @@ Stack(
                     children: [
                       Text(
                         "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
-                        style: const TextStyle(fontSize: 12, color: Colors.black54),
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
                       ),
                     ],
                   ),
@@ -341,7 +339,7 @@ Stack(
     return Directionality(
       textDirection: ui.TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: kBackgroundColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
@@ -467,11 +465,11 @@ Stack(
                   child: Align(
                     alignment: Alignment.center,
                     child: Text(
-                      "العروض و المباريات",
+                      "العروض و التخفيضات",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: kPrimaryColor,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
@@ -522,7 +520,7 @@ Stack(
             child: Material(
               elevation: 6,
               borderRadius: BorderRadius.circular(10),
-              color: kPrimaryColor,
+              color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: 120,
                 padding: const EdgeInsets.all(8),
@@ -555,7 +553,7 @@ Stack(
             child: Material(
               elevation: 6,
               borderRadius: BorderRadius.circular(10),
-              color: kPrimaryColor,
+              color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: 120,
                 padding: const EdgeInsets.all(8),
@@ -598,7 +596,7 @@ Stack(
                 child: Material(
                   elevation: 4,
                   borderRadius: BorderRadius.circular(10),
-                  color: kPrimaryColor,
+                  color: Theme.of(context).colorScheme.primary,
                   child: Container(
                     height: (buttonHeight - 4) / 2,
                     width: double.infinity,
@@ -624,7 +622,7 @@ Stack(
               Material(
                 elevation: 4,
                 borderRadius: BorderRadius.circular(10),
-                color: kPrimaryColor,
+                color: Theme.of(context).colorScheme.primary,
                 child: Container(
                   height: (buttonHeight - 4) / 2,
                   width: double.infinity,
@@ -662,7 +660,7 @@ Stack(
             child: Material(
               elevation: 6,
               borderRadius: BorderRadius.circular(10),
-              color: kPrimaryColor,
+              color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: buttonHeight,
                 width: double.infinity,
@@ -754,7 +752,7 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
     return Container(
       height: 40,
       width: double.infinity,
-      color: kPrimaryColor,
+      color: Theme.of(context).colorScheme.primary,
       child: ShaderMask(
         shaderCallback: (Rect bounds) {
           return const LinearGradient(

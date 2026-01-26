@@ -160,7 +160,7 @@ class _OtpPageState extends State<OtpPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -179,7 +179,7 @@ class _OtpPageState extends State<OtpPage> {
             decoration: InputDecoration(
               counterText: "",
               filled: true,
-              fillColor: Colors.white,
+              fillColor: Theme.of(context).colorScheme.onPrimary,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5),
@@ -201,10 +201,10 @@ class _OtpPageState extends State<OtpPage> {
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
-        backgroundColor: Colors.redAccent[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         ),
         body: SafeArea(
           child: Center(
@@ -214,21 +214,21 @@ class _OtpPageState extends State<OtpPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   // Title
-                  const Text(
+                 Text(
                     "رمز التحقق",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   Text(
                     "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSecondary,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -245,18 +245,18 @@ class _OtpPageState extends State<OtpPage> {
                     child: ElevatedButton(
                       onPressed: loading ? null : _verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        disabledBackgroundColor: Colors.redAccent[300],
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       child: loading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 strokeWidth: 2.5,
                               ),
                             )
@@ -277,7 +277,7 @@ class _OtpPageState extends State<OtpPage> {
                           ? "إعادة الإرسال خلال ${secondsRemaining}ث"
                           : "إعادة إرسال الرمز",
                       style: TextStyle(
-                        color: secondsRemaining > 0 ? Colors.grey : Colors.redAccent,
+                        color: secondsRemaining > 0 ? Colors.grey : Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

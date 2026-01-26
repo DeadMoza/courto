@@ -1,7 +1,9 @@
 import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/settingsPages/favorites_page.dart';
+import 'package:courto/pages/settingsPages/language_page.dart';
 import 'package:courto/pages/settingsPages/policy_page.dart';
 import 'package:courto/pages/settingsPages/support_page.dart';
+import 'package:courto/pages/settingsPages/theme_page.dart';
 import 'package:courto/pages/signup_page.dart';
 import 'package:flutter/material.dart';
 import 'package:courto/pages/settingsPages/about_page.dart';
@@ -45,7 +47,7 @@ void _showLogoutConfirmation(BuildContext parentContext) {
             onPressed: () => Navigator.of(context).pop(),
           ),
           TextButton(
-            child: const Text('نعم', style: TextStyle(color: Colors.redAccent)),
+            child: Text('نعم', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
             onPressed: () {
               Navigator.of(context).pop(); // close dialog
               _logout(parentContext);      // USE PARENT CONTEXT
@@ -63,7 +65,7 @@ void _showLogoutConfirmation(BuildContext parentContext) {
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      color: Colors.red[50],
+      color: Theme.of(context).scaffoldBackgroundColor,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween, 
         children: [
@@ -99,12 +101,11 @@ void _showLogoutConfirmation(BuildContext parentContext) {
 
   @override
   Widget build(BuildContext context) {
-    print(fields);
     final isLoggedIn = AuthService.isLoggedIn;
     final String userName = isLoggedIn ? AuthService.fullName : "يرجى تسجيل الدخول"; 
 
     return Scaffold(
-      backgroundColor: Colors.white, 
+      backgroundColor: Theme.of(context).colorScheme.onPrimary, 
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -153,8 +154,6 @@ void _showLogoutConfirmation(BuildContext parentContext) {
               ),
               const Divider(height: 1),
             ],
-            
-        
 
             SettingsTile(
               icon: Icons.policy,
@@ -174,19 +173,39 @@ void _showLogoutConfirmation(BuildContext parentContext) {
             ),
 
             const Divider(height: 1),
+
+                        SettingsTile( 
+              icon: Icons.language,
+              title: "لغة التطبيق",
+              onTap: () {
+                 Navigator.push(context, MaterialPageRoute(builder: (_) => const LanguagePage()));
+              },
+            ),
+            
+            const Divider(height: 1),
+
+            SettingsTile( 
+              icon: Icons.visibility,
+              title: "وضع الرؤية",
+              onTap: () {
+                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ThemePage()));
+              },
+            ),
+
+            const Divider(height: 1),
             
             if (isLoggedIn) 
               SettingsTile(
                 icon: Icons.logout,
                 title: "تسجيل الخروج",
-                iconColor: Colors.redAccent,
+                iconColor: Theme.of(context).colorScheme.primary,
                 onTap: () => _showLogoutConfirmation(context),
               )
             else
               SettingsTile(
                 icon: Icons.login,
                 title: "تسجيل الدخول",
-                iconColor: Colors.redAccent,
+                iconColor: Theme.of(context).colorScheme.primary,
                 onTap: () {
                   Navigator.pushReplacement(
                     context,
@@ -212,7 +231,7 @@ class SettingsTile extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
-    this.iconColor = Colors.redAccent,
+    this.iconColor,
     super.key,
   });
 

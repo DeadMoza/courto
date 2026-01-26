@@ -84,12 +84,12 @@ class _FavoritesPageState extends State<FavoritesPage> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+         SnackBar(
             content: Text(
               "تمت الإزالة من المفضلة",
               textDirection: TextDirection.rtl,
             ),
-            backgroundColor: Colors.redAccent,
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       } else {
@@ -114,7 +114,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
               onPressed: () => Navigator.pop(context, false),
             ),
             TextButton(
-              child: const Text("حذف", style: TextStyle(color: Colors.redAccent)),
+              child: Text("حذف", style: TextStyle(color: Theme.of(context).colorScheme.primary)),
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
@@ -134,7 +134,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
           message,
           textDirection: TextDirection.rtl,
         ),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -167,14 +167,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.red[50],
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           title: const Text("المفضلة"),
-          backgroundColor: Colors.redAccent,
-          foregroundColor: Colors.white,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         ),
         body: loading
-            ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+            ? Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary))
             : favorites.isEmpty
                 ? const Center(
                     child: Text(
@@ -190,7 +190,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
 
                       return Card(
                         elevation: 3,
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onPrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
@@ -209,14 +209,14 @@ class _FavoritesPageState extends State<FavoritesPage> {
                           leading: Icon(
                             _getFieldIcon(fav["field_type"]),
                             size: 34,
-                            color: Colors.redAccent,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
                           title: Text(
                             fav["field_name"],
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.redAccent,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           ),
                           subtitle: Padding(
@@ -234,7 +234,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             ),
                           ),
                           trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.redAccent),
+                            icon: Icon(Icons.delete, color: Theme.of(context).colorScheme.primary),
                             onPressed: () {
                               confirmRemoveFavorite(fav["field_id"]);
                             },
