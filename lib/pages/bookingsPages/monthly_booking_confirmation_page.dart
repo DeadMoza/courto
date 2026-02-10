@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
 import 'package:courto/services/auth_service.dart';
-import 'dart:ui' as ui;
+import 'package:courto/l10n/app_localizations.dart';
 
 class MonthlyBookingConfirmationPage extends StatefulWidget {
   final Map<String, dynamic> field;
@@ -25,14 +25,11 @@ class MonthlyBookingConfirmationPage extends StatefulWidget {
     required this.userId,
     required this.totalBookingPrice,
     required this.remainingPaymentToOwner,
-
-    
   });
 
   @override
   State<MonthlyBookingConfirmationPage> createState() =>
       _MonthlyBookingConfirmationPageState();
-      
 }
 
 class _MonthlyBookingConfirmationPageState
@@ -40,93 +37,114 @@ class _MonthlyBookingConfirmationPageState
   final TextEditingController _noteController = TextEditingController();
   final apiUrl = dotenv.env['API_URL'];
 
-/// Merge consecutive booked time slots and handle cross-midnight times
-List<Map<String, DateTime>> _mergeConsecutiveSlots() {
-  if (widget.slots.isEmpty) return [];
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
-  List<Map<String, DateTime>> merged = [];
-  widget.slots.sort((a, b) =>
-      DateTime.parse(a['start']).compareTo(DateTime.parse(b['start'])));
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
 
-  DateTime? currentStart;
-  DateTime? currentEnd;
+  /// Merge consecutive booked time slots and handle cross-midnight times
+  List<Map<String, DateTime>> _mergeConsecutiveSlots() {
+    if (widget.slots.isEmpty) return [];
 
-  for (final s in widget.slots) {
-    DateTime start = DateTime.parse(s['start']);
-    DateTime end = DateTime.parse(s['end']);
+    final merged = <Map<String, DateTime>>[];
+    widget.slots.sort((a, b) =>
+        DateTime.parse(a['start']).compareTo(DateTime.parse(b['start'])));
 
-    if (end.isBefore(start)) {
-      end = end.add(const Duration(days: 1));
+    DateTime? currentStart;
+    DateTime? currentEnd;
+
+    for (final s in widget.slots) {
+      DateTime start = DateTime.parse(s['start']);
+      DateTime end = DateTime.parse(s['end']);
+
+      if (end.isBefore(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+
+      if (currentStart == null) {
+        currentStart = start;
+        currentEnd = end;
+      } else if (start.isAtSameMomentAs(currentEnd!)) {
+        currentEnd = end;
+      } else {
+        merged.add({'start': currentStart, 'end': currentEnd});
+        currentStart = start;
+        currentEnd = end;
+      }
     }
 
-    if (currentStart == null) {
-      currentStart = start;
-      currentEnd = end;
-    } else if (start.isAtSameMomentAs(currentEnd!)) {
-      currentEnd = end;
-    } else {
+    if (currentStart != null && currentEnd != null) {
       merged.add({'start': currentStart, 'end': currentEnd});
-      currentStart = start;
-      currentEnd = end;
     }
+
+    return merged;
   }
 
-  if (currentStart != null && currentEnd != null) {
-    merged.add({'start': currentStart, 'end': currentEnd});
-  }
+  void _showMidnightInfoDialog() {
+    final t = AppLocalizations.of(context)!;
 
-  return merged;
-}
-  void _showMidnightInfoDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Flexible( 
-                child: Text(
-                  "تنبيه بخصوص التوقيت",
-                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18,),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ],
+      builder: (_) => Directionality(
+        textDirection: _dir,
+        child: AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: Text(
+            _isEnglish ? "Time notice" : t.midnightInfoTitle,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontSize: 18,
+            ),
+            textAlign: TextAlign.center,
           ),
-          content: const Text(
-            "إذا كانت فترة الحجز تمتد إلى ما بعد منتصف الليل (12:00 ص)، فإن تلك الساعات تقع فعليًا في اليوم التالي للتاريخ المحدد في الأعلى، وليس في التاريخ الحالي.",
-            textAlign: TextAlign.right,
+          content: Text(
+            _isEnglish
+                ? "If your booking extends past midnight (12:00 AM), those hours belong to the next day, not the selected date."
+                : t.midnightInfoBody,
+            textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text("حسناً", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                _isEnglish ? "OK" : t.ok,
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
-
   Future<void> _bookField() async {
+    final t = AppLocalizations.of(context)!;
+
     final mergedRanges = _mergeConsecutiveSlots();
     if (mergedRanges.isEmpty) return;
 
     final firstRange = mergedRanges.first;
     final startTime = firstRange['start']!;
     final endTime = firstRange['end']!;
-    final note = _noteController.text;  
+    final note = _noteController.text;
 
     final totalBookingPrice = widget.totalBookingPrice * 4;
-    final remaining =  widget.remainingPaymentToOwner * 4;
+    final remaining = widget.remainingPaymentToOwner * 4;
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => Center(
+        child: CircularProgressIndicator(
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
     );
 
     try {
@@ -150,85 +168,121 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
           "client_id": widget.field["field_client_id"],
           "field_name": widget.field["field_name"],
         }),
-
       );
 
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("تم ارسال طلب الحجز الشهري إلى صاحب الملعب."),
-            backgroundColor: Colors.red,
+          SnackBar(
+            content: Text(
+              _isEnglish
+                  ? "Monthly booking request sent to the field owner."
+                  : t.monthlyRequestSent,
+              textDirection: _dir,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
         Navigator.pushReplacementNamed(context, "/bookingHistoryPage");
-
       } else {
         final data = jsonDecode(response.body);
-        final message = data['message'] ?? 'فشل تأكيد الحجز';
+        final message = data['message'] ??
+            (_isEnglish ? "Booking confirmation failed" : t.bookingConfirmFailed);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text(message.toString(), textDirection: _dir),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
         );
       }
     } catch (e) {
-      Navigator.pop(context);
+      if (mounted) Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("حدث خطأ: $e"), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(
+            _isEnglish ? "Error: $e" : t.errorWithMessage(e.toString()),
+            textDirection: _dir,
+          ),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
       );
     }
   }
 
   void _confirmBooking() {
+    final t = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(
-          "تأكيد الحجز الشهري",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Theme.of(context).colorScheme.primary),
-        ),
-        content: const Text(
-          "هل تريد تأكيد هذا الحجز لمدة 4 ايام؟",
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("إلغاء", style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+      builder: (_) => Directionality(
+        textDirection: _dir,
+        child: AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          title: Text(
+            _isEnglish ? "Confirm monthly booking" : t.monthlyConfirmDialogTitle,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              shape:
-                  RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+          content: Text(
+            _isEnglish
+                ? "Do you want to confirm this booking for 4 dates?"
+                : t.monthlyConfirmDialogBody,
+            textAlign: TextAlign.center,
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                _isEnglish ? "Cancel" : t.cancel,
+                style:
+                    TextStyle(color: Theme.of(context).colorScheme.onSecondary),
+              ),
             ),
-            onPressed: () {
-              Navigator.pop(context);
-              _bookField();
-            },
-            child: const Text("تأكيد", style: TextStyle(color: Colors.white)),
-          ),
-        ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(5),
+                ),
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+                _bookField();
+              },
+              child: Text(
+                _isEnglish ? "Confirm" : t.confirm,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final t = AppLocalizations.of(context)!;
+
     final mergedRanges = _mergeConsecutiveSlots();
 
     final totalBookingPrice = widget.totalBookingPrice * 4;
-    final remaining =  widget.remainingPaymentToOwner * 4;
+    final remaining = widget.remainingPaymentToOwner * 4;
 
     final date2 = widget.date.add(const Duration(days: 7));
     final date3 = widget.date.add(const Duration(days: 14));
     final date4 = widget.date.add(const Duration(days: 21));
 
+    final currency = _isEnglish ? "LYD" : t.currencyLYD;
+
+    final fieldName = !_isEnglish ? (widget.field["field_name"] ?? '').toString() : (widget.field["field_english_name"] ?? '').toString();
+
+
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      textDirection: _dir,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -238,9 +292,10 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
             color: Theme.of(context).colorScheme.onPrimary,
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, -2)),
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 8,
+                offset: const Offset(0, -2),
+              ),
             ],
           ),
           child: SafeArea(
@@ -250,11 +305,17 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("سعر الحجز",
-                        style: TextStyle(fontSize: 16)),
                     Text(
-                      "${totalBookingPrice.toStringAsFixed(2)} د.ل",
-                      style: const TextStyle(fontSize: 16, color: Colors.red),
+                      _isEnglish ? "Booking price" : t.bookingPrice,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      "${totalBookingPrice.toStringAsFixed(2)} $currency",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -262,11 +323,17 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("المبلغ المتبقي لصاحب الملعب:",
-                        style: TextStyle(fontSize: 16)),
                     Text(
-                      "${remaining.toStringAsFixed(2)} د.ل",
-                      style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
+                      _isEnglish ? "Remaining to owner:" : t.remainingToOwner,
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      "${remaining.toStringAsFixed(2)} $currency",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -282,9 +349,11 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: _confirmBooking,
-                    child: const Text(
-                      "تأكيد الحجز الشهري",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    child: Text(
+                      _isEnglish
+                          ? "Confirm monthly booking"
+                          : t.confirmMonthlyBookingButton,
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
                 ),
@@ -296,177 +365,196 @@ List<Map<String, DateTime>> _mergeConsecutiveSlots() {
           padding: const EdgeInsets.all(16),
           child: Card(
             color: Theme.of(context).colorScheme.onPrimary,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             elevation: 3,
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.field['field_name'] ?? 'ملعب غير معروف',
-                      style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary)),
-                  const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(5),
+                  Text(
+                    fieldName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                     Icon(Icons.calendar_today, size: 20, color: Theme.of(context).colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          "${AppFormat.formatDateArabic(widget.date)} - ${AppFormat.formatDateArabic(date2)} - ${AppFormat.formatDateArabic(date3)} - ${AppFormat.formatDateArabic(date4)}",
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Theme.of(context).colorScheme.onSecondary,
-                            height: 1.4,
-                          ),
-                          overflow: TextOverflow.visible,
-                          softWrap: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
                   const SizedBox(height: 8),
-if (mergedRanges.isNotEmpty)
-  Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      // Times on the left (takes remaining width)
-      Expanded(
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: mergedRanges.map((r) {
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              child: Text(
-                "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.onSecondary,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ),
-
-      const SizedBox(width: 8),
-
-      // Midnight info icon on the right
-      IconButton(
-        icon: Icon(Icons.nights_stay,
-            color: Theme.of(context).colorScheme.primary, size: 24),
-        onPressed: () => _showMidnightInfoDialog(context),
-        padding: EdgeInsets.zero,
-        constraints: const BoxConstraints(),
-        tooltip: "تنبيه بخصوص التوقيت",
-      ),
-    ],
-  ),
-
-                  const Divider(height: 30, thickness: 1.2),
-                  Column(
-                    children: [
-                                        Container(
-                    padding: const EdgeInsets.all(8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
                     decoration: BoxDecoration(
                       color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius: BorderRadius.circular(5),
-                      border: Border.all(color: Theme.of(context).colorScheme.primary),
                     ),
-                    child: Column(
+                    child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                           Icon(Icons.info_outline,
-                                color: Theme.of(context).colorScheme.primary, size: 20),
-                            const SizedBox(width: 5),
-Flexible(
-                              child: RichText(
-  text:  TextSpan(
-    style: TextStyle(
-      fontSize: 14.5,
-      height: 1.5,
-      color: Theme.of(context).colorScheme.onSecondary,
-      fontFamily: "Changa"
-    ),
-    children: [
-      const TextSpan(
-        text:
-            "في حالة بقاء حجزك قيد الانتظار فيمكنك الغاء الحجز بعد مرور 20 دقيقة بالضبط.\n"
-            "ولا يمكنك حجز ملعب آخر أثناء وجود حجز قيد الانتظار.\n\n"
-            "سيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\n"
-            "سيتم خصم مبلغ الحجز ",
-      ),
-      TextSpan(
-        text: "$totalBookingPrice د.ل",
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      const TextSpan(
-        text: " في لحظة قبول مدير الملعب لطلبك، وسيتعين عليك دفع ",
-      ),
-      TextSpan(
-        text: "${remaining.toStringAsFixed(2)} د.ل",
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      const TextSpan(
-        text: " لمدير الملعب بعد او قبل الانتهاء من اللعب.",
-      ),
-    ],
-  ),
-)
-
+                        Icon(Icons.calendar_today,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _isEnglish
+                                ? "${widget.date.year}-${widget.date.month.toString().padLeft(2, '0')}-${widget.date.day.toString().padLeft(2, '0')} - "
+                                  "${date2.year}-${date2.month.toString().padLeft(2, '0')}-${date2.day.toString().padLeft(2, '0')} - "
+                                  "${date3.year}-${date3.month.toString().padLeft(2, '0')}-${date3.day.toString().padLeft(2, '0')} - "
+                                  "${date4.year}-${date4.month.toString().padLeft(2, '0')}-${date4.day.toString().padLeft(2, '0')}"
+                                : "${AppFormat.formatDateArabic(widget.date)} - ${AppFormat.formatDateArabic(date2)} - ${AppFormat.formatDateArabic(date3)} - ${AppFormat.formatDateArabic(date4)}",
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Theme.of(context).colorScheme.onSecondary,
+                              height: 1.4,
                             ),
-                          ],
+                            overflow: TextOverflow.visible,
+                            softWrap: true,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                    ],
+                  const SizedBox(height: 8),
+                  if (mergedRanges.isNotEmpty)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: mergedRanges.map((r) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 14),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).scaffoldBackgroundColor,
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  "${AppFormat.formatTime(r['start']!)} - ${AppFormat.formatTime(r['end']!)}",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSecondary,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Tooltip(
+                          message: _isEnglish ? "Time notice" : t.timeTooltip,
+                          child: IconButton(
+                            icon: Icon(Icons.nights_stay,
+                                color: Theme.of(context).colorScheme.primary,
+                                size: 24),
+                            onPressed: _showMidnightInfoDialog,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  const Divider(height: 30, thickness: 1.2),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(5),
+                      border: Border.all(
+                          color: Theme.of(context).colorScheme.primary),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.info_outline,
+                            color: Theme.of(context).colorScheme.primary,
+                            size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: RichText(
+                            textDirection: _dir,
+                            text: TextSpan(
+                              style: TextStyle(
+                                fontSize: 14.5,
+                                height: 1.5,
+                                color:
+                                    Theme.of(context).colorScheme.onSecondary,
+                                fontFamily: "Changa",
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: _isEnglish
+                                      ? ("If your booking stays pending, you can cancel it exactly after 20 minutes.\n"
+                                          "You can't book another field while you have a pending booking.\n\n"
+                                          "The field manager will accept or reject your request as soon as possible.\n\n"
+                                          "The booking amount ")
+                                      : t.pendingInfoPrefix,
+                                ),
+                                TextSpan(
+                                  text:
+                                      "${totalBookingPrice.toStringAsFixed(2)} $currency",
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: _isEnglish
+                                      ? " will be charged when the request is accepted, and you'll need to pay "
+                                      : t.pendingInfoMiddle,
+                                ),
+                                TextSpan(
+                                  text:
+                                      "${remaining.toStringAsFixed(2)} $currency",
+                                  style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: _isEnglish
+                                      ? " to the field manager before or after playing."
+                                      : t.pendingInfoSuffix,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
-                       Text(
-                        "ملاحظات لصاحب الملعب:",
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.onSecondary),
-                      ),
+                  Text(
+                    _isEnglish ? "Notes to field manager:" : t.notesToOwnerLabel,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _noteController,
                     maxLines: 3,
+                    textDirection: _dir,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5)),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(5),
                         borderSide: BorderSide(
-                            color: Theme.of(context).colorScheme.primary, width: 1.5),
+                          color: Theme.of(context).colorScheme.primary,
+                          width: 1.5,
+                        ),
                       ),
                     ),
                   ),

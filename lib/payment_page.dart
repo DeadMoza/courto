@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:courto/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -13,10 +14,11 @@ class PaymentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final amountDirham = (amountLYD * 1000).toString();
+    final t = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("شحن المحفظة"),
+        title: Text(t.paymentPage),
         elevation: 0,
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor, // Page background

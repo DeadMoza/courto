@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'otp_page.dart'; 
+
+import 'otp_page.dart';
 
 class PhoneInputPage extends StatefulWidget {
   final String? phoneNumber;
@@ -18,6 +19,9 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
   bool loading = false;
   final apiUrl = dotenv.env['API_URL'];
 
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
+
   @override
   void initState() {
     super.initState();
@@ -30,9 +34,17 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
     super.dispose();
   }
 
-  Future<void> _submitPhone() async {
-    String phone = phoneController.text.trim();
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, textDirection: _dir),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
 
+  String _normalizeLibyanPhone(String input) {
+    String phone = input.trim();
 
     if (phone.startsWith("09")) {
       phone = "218${phone.substring(1)}";
@@ -44,13 +56,15 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
       phone = "218$phone";
     }
 
-    if (phone.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("يرجى إدخال رقم الهاتف"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+    return phone;
+  }
+
+  Future<void> _submitPhone() async {
+    final raw = phoneController.text;
+    final phone = _normalizeLibyanPhone(raw);
+
+    if (raw.trim().isEmpty) {
+      _showSnack(_isEnglish ? "Please enter your phone number" : "يرجى إدخال رقم الهاتف");
       return;
     }
 
@@ -60,10 +74,14 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
       final url = Uri.parse("${apiUrl}users/checkPhoneNumber");
       final res = await http.post(
         url,
-        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
+        headers: {
+          "Content-Type": "application/json",
+          'x-api-key': '${dotenv.env['API_KEY']}',
+        },
         body: jsonEncode({"phone_number": phone}),
       );
 
+      if (!mounted) return;
       setState(() => loading = false);
 
       if (res.statusCode == 200) {
@@ -74,34 +92,29 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
           ),
         );
       } else {
-        String msg = "فشل التحقق من الرقم";
+        String msg = _isEnglish ? "Failed to verify the number" : "فشل التحقق من الرقم";
         try {
           final data = jsonDecode(res.body);
-          if (data["error"] != null) msg = data["error"];
+          if (data["error"] != null) msg = data["error"].toString();
         } catch (_) {}
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
-        );
+        _showSnack(msg);
       }
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
       setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("خطأ في الاتصال بالشبكة"),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      _showSnack(_isEnglish ? "Network error, please try again" : "خطأ في الاتصال بالشبكة");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _dir,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
-          backgroundColor: Colors.redAccent,
+          backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+          iconTheme: const IconThemeData(color: Colors.white),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => Navigator.pop(context),
@@ -113,59 +126,67 @@ class _PhoneInputPageState extends State<PhoneInputPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Text(
-                "إعادة تعيين كلمة المرور",
+              Text(
+                _isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 10),
-              const Text(
-                "أدخل رقم الهاتف المسجل لدينا لإعادة تعيين كلمة المرور:",
-                style: TextStyle(fontSize: 16),
+              Text(
+                _isEnglish
+                    ? "Enter the phone number registered with us to reset your password:"
+                    : "أدخل رقم الهاتف المسجل لدينا لإعادة تعيين كلمة المرور:",
+                style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
+
               TextField(
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
+                textDirection: TextDirection.ltr, // numbers always better LTR
                 decoration: InputDecoration(
-                  labelText: "رقم الهاتف",
-                  prefixIcon: const Icon(Icons.phone, color: Colors.redAccent),
+                  labelText: _isEnglish ? "Phone number" : "رقم الهاتف",
+                  prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                   filled: true,
+                  fillColor: Theme.of(context).colorScheme.onPrimary,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(5),
                     borderSide: BorderSide.none,
                   ),
                 ),
               ),
+
               const SizedBox(height: 24),
+
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
                   onPressed: loading ? null : _submitPhone,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.redAccent,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
                   ),
                   child: loading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.5,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         )
-                      : const Text(
-                          "متابعة",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
+                      : Text(
+                          _isEnglish ? "Continue" : "متابعة",
+                          style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onPrimary),
                         ),
                 ),
               ),

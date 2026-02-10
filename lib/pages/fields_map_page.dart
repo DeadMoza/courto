@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:custom_info_window/custom_info_window.dart';
 import 'dart:ui' as ui;
+import 'package:courto/l10n/app_localizations.dart';
 import 'bookingsPages/field_details_page.dart';
 import '../services/auth_service.dart';
 
@@ -40,11 +41,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
 
   // --- New/Updated State Variables ---
   final Map<String, BitmapDescriptor> _cachedIcons = {};
-  final Map<String, Map<String, dynamic>> _fieldLookup = {}; // For fast field lookup by MarkerId
-  bool _iconsLoaded = false; // Tracks if asset loading is complete
-  
+  final Map<String, Map<String, dynamic>> _fieldLookup = {};
+  bool _iconsLoaded = false;
+
   String? _selectedMarkerId;
-  bool _mapAvailable = true; // Track map availability
+  bool _mapAvailable = true;
 
   final int radiusKm = 20;
   late LatLngBounds _cityBounds;
@@ -63,7 +64,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   void initState() {
     super.initState();
     _defineCityBounds();
-    _loadCustomMarkers(); // This calls _loadFieldMarkers() when done
+    _loadCustomMarkers();
   }
 
   @override
@@ -75,42 +76,34 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   @override
   void didUpdateWidget(covariant FieldsMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only reload markers if the data changed AND icons are loaded
     if (widget.fields != oldWidget.fields && _iconsLoaded) {
       _loadFieldMarkers();
     }
   }
 
-  // Helper getter to check map prerequisites
   bool get _canShowMap {
     return AuthService.isLoggedIn &&
         widget.initialLat != 0 &&
         widget.initialLng != 0;
   }
-  
-  // Theme helper
+
   Future<void> _setMapStyle(GoogleMapController controller) async {
-  final bool isDarkMode =
-      Theme.of(context).brightness == Brightness.dark;
+    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-  if (isDarkMode) {
-    final style =
-        await rootBundle.loadString('assets/map_styles/dark_map.json');
-    controller.setMapStyle(style);
-  } else {
-    controller.setMapStyle(null); // default light map
+    if (isDarkMode) {
+      final style = await rootBundle.loadString('assets/map_styles/dark_map.json');
+      controller.setMapStyle(style);
+    } else {
+      controller.setMapStyle(null);
+    }
   }
-}
-
-
-  // --- Icon & Asset Loading ---
 
   BitmapDescriptor? _getIconForField({
     required Map<String, dynamic> field,
     required bool isSelected,
   }) {
     final String type = (field["field_type"] ?? '').toString().toLowerCase();
-    
+
     switch (type) {
       case 'tennis':
         return isSelected
@@ -125,9 +118,9 @@ class _FieldsMapPageState extends State<FieldsMapPage>
             ? _cachedIcons[_padelSelectedIconKey]
             : _cachedIcons[_padelIconKey];
       default:
-          return isSelected
-              ? _cachedIcons[_fieldSelectedIconKey]
-              : _cachedIcons[_fieldIconKey];
+        return isSelected
+            ? _cachedIcons[_fieldSelectedIconKey]
+            : _cachedIcons[_fieldIconKey];
     }
   }
 
@@ -154,16 +147,13 @@ class _FieldsMapPageState extends State<FieldsMapPage>
           await _bitmapDescriptorFromAsset("assets/images/courtoPadelSprite.png", 130);
 
       if (mounted) {
-        setState(() {
-          _iconsLoaded = true;
-        });
+        setState(() => _iconsLoaded = true);
         _loadFieldMarkers();
       }
     } catch (e) {
+      // ignore: avoid_print
       print("Failed to load custom markers: $e");
-      if (mounted) {
-        setState(() => _mapAvailable = false);
-      }
+      if (mounted) setState(() => _mapAvailable = false);
     }
   }
 
@@ -176,8 +166,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     final Uint8List resized = byteData!.buffer.asUint8List();
     return BitmapDescriptor.fromBytes(resized);
   }
-
-  // --- Map and Marker Logic ---
 
   void _defineCityBounds() {
     final double latOffset = radiusKm / 110.574;
@@ -197,41 +185,46 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 
   void _loadFieldMarkers() {
-    if (!_iconsLoaded) return; // Wait for icons to be loaded
+    if (!_iconsLoaded) return;
 
-    // Clear previous lookup and prepare new markers
     _fieldLookup.clear();
-    
+
+    final isEnglish = Localizations.localeOf(context).languageCode == "en";
+
     final markers = widget.fields
         .where((f) => f["field_latitude"] != null && f["field_longitude"] != null)
         .map((field) {
-      final double lat =
-          double.tryParse(field["field_latitude"]?.toString() ?? '') ?? 0.0;
-      final double lng =
-          double.tryParse(field["field_longitude"]?.toString() ?? '') ?? 0.0;
-      final String name = field["field_name"] ?? 'ملعب';
-      // Use a unique ID for the marker. Fallback to a composite key if no dedicated ID
-      final String uniqueId = field["field_id"]?.toString() ?? 
-          '${name}_$lat$lng'; 
+          final double lat =
+              double.tryParse(field["field_latitude"]?.toString() ?? '') ?? 0.0;
+          final double lng =
+              double.tryParse(field["field_longitude"]?.toString() ?? '') ?? 0.0;
 
-      if (lat == 0.0 && lng == 0.0) return null;
+          final String name = isEnglish
+              ? (field["field_english_name"] ?? field["field_name"] ?? 'Field')
+              : (field["field_name"] ?? 'ملعب');
 
-      // Store the field in the lookup map using the unique ID
-      _fieldLookup[uniqueId] = field;
+          final String uniqueId =
+              field["field_id"]?.toString() ?? '${name}_$lat$lng';
 
-      final bool isSelected = _selectedMarkerId == uniqueId;
-      final BitmapDescriptor? icon =
-          _getIconForField(field: field, isSelected: isSelected);
+          if (lat == 0.0 && lng == 0.0) return null;
 
-      if (icon == null) return null;
+          _fieldLookup[uniqueId] = field;
 
-      return Marker(
-        markerId: MarkerId(uniqueId), // Use unique ID
-        position: LatLng(lat, lng),
-        icon: icon,
-        onTap: () => _handleMarkerTap(uniqueId),
-      );
-    }).whereType<Marker>().toSet();
+          final bool isSelected = _selectedMarkerId == uniqueId;
+          final BitmapDescriptor? icon =
+              _getIconForField(field: field, isSelected: isSelected);
+
+          if (icon == null) return null;
+
+          return Marker(
+            markerId: MarkerId(uniqueId),
+            position: LatLng(lat, lng),
+            icon: icon,
+            onTap: () => _handleMarkerTap(uniqueId),
+          );
+        })
+        .whereType<Marker>()
+        .toSet();
 
     setState(() {
       _markers
@@ -241,7 +234,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 
   void _handleMarkerTap(String markerId) {
-    // 1. Get the field data using the optimized lookup
     final Map<String, dynamic>? field = _fieldLookup[markerId];
     if (field == null) return;
 
@@ -250,13 +242,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       double.tryParse(field["field_longitude"]?.toString() ?? '') ?? 0.0,
     );
 
-    // 2. Deselect the previous marker if different
     final String? oldSelectedId = _selectedMarkerId;
     if (oldSelectedId != null && oldSelectedId != markerId) {
       _updateSingleMarkerIcon(oldSelectedId, false);
     }
 
-    // 3. Toggle selection
     final bool currentlySelected = _selectedMarkerId == markerId;
     final String? newSelectedId = currentlySelected ? null : markerId;
 
@@ -264,7 +254,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
 
     setState(() => _selectedMarkerId = newSelectedId);
 
-    // 4. Update info window
     if (newSelectedId != null) {
       _customInfoWindowController.addInfoWindow!(
         _buildCustomInfo(field),
@@ -276,7 +265,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 
   void _updateSingleMarkerIcon(String markerId, bool isSelected) {
-    // Optimized: Use the lookup map to find the field data quickly
     final field = _fieldLookup[markerId];
     if (field == null || field.isEmpty) return;
 
@@ -284,14 +272,13 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         _getIconForField(field: field, isSelected: isSelected);
     if (newIcon == null) return;
 
-    // Find the existing marker
     final Marker? existingMarker = _markers.firstWhere(
-        (m) => m.markerId.value == markerId,
-        // ignore: cast_from_null_always_fails
-        orElse: () => null as Marker);
+      (m) => m.markerId.value == markerId,
+      // ignore: cast_from_null_always_fails
+      orElse: () => null as Marker,
+    );
 
     if (existingMarker != null) {
-      // Update the marker icon in the set
       setState(() {
         _markers.remove(existingMarker);
         _markers.add(existingMarker.copyWith(iconParam: newIcon));
@@ -299,9 +286,10 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     }
   }
 
-  // --- UI Components ---
-
   Widget _buildCustomInfo(Map<String, dynamic> field) {
+    final t = AppLocalizations.of(context)!;
+    final isEnglish = Localizations.localeOf(context).languageCode == "en";
+
     IconData fieldIcon;
     switch (field["field_type"]?.toString().toLowerCase()) {
       case "football":
@@ -311,7 +299,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         fieldIcon = Icons.sports_basketball;
         break;
       case "tennis":
-        fieldIcon = Icons.sports_baseball; // Often used for tennis in material icons
+        fieldIcon = Icons.sports_baseball;
         break;
       case "padel":
         fieldIcon = Icons.sports_tennis;
@@ -320,21 +308,23 @@ class _FieldsMapPageState extends State<FieldsMapPage>
         fieldIcon = Icons.sports;
     }
 
-    final double totalPrice = double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
-    final double? totalPriceAfterDiscount = double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0");
+    final double totalPrice =
+        double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
+    final double? totalPriceAfterDiscount =
+        double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0");
 
+    final String name = isEnglish
+        ? (field["field_english_name"] ?? field["field_name"] ?? "Field")
+        : (field["field_name"] ?? t.fieldDefaultName);
 
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => FieldDetailsPage(field: field),
-          ),
+          MaterialPageRoute(builder: (_) => FieldDetailsPage(field: field)),
         );
       },
-      // The AnimatedInfoWindow now just wraps the content for the scale effect
-      child: _AnimatedInfoWindow( 
+      child: _AnimatedInfoWindow(
         child: Container(
           width: 240,
           padding: const EdgeInsets.all(7),
@@ -358,7 +348,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      field["field_name"] ?? 'ملعب',
+                      name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
@@ -369,40 +359,40 @@ class _FieldsMapPageState extends State<FieldsMapPage>
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (field["field_has_discount"])
+                    if (field["field_has_discount"] == true)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "د.ل. $totalPriceAfterDiscount / الساعة |",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        children: [
+                          Text(
+                            "${t.currency((totalPriceAfterDiscount ?? 0).toStringAsFixed(2))} / ${isEnglish ? "hour" : "الساعة"} |",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const SizedBox(width: 6),
-                            Text(
-                              totalPrice.toStringAsFixed(2),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                decoration: TextDecoration.lineThrough,
-                              ),
-                            ),
-                          ],
-                        )
-                       else Text(
-                          "د.ل. ${totalPrice.toStringAsFixed(2)} / الساعة",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
                           ),
-                        )
-
-                    ],
-                  ),
+                          const SizedBox(width: 6),
+                          Text(
+                            totalPrice.toStringAsFixed(2),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Text(
+                        "${t.currency(totalPrice.toStringAsFixed(2))} / ${isEnglish ? "hour" : "الساعة"}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                  ],
+                ),
               ),
               Positioned(
                 top: 0,
@@ -413,11 +403,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
                     borderRadius: BorderRadius.circular(5),
                   ),
                   padding: const EdgeInsets.all(4),
-                  child: Icon(
-                    fieldIcon,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                  child: Icon(fieldIcon, color: Colors.white, size: 22),
                 ),
               ),
             ],
@@ -437,6 +423,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 
   Widget _buildPermissionMessage() {
+    final t = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
@@ -446,11 +433,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.map, size: 60, color: Theme.of(context).colorScheme.primary),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Text(
-                "يجب تسجيل الدخول ومنح صلاحية الوصول إلى الموقع لمشاهدة الملاعب.",
+                t.mapPermissionRequired,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: const TextStyle(fontSize: 16, color: Colors.black54),
               ),
             ],
           ),
@@ -459,24 +446,24 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     );
   }
 
-  // --- Main Build Method ---
-
   @override
   Widget build(BuildContext context) {
-    // 1. Loading from parent (HomePage)
+    final t = AppLocalizations.of(context)!;
+
     if (widget.loading) {
-      return  Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+      return Center(
+        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+      );
     }
 
-    // 2. Permission/Auth check
     if (!_canShowMap) return _buildPermissionMessage();
 
-    // 3. Icon Loading check (Map is available, but icons/markers are not ready)
     if (!_iconsLoaded) {
-      return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary));
+      return Center(
+        child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
+      );
     }
 
-    // 4. Map failed to initialize/load assets
     if (!_mapAvailable) {
       return Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -487,11 +474,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.map, size: 60, color: Theme.of(context).colorScheme.primary),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
-                  "الخريطة غير متوفرة حالياً. سيتم إعادة المحاولة في بداية الشهر.",
+                  t.mapNotAvailable,
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+                  style: const TextStyle(fontSize: 16, color: Colors.black54),
                 ),
               ],
             ),
@@ -500,7 +487,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
       );
     }
 
-    // Determine safe initial camera target
     LatLng initialTarget = LatLng(widget.initialLat, widget.initialLng);
     if (!_pointInBounds(initialTarget, _cityBounds)) {
       initialTarget = LatLng(widget.cityLat, widget.cityLng);
@@ -528,11 +514,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
                 _customInfoWindowController.googleMapController = controller;
                 await _setMapStyle(controller);
               } catch (e) {
+                // ignore: avoid_print
                 print("Map failed to load: $e");
                 setState(() => _mapAvailable = false);
               }
             },
-
             onTap: (_) {
               if (_selectedMarkerId != null) {
                 _customInfoWindowController.hideInfoWindow!();
@@ -554,7 +540,6 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 }
 
-// Custom widget for the scaling animation
 class _AnimatedInfoWindow extends StatefulWidget {
   final Widget child;
   const _AnimatedInfoWindow({required this.child});

@@ -24,8 +24,10 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
   DateTime? selectedDay;
   bool loading = true;
 
-  int get totalSlots => widget.field["slots_per_day"] ?? 10; 
+  int get totalSlots => widget.field["slots_per_day"] ?? 10;
   final apiUrl = dotenv.env['API_URL'];
+
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
 
   @override
   void initState() {
@@ -35,10 +37,18 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
 
   Future<void> fetchBookings() async {
     setState(() => loading = true);
-    final url = Uri.parse("${apiUrl}users/getfieldBookings/${widget.field['field_id']}");
+    final url =
+        Uri.parse("${apiUrl}users/getfieldBookings/${widget.field['field_id']}");
 
     try {
-      final res = await http.get(url, headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'});
+      final res = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          'x-api-key': '${dotenv.env['API_KEY']}'
+        },
+      );
+
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
         final Map<DateTime, List<dynamic>> temp = {};
@@ -49,14 +59,17 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
           (temp[simpleDay] ??= []).add(booking);
         }
 
+        if (!mounted) return;
         setState(() {
           bookingsByDate = temp;
           loading = false;
         });
       } else {
+        if (!mounted) return;
         setState(() => loading = false);
       }
-    } catch (e) {
+    } catch (_) {
+      if (!mounted) return;
       setState(() => loading = false);
     }
   }
@@ -68,11 +81,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
 
   Color _fillForDay(DateTime day) {
     final bookings = _getBookingsForDay(day);
-
-    if (bookings.length >= totalSlots) {
-      return Colors.red.shade400;
-    }
-
+    if (bookings.length >= totalSlots) return Colors.red.shade400;
     return Colors.transparent;
   }
 
@@ -83,7 +92,14 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     Color? textColor,
     bool isSelected = false,
   }) {
-    final numberColor = textColor ?? (fill != Colors.transparent ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSecondary);
+    final numberColor = textColor ??
+        (fill != Colors.transparent
+            ? Theme.of(context).colorScheme.onPrimary
+            : Theme.of(context).colorScheme.onSecondary);
+
+    // Day number: normal in English, Arabic numerals otherwise (your helper)
+    final dayText =
+        _isEnglish ? '${day.day}' : AppFormat.toEnglishNumbers('${day.day}');
 
     return Center(
       child: Container(
@@ -98,7 +114,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
         ),
         child: Center(
           child: Text(
-            '${day.day}',
+            dayText,
             style: TextStyle(
               color: numberColor,
               fontWeight: FontWeight.w600,
@@ -115,104 +131,118 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     final lastDay = today.add(const Duration(days: 7));
 
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      // ✅ LTR for English, RTL for Arabic
+      textDirection: _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: loading
-            ? const Center(child: CircularProgressIndicator(color: Colors.red))
+            ? Center(
+                child: CircularProgressIndicator(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              )
             : ListView(
-              children: [ SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: TableCalendar(
-                      locale: 'ar',
-                      firstDay: today,
-                      lastDay: lastDay,
-                      focusedDay: focusedDay,
-                      rowHeight: 52,
-                      headerStyle: const HeaderStyle(
-                        formatButtonVisible: false,
-                        titleCentered: true,
-                      ),
-                      selectedDayPredicate: (day) => isSameDay(selectedDay, day),
-                      
-                      onDaySelected: (selected, focused) async {
-                        setState(() {
-                          selectedDay = selected;
-                          focusedDay = focused;
-                        });
-              
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => FieldBookingSlotsPage(
-                              field: widget.field,
-                              date: selected,
-                              bookings: _getBookingsForDay(selected),
+                children: [
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: TableCalendar(
+                        locale: _isEnglish ? 'en' : 'ar',
+                        firstDay: today,
+                        lastDay: lastDay,
+                        focusedDay: focusedDay,
+                        rowHeight: 52,
+                        headerStyle: const HeaderStyle(
+                          formatButtonVisible: false,
+                          titleCentered: true,
+                        ),
+                        selectedDayPredicate: (day) =>
+                            isSameDay(selectedDay, day),
+                        onDaySelected: (selected, focused) async {
+                          setState(() {
+                            selectedDay = selected;
+                            focusedDay = focused;
+                          });
+
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FieldBookingSlotsPage(
+                                field: widget.field,
+                                date: selected,
+                                bookings: _getBookingsForDay(selected),
+                              ),
                             ),
-                          ),
-                        );
-              
-                        await fetchBookings(); // refresh after returning
-                      },
-                      calendarStyle: const CalendarStyle(
-                        cellPadding: EdgeInsets.zero,
-                        cellMargin: EdgeInsets.zero,
-                        todayDecoration: BoxDecoration(),
-                        selectedDecoration: BoxDecoration(),
-                      ),
-                      calendarBuilders: CalendarBuilders(
-                         headerTitleBuilder: (context, day) {
-                                  final text = MaterialLocalizations.of(context).formatMonthYear(day);
-                                  return Center(
-                                    child: Text(
-                                      AppFormat.toEnglishNumbers(text),
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  );
-                                },
-                        defaultBuilder: (context, day, _) {
-                          final fill = _fillForDay(day);
-                          return _buildDayCell(
-                            day,
-                            fill: fill,
-                            border: Colors.transparent,
-                            isSelected: isSameDay(day, selectedDay),
                           );
+
+                          await fetchBookings();
                         },
-                        outsideBuilder: (context, day, _) {
-                          final fill = _fillForDay(day);
-                          return _buildDayCell(
-                            day,
-                            fill: fill.withOpacity(0.25),
-                            border: Colors.transparent,
-                            textColor: Colors.black45,
-                          );
-                        },
-                        todayBuilder: (context, day, _) {
-                          final fill = _fillForDay(day);
-                          return _buildDayCell(
-                            day,
-                            fill: fill,
-                            border: Theme.of(context).colorScheme.onSecondary,
-                            isSelected: isSameDay(day, selectedDay),
-                          );
-                        },
-                        selectedBuilder: (context, day, _) {
-                          final fill = _fillForDay(day);
-                          return _buildDayCell(
-                            day,
-                            fill: fill,
-                            border: Colors.black,
-                            isSelected: true,
-                          );
-                        },
+                        calendarStyle: const CalendarStyle(
+                          cellPadding: EdgeInsets.zero,
+                          cellMargin: EdgeInsets.zero,
+                          todayDecoration: BoxDecoration(),
+                          selectedDecoration: BoxDecoration(),
+                        ),
+                        calendarBuilders: CalendarBuilders(
+                          headerTitleBuilder: (context, day) {
+                            final text = MaterialLocalizations.of(context)
+                                .formatMonthYear(day);
+
+                            // If you want Arabic numerals on Arabic, keep your helper.
+                            final shown = _isEnglish
+                                ? text
+                                : AppFormat.toEnglishNumbers(text);
+
+                            return Center(
+                              child: Text(
+                                shown,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            );
+                          },
+                          defaultBuilder: (context, day, _) {
+                            final fill = _fillForDay(day);
+                            return _buildDayCell(
+                              day,
+                              fill: fill,
+                              border: Colors.transparent,
+                              isSelected: isSameDay(day, selectedDay),
+                            );
+                          },
+                          outsideBuilder: (context, day, _) {
+                            final fill = _fillForDay(day);
+                            return _buildDayCell(
+                              day,
+                              fill: fill.withOpacity(0.25),
+                              border: Colors.transparent,
+                              textColor: Colors.black45,
+                            );
+                          },
+                          todayBuilder: (context, day, _) {
+                            final fill = _fillForDay(day);
+                            return _buildDayCell(
+                              day,
+                              fill: fill,
+                              border: Theme.of(context).colorScheme.onSecondary,
+                              isSelected: isSameDay(day, selectedDay),
+                            );
+                          },
+                          selectedBuilder: (context, day, _) {
+                            final fill = _fillForDay(day);
+                            return _buildDayCell(
+                              day,
+                              fill: fill,
+                              border: Colors.black,
+                              isSelected: true,
+                            );
+                          },
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ]),
+                ],
+              ),
       ),
     );
   }

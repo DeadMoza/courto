@@ -5,12 +5,15 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'services/auth_service.dart' show AuthService;
+import 'package:courto/l10n/app_localizations.dart';
 
 Future<void> showChargeWalletDialog(BuildContext context) async {
+  final t = AppLocalizations.of(context)!;
+
   if (!AuthService.isLoggedIn) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("يجب تسجيل الدخول أولاً"),
+      SnackBar(
+        content: Text(t.chargeWalletLoginRequired),
         backgroundColor: Colors.redAccent,
       ),
     );
@@ -52,7 +55,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         keyboardType: TextInputType.number,
                         maxLength: 13,
                         decoration: InputDecoration(
-                          labelText: "أدخل رقم الكرت",
+                          labelText: t.chargeWalletEnterCardNumber,
                           prefixIcon: const Icon(
                             Icons.card_membership,
                             color: Colors.redAccent,
@@ -66,10 +69,10 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         ),
                         validator: (val) {
                           if (val == null || val.length != 13) {
-                            return "يجب أن يكون 13 رقماً";
+                            return t.chargeWalletCardMustBe13;
                           }
                           if (!RegExp(r'^\d{13}$').hasMatch(val)) {
-                            return "يجب يحتوي على أرقام فقط";
+                            return t.chargeWalletDigitsOnly;
                           }
                           return null;
                         },
@@ -86,7 +89,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                             controller: amountController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              labelText: "ادخل المبلغ",
+                              labelText: t.chargeWalletEnterAmount,
                               prefixIcon: const Icon(
                                 Icons.credit_card,
                                 color: Colors.redAccent,
@@ -100,14 +103,14 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                             ),
                             validator: (val) {
                               if (val == null || val.isEmpty) {
-                                return "الرجاء إدخال المبلغ";
+                                return t.chargeWalletAmountRequired;
                               }
                               final amount = int.tryParse(val);
                               if (amount == null || amount <= 0) {
-                                return "مبلغ غير صالح";
+                                return t.chargeWalletInvalidAmount;
                               }
                               if (amount > 200) {
-                                return "الحد الأقصى 200 دينار";
+                                return t.chargeWalletMax200;
                               }
                               return null;
                             },
@@ -137,12 +140,13 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text("بطاقة مصرفية"),
+                                Text(t.chargeWalletBankCard),
                               ],
                             ),
                           ),
                           GestureDetector(
-                            onTap: () => setState(() => selectedMethod = "courto"),
+                            onTap: () =>
+                                setState(() => selectedMethod = "courto"),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -160,7 +164,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                const Text("كرت كورتو"),
+                                Text(t.chargeWalletCourtoCard),
                               ],
                             ),
                           ),
@@ -169,19 +173,19 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
           );
 
           return AlertDialog(
-            title: const Text(
-              "شحن المحفظة",
+            title: Text(
+              t.chargeWalletTitle,
               textAlign: TextAlign.center,
             ),
             content: SizedBox(width: double.maxFinite, child: content),
             actions: selectedMethod == "courto"
                 ? [
                     TextButton(
-                      child: const Text("إلغاء"),
+                      child: Text(t.cancel),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                     ElevatedButton(
-                      child: const Text("تأكيد"),
+                      child: Text(t.confirm),
                       onPressed: () async {
                         if (!_formKey.currentState!.validate()) return;
 
@@ -220,12 +224,17 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
 
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString(
-                                'userData', jsonEncode(AuthService.userData));
+                              'userData',
+                              jsonEncode(AuthService.userData),
+                            );
 
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  "تم شحن المحفظة بمبلغ ${data['voucher_value']} دينار. الرصيد الحالي: ${data['wallet_balance']} دينار.",
+                                  t.chargeWalletSuccess(
+                                    data['voucher_value'],
+                                    data['wallet_balance'],
+                                  ),
                                 ),
                                 backgroundColor: Colors.redAccent,
                               ),
@@ -234,8 +243,9 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text(data['message'] ?? "حدث خطأ"),
+                                content: Text(
+                                  data['message'] ?? t.chargeWalletGenericError,
+                                ),
                                 backgroundColor: Colors.redAccent,
                               ),
                             );
@@ -243,8 +253,8 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                         } catch (_) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("حدث خطأ أثناء الاتصال بالخادم."),
+                            SnackBar(
+                              content: Text(t.supportErrorServer),
                               backgroundColor: Colors.redAccent,
                             ),
                           );
@@ -255,11 +265,11 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                 : selectedMethod == "bank"
                     ? [
                         TextButton(
-                          child: const Text("إلغاء"),
+                          child: Text(t.cancel),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                         ElevatedButton(
-                          child: const Text("الدفع"),
+                          child: Text(t.pay),
                           onPressed: () {
                             if (!_formKey.currentState!.validate()) return;
 
@@ -279,7 +289,7 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                       ]
                     : [
                         TextButton(
-                          child: const Text("إلغاء"),
+                          child: Text(t.cancel),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],

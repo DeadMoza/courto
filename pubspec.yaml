@@ -4,7 +4,7 @@ description: "courto app"
 publish_to: 'none' 
 
 
-version: 2.1.2+6
+version: 2.1.3+7
 
 environment:
   sdk: ^3.8.1
@@ -43,7 +43,7 @@ dev_dependencies:
 
 
 flutter:
-
+  generate: true
   uses-material-design: true
 
 

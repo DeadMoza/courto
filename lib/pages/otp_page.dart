@@ -19,19 +19,24 @@ class OtpPage extends StatefulWidget {
   });
 
   @override
-  _OtpPageState createState() => _OtpPageState();
+  State<OtpPage> createState() => _OtpPageState();
 }
 
 class _OtpPageState extends State<OtpPage> {
   final List<TextEditingController> codeControllers =
       List.generate(4, (_) => TextEditingController());
+
   String? generatedCode;
   bool loading = false;
   int secondsRemaining = 0;
   Timer? timer;
+
   final apiUrl = dotenv.env['API_URL'];
   final rasaelUsername = dotenv.env['RASAEL_USERNAME'];
   final rasaelPassword = dotenv.env['RASAEL_PASSWORD'];
+
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   @override
   void initState() {
@@ -60,14 +65,19 @@ class _OtpPageState extends State<OtpPage> {
       final loginRes = await http.post(
         Uri.parse("https://client.almasafa.ly/api/MasafaRasaelLogin"),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"username": "$rasaelUsername", "password": "$rasaelPassword"}),
+        body: json.encode({
+          "username": rasaelUsername ?? "",
+          "password": rasaelPassword ?? "",
+        }),
       );
 
       if (loginRes.statusCode == 200) {
         final loginData = json.decode(loginRes.body);
         final token = loginData["token"]?.toString();
 
-        if (token == null) throw Exception("فشل الحصول على التوكن");
+        if (token == null) {
+          throw Exception(_isEnglish ? "Failed to get token" : "فشل الحصول على التوكن");
+        }
 
         final smsRes = await http.post(
           Uri.parse("https://client.almasafa.ly/api/sms/Send"),
@@ -77,24 +87,28 @@ class _OtpPageState extends State<OtpPage> {
           },
           body: json.encode({
             "phoneNumber": widget.phoneNumber,
-            "message": "رمز التحقق الخاص بك هو: $generatedCode",
+            "message": _isEnglish
+                ? "Your verification code is: $generatedCode"
+                : "رمز التحقق الخاص بك هو: $generatedCode",
             "senderID": "13201",
           }),
         );
 
         if (smsRes.statusCode != 200) {
-          throw Exception("فشل إرسال رمز التحقق");
+          throw Exception(_isEnglish ? "Failed to send verification code" : "فشل إرسال رمز التحقق");
         }
 
         _startTimer();
       } else {
-        throw Exception("فشل تسجيل الدخول لخدمة الرسائل");
+        throw Exception(_isEnglish
+            ? "Failed to login to messaging service"
+            : "فشل تسجيل الدخول لخدمة الرسائل");
       }
     } catch (e) {
-      _showError("خطأ: ${e.toString()}");
+      _showError("${_isEnglish ? "Error" : "خطأ"}: ${e.toString()}");
+    } finally {
+      if (mounted) setState(() => loading = false);
     }
-
-    setState(() => loading = false);
   }
 
   void _startTimer() {
@@ -110,8 +124,9 @@ class _OtpPageState extends State<OtpPage> {
 
   Future<void> _verifyCode() async {
     final enteredCode = codeControllers.map((c) => c.text).join();
+
     if (enteredCode != generatedCode) {
-      _showError("رمز التحقق غير صحيح");
+      _showError(_isEnglish ? "Invalid verification code" : "رمز التحقق غير صحيح");
       return;
     }
 
@@ -119,51 +134,59 @@ class _OtpPageState extends State<OtpPage> {
 
     try {
       final res = await http.post(
-        Uri.parse("${apiUrl}users/signup"),
-        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
+        Uri.parse("${apiUrl ?? ""}users/signup"),
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": dotenv.env['API_KEY'] ?? "",
+        },
         body: json.encode({
           "full_name": widget.fullName,
           "phone_number": widget.phoneNumber,
           "password": widget.password,
-
         }),
       );
 
+      if (!mounted) return;
       setState(() => loading = false);
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
-        final message = data["message"] ?? "تم انشاء الحساب بنجاح.";
+        final message = data["message"] ??
+            (_isEnglish ? "Account created successfully." : "تم انشاء الحساب بنجاح.");
 
-        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => LoginPage(successMessage: message)),
           (route) => false,
         );
       } else {
-        String message = "فشل إنشاء الحساب";
+        String message = _isEnglish ? "Failed to create account" : "فشل إنشاء الحساب";
         try {
           final data = json.decode(res.body);
           if (data["error"] != null) message = data["error"];
         } catch (_) {}
-        if (!mounted) return;
+
         Navigator.pop(context, message);
       }
-    } catch (error) {
+    } catch (_) {
+      if (!mounted) return;
       setState(() => loading = false);
-      _showError("حدث خطأ أثناء إنشاء الحساب");
+      _showError(_isEnglish
+          ? "An error occurred while creating the account"
+          : "حدث خطأ أثناء إنشاء الحساب");
     }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, textDirection: TextDirection.rtl),
+        content: Text(message, textDirection: _dir),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
+
   Widget _otpFields() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -175,6 +198,7 @@ class _OtpPageState extends State<OtpPage> {
             keyboardType: TextInputType.number,
             maxLength: 1,
             textAlign: TextAlign.center,
+            textDirection: TextDirection.ltr, // digits are always LTR
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               counterText: "",
@@ -198,8 +222,10 @@ class _OtpPageState extends State<OtpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = _isEnglish;
+
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
@@ -213,9 +239,8 @@ class _OtpPageState extends State<OtpPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Title
-                 Text(
-                    "رمز التحقق",
+                  Text(
+                    isEnglish ? "Verification Code" : "رمز التحقق",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -223,9 +248,10 @@ class _OtpPageState extends State<OtpPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
                   Text(
-                    "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
+                    isEnglish
+                        ? "We sent a verification code to ${widget.phoneNumber}"
+                        : "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
                     style: TextStyle(
                       fontSize: 16,
                       color: Theme.of(context).colorScheme.onSecondary,
@@ -234,11 +260,9 @@ class _OtpPageState extends State<OtpPage> {
                   ),
                   const SizedBox(height: 28),
 
-                  // OTP fields
                   _otpFields(),
                   const SizedBox(height: 28),
 
-                  // Confirm button
                   SizedBox(
                     width: double.infinity,
                     height: 48,
@@ -260,24 +284,26 @@ class _OtpPageState extends State<OtpPage> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              "تأكيد",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white),
+                          : Text(
+                              isEnglish ? "Confirm" : "تأكيد",
+                              style: const TextStyle(fontSize: 16, color: Colors.white),
                             ),
                     ),
                   ),
                   const SizedBox(height: 20),
 
-                  // Resend button
                   TextButton(
                     onPressed: secondsRemaining > 0 ? null : _sendOtp,
                     child: Text(
                       secondsRemaining > 0
-                          ? "إعادة الإرسال خلال ${secondsRemaining}ث"
-                          : "إعادة إرسال الرمز",
+                          ? (isEnglish
+                              ? "Resend in ${secondsRemaining}s"
+                              : "إعادة الإرسال خلال ${secondsRemaining}ث")
+                          : (isEnglish ? "Resend code" : "إعادة إرسال الرمز"),
                       style: TextStyle(
-                        color: secondsRemaining > 0 ? Colors.grey : Theme.of(context).colorScheme.primary,
+                        color: secondsRemaining > 0
+                            ? Colors.grey
+                            : Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

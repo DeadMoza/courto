@@ -29,6 +29,10 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
   String _bookingFrequency = 'daily';
 
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  ui.TextDirection get _dir =>
+      _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl;
+
   @override
   void initState() {
     super.initState();
@@ -60,8 +64,18 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       int normalizedHour = hour % 24;
       int normalizedEndHour = (hour + 1) % 24;
 
-      DateTime start = DateTime(widget.date.year, widget.date.month, widget.date.day, normalizedHour);
-      DateTime end = DateTime(widget.date.year, widget.date.month, widget.date.day, normalizedEndHour);
+      DateTime start = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        normalizedHour,
+      );
+      DateTime end = DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        normalizedEndHour,
+      );
 
       if (hour >= 24) {
         start = start.add(const Duration(days: 1));
@@ -70,7 +84,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
       slots.add(TimeSlot(start: start, end: end));
     }
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   Map<String, dynamic>? _findBookingForSlot(TimeSlot slot) {
@@ -83,8 +97,20 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         int startHour = int.parse(startParts[0]);
         int endHour = int.parse(endParts[0]);
 
-        var start = DateTime(bookingDate.year, bookingDate.month, bookingDate.day, startHour, int.parse(startParts[1]));
-        var end = DateTime(bookingDate.year, bookingDate.month, bookingDate.day, endHour, int.parse(endParts[1]));
+        var start = DateTime(
+          bookingDate.year,
+          bookingDate.month,
+          bookingDate.day,
+          startHour,
+          int.parse(startParts[1]),
+        );
+        var end = DateTime(
+          bookingDate.year,
+          bookingDate.month,
+          bookingDate.day,
+          endHour,
+          int.parse(endParts[1]),
+        );
 
         if (end.isBefore(start)) {
           end = end.add(const Duration(days: 1));
@@ -98,7 +124,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         return slot.start.isAtSameMomentAs(start) ||
             (slot.start.isAfter(start) && slot.start.isBefore(end));
       });
-    } catch (e) {
+    } catch (_) {
       return null;
     }
   }
@@ -118,13 +144,22 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
 
   void _onSlotTap(TimeSlot slot) {
     if (!AuthService.isLoggedIn) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => SignupPage()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SignupPage()),
+      );
       return;
     }
 
     if (_isBooked(slot)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('هذه الفترة محجوزة'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            _isEnglish ? 'This time is booked' : 'هذه الفترة محجوزة',
+            textDirection: _dir,
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
@@ -133,8 +168,12 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
 
     if (alreadySelected) {
-      final minTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
-      final maxTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
+      final minTime = _selectedSlots
+          .map((s) => s.start)
+          .reduce((a, b) => a.isBefore(b) ? a : b);
+      final maxTime = _selectedSlots
+          .map((s) => s.start)
+          .reduce((a, b) => a.isAfter(b) ? a : b);
 
       if (slot.start.isAtSameMomentAs(minTime) ||
           slot.start.isAtSameMomentAs(maxTime)) {
@@ -142,7 +181,15 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         setState(() {});
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية'), backgroundColor: Colors.redAccent),
+          SnackBar(
+            content: Text(
+              _isEnglish
+                  ? "You can't remove this slot because it is part of a consecutive selection."
+                  : 'لا يمكنك إلغاء هذه الفترة لأنها جزء من سلسلة متتالية',
+              textDirection: _dir,
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
       return;
@@ -154,22 +201,41 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       return;
     }
 
-    final minTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isBefore(b) ? a : b);
-    final maxTime = _selectedSlots.map((s) => s.start).reduce((a, b) => a.isAfter(b) ? a : b);
+    final minTime = _selectedSlots
+        .map((s) => s.start)
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    final maxTime = _selectedSlots
+        .map((s) => s.start)
+        .reduce((a, b) => a.isAfter(b) ? a : b);
 
-    final isAdjacent = slot.start.isAtSameMomentAs(minTime.subtract(const Duration(hours: 1))) ||
-        slot.start.isAtSameMomentAs(maxTime.add(const Duration(hours: 1)));
+    final isAdjacent =
+        slot.start.isAtSameMomentAs(minTime.subtract(const Duration(hours: 1))) ||
+            slot.start.isAtSameMomentAs(maxTime.add(const Duration(hours: 1)));
 
     if (!isAdjacent) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب اختيار فترات متتالية (حتى 3 ساعات فقط)'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            _isEnglish
+                ? 'Select consecutive slots (up to 3 hours)'
+                : 'يجب اختيار فترات متتالية (حتى 3 ساعات فقط)',
+            textDirection: _dir,
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
 
     if (_selectedSlots.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الحد الأقصى للاختيار 3 ساعات'), backgroundColor: Colors.redAccent),
+        SnackBar(
+          content: Text(
+            _isEnglish ? 'Max selection is 3 hours' : 'الحد الأقصى للاختيار 3 ساعات',
+            textDirection: _dir,
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
       );
       return;
     }
@@ -179,13 +245,21 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     setState(() {});
   }
 
-  double get _bookingPricePerHour => double.tryParse(widget.field['field_calculated_booking_price'].toString()) ?? 0.0;
-  double? get _remainingToOwnerPerHour => widget.field["field_has_discount"]
-  ? double.tryParse(widget.field["field_calculated_remaining_price_after_discount"].toString())
-  : double.tryParse(widget.field['field_calculated_remaining_price'].toString());
+  double get _bookingPricePerHour =>
+      double.tryParse(widget.field['field_calculated_booking_price'].toString()) ??
+      0.0;
 
-  double get _currentTotalBookingPrice => _selectedSlots.length * _bookingPricePerHour;
-  double get _remainingPaymentToOwner => _selectedSlots.length * _remainingToOwnerPerHour!;
+  double? get _remainingToOwnerPerHour => widget.field["field_has_discount"] == true
+      ? double.tryParse(
+          widget.field["field_calculated_remaining_price_after_discount"].toString(),
+        )
+      : double.tryParse(widget.field['field_calculated_remaining_price'].toString());
+
+  double get _currentTotalBookingPrice =>
+      _selectedSlots.length * _bookingPricePerHour;
+
+  double get _remainingPaymentToOwner =>
+      _selectedSlots.length * (_remainingToOwnerPerHour ?? 0);
 
   Future<void> _onContinuePressed() async {
     if (_selectedSlots.isEmpty) return;
@@ -196,8 +270,18 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     final lastSlot = _selectedSlots.last;
     final baseDate = widget.date;
 
-    final normalizedStart = DateTime(baseDate.year, baseDate.month, baseDate.day, firstSlot.start.hour);
-    final normalizedEnd = DateTime(baseDate.year, baseDate.month, baseDate.day, lastSlot.end.hour);
+    final normalizedStart = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      firstSlot.start.hour,
+    );
+    final normalizedEnd = DateTime(
+      baseDate.year,
+      baseDate.month,
+      baseDate.day,
+      lastSlot.end.hour,
+    );
 
     final mergedSlot = [
       {
@@ -209,120 +293,137 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     await showDialog(
       context: context,
       builder: (ctx) {
-        return AlertDialog(
-          title: const Text("اختر نوع الحجز", textAlign: TextAlign.center),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Daily booking
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _bookingFrequency = "daily";
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => DailyBookingConfirmationPage(
-                          field: widget.field,
-                          date: widget.date,
-                          slots: mergedSlot,
-                          totalBookingPrice: _currentTotalBookingPrice,
-                          remainingPaymentToOwner: _remainingPaymentToOwner,
-                          frequency: _bookingFrequency,
-                          userId: AuthService.userData?['id'],
+        return Directionality(
+          textDirection: _dir, // ✅ dialog follows language
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            title: Text(
+              _isEnglish ? "Choose booking type" : "اختر نوع الحجز",
+              textAlign: TextAlign.center,
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // Daily booking
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _bookingFrequency = "daily";
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => DailyBookingConfirmationPage(
+                            field: widget.field,
+                            date: widget.date,
+                            slots: mergedSlot,
+                            totalBookingPrice: _currentTotalBookingPrice,
+                            remainingPaymentToOwner: _remainingPaymentToOwner,
+                            frequency: _bookingFrequency,
+                            userId: AuthService.userData?['id'],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.red[100],
-                          borderRadius: BorderRadius.circular(5),
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.red[100],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Icon(Icons.calendar_today,
+                              size: 40, color: Colors.red),
                         ),
-                        child: const Icon(Icons.calendar_today, size: 40, color: Colors.red),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text("يومي"),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(_isEnglish ? "Daily" : "يومي"),
+                      ],
+                    ),
                   ),
-                ),
 
-                // Monthly booking
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    _bookingFrequency = "monthly";
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => MonthlyBookingConfirmationPage(
-                          field: widget.field,
-                          date: widget.date,
-                          slots: mergedSlot,
-                          totalBookingPrice: _currentTotalBookingPrice,
-                          remainingPaymentToOwner: _remainingPaymentToOwner,
-                          frequency: _bookingFrequency,
-                          userId: AuthService.userData?['id'],
+                  // Monthly booking
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      _bookingFrequency = "monthly";
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MonthlyBookingConfirmationPage(
+                            field: widget.field,
+                            date: widget.date,
+                            slots: mergedSlot,
+                            totalBookingPrice: _currentTotalBookingPrice,
+                            remainingPaymentToOwner: _remainingPaymentToOwner,
+                            frequency: _bookingFrequency,
+                            userId: AuthService.userData?['id'],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.blue[100],
-                          borderRadius: BorderRadius.circular(5),
+                      );
+                    },
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Icon(Icons.calendar_view_month,
+                              size: 40, color: Colors.blue),
                         ),
-                        child: const Icon(Icons.calendar_view_month, size: 40, color: Colors.blue),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text("شهري"),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(_isEnglish ? "Monthly" : "شهري"),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            actions: [
+              TextButton(
+                child: Text(_isEnglish ? "Cancel" : "إلغاء"),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              child: const Text("إلغاء"),
-              onPressed: () => Navigator.pop(ctx),
-            ),
-          ],
         );
       },
     );
   }
 
   Widget _buildSlotTile(TimeSlot slot) {
-    print(widget.field);
-
     final isConfirmed = _isConfirmed(slot);
-    final isSelected = _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
+    final isSelected =
+        _selectedSlots.any((s) => s.start.isAtSameMomentAs(slot.start));
 
     Color bg;
     TextStyle textStyle;
 
     if (isConfirmed) {
       bg = Theme.of(context).colorScheme.primary;
-      textStyle = TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold);
+      textStyle = TextStyle(
+        color: Theme.of(context).colorScheme.onPrimary,
+        fontWeight: FontWeight.bold,
+      );
     } else if (isSelected) {
       bg = Colors.amber;
-      textStyle = TextStyle(color: Theme.of(context).colorScheme.onPrimary, fontWeight: FontWeight.bold);
+      textStyle = TextStyle(
+        color: Theme.of(context).colorScheme.onPrimary,
+        fontWeight: FontWeight.bold,
+      );
     } else {
       bg = Theme.of(context).colorScheme.onPrimary;
-      textStyle = TextStyle(color: Theme.of(context).colorScheme.onSecondary, fontWeight: FontWeight.bold);
+      textStyle = TextStyle(
+        color: Theme.of(context).colorScheme.onSecondary,
+        fontWeight: FontWeight.bold,
+      );
     }
 
     return Container(
@@ -339,15 +440,24 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
           child: Text(
             "${AppFormat.formatTime(slot.start)} - ${AppFormat.formatTime(slot.end)}",
             style: textStyle,
+            textDirection: _dir,
           ),
         ),
         subtitle: Center(
           child: isConfirmed
-              ?  Text("محجوز", style: TextStyle(color: Theme.of(context).colorScheme.onPrimary))
+              ? Text(
+                  _isEnglish ? "Booked" : "محجوز",
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                  textDirection: _dir,
+                )
               : (isSelected
                   ? Text(
                       "${_selectedSlots.indexWhere((s) => s.start.isAtSameMomentAs(slot.start)) + 1} / ${_selectedSlots.length}",
-                      style: TextStyle(color: Theme.of(context).colorScheme.onPrimary))
+                      style:
+                          TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+                      textDirection: _dir,
+                    )
                   : null),
         ),
       ),
@@ -357,7 +467,8 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      // ✅ whole page becomes LTR on English
+      textDirection: _dir,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -378,7 +489,10 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                     elevation: 4,
                     borderRadius: BorderRadius.circular(10),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: Theme.of(context).colorScheme.onPrimary,
                         borderRadius: BorderRadius.circular(5),
@@ -397,24 +511,42 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "سعر الحجز: ${_currentTotalBookingPrice.toStringAsFixed(2)} د.ل",
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                _isEnglish
+                                    ? "Booking price: ${_currentTotalBookingPrice.toStringAsFixed(2)} LYD"
+                                    : "سعر الحجز: ${_currentTotalBookingPrice.toStringAsFixed(2)} د.ل",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                                textDirection: _dir,
                               ),
                               Text(
-                                "المتبقي بعد اللعب: ${_remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
-                                style: const TextStyle(fontSize: 13, color: Colors.grey),
+                                _isEnglish
+                                    ? "Remaining after play: ${_remainingPaymentToOwner.toStringAsFixed(2)} LYD"
+                                    : "المتبقي بعد اللعب: ${_remainingPaymentToOwner.toStringAsFixed(2)} د.ل",
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
+                                textDirection: _dir,
                               ),
                             ],
                           ),
                           ElevatedButton(
                             onPressed: _onContinuePressed,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.primary,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
                             ),
-                            child: const Text('متابعة'),
+                            child: Text(_isEnglish ? 'Continue' : 'متابعة'),
                           ),
                         ],
                       ),

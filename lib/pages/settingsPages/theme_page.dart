@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:courto/l10n/app_localizations.dart';
 import '../../providers/theme_provider.dart';
 
 class ThemePage extends StatelessWidget {
@@ -8,12 +9,13 @@ class ThemePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
+    final t = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "الوضع الليلي",
-          style: TextStyle(fontFamily: "Changa"),
+        title: Text(
+          t.themeTitle,
+          style: const TextStyle(fontFamily: "Changa"),
         ),
         elevation: 0,
       ),
@@ -30,7 +32,7 @@ class ThemePage extends StatelessWidget {
               _themeTile(
                 context,
                 icon: Icons.light_mode_outlined,
-                title: "فاتح",
+                title: t.themeLight,
                 value: ThemeMode.light,
                 groupValue: themeProvider.themeMode,
               ),
@@ -38,7 +40,7 @@ class ThemePage extends StatelessWidget {
               _themeTile(
                 context,
                 icon: Icons.dark_mode_outlined,
-                title: "داكن",
+                title: t.themeDark,
                 value: ThemeMode.dark,
                 groupValue: themeProvider.themeMode,
               ),
@@ -46,7 +48,7 @@ class ThemePage extends StatelessWidget {
               _themeTile(
                 context,
                 icon: Icons.settings_suggest_outlined,
-                title: "حسب النظام",
+                title: t.themeSystem,
                 value: ThemeMode.system,
                 groupValue: themeProvider.themeMode,
               ),
@@ -73,9 +75,7 @@ class ThemePage extends StatelessWidget {
       onChanged: (v) => themeProvider.setTheme(v!),
       secondary: Icon(
         icon,
-        color: isSelected
-            ? Theme.of(context).colorScheme.primary
-            : Colors.grey,
+        color: isSelected ? Theme.of(context).colorScheme.primary : Colors.grey,
       ),
       title: Text(
         title,

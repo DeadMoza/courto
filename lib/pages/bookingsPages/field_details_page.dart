@@ -20,39 +20,106 @@ class FieldDetailsPage extends StatefulWidget {
 class _FieldDetailsPageState extends State<FieldDetailsPage> {
   final PageController _pageController = PageController(viewportFraction: 0.95);
   int _currentPage = 0;
+
   final String? apiUrl = dotenv.env['API_URL'];
-  // Placeholder state for the favorite button
-  bool _isFavorite = false; // FAVORITE STATUS
-  bool _loadingFavorite = false; // avoid spam tapping
-  int? userId = AuthService.userData?["id"];
   final apiKey = dotenv.env['API_KEY'];
 
-  // New state variables for reviews
+  bool _isFavorite = false;
+  bool _loadingFavorite = false;
+  int? userId = AuthService.userData?["id"];
+
   double _fieldScore = 0.0;
   int _reviewCount = 0;
   bool _isLoadingReviews = true;
 
   String mappedFieldType = "";
 
+  bool _isEnglish = false;
+
+  // City name map (Arabic -> English)
+  static const Map<String, String> _cityEnMap = {
+    "طرابلس": "Tripoli",
+    "مصراتة": "Misrata",
+    "بنغازي": "Benghazi",
+    "الزاوية": "Zawiya",
+    "الخمس": "Khoms",
+    "سرت": "Surt",
+    "درنة": "Derna",
+    "طبرق": "Tobruk",
+    "سبها": "Sabha",
+    "صبراتة": "Subrata",
+    "زوارة": "Zuwara"
+  };
+
+    static const Map<String, String> _locationEnMap = {
+    "الظهرة": "Al Dahra",
+    "زاوية الدهماني": "Zawiyat Al Dahmani",
+    "أبو سليم": "Abu Salim",
+    "الحي الإسلامي": "Al Islamic District",
+    "الدريبي": "Al Draybi",
+    "السراج": "Al Sarraj",
+    "المدينة القديمة": "Old City",
+    "الهاني": "Al Hani",
+    "الهضبة الخضراء": "Green Plateau",
+    "باب بن غشير": "Bab Ben Ghashir",
+    "حي الأندلس": "Hay Al Andalus",
+    "حي دمشق": "Hay Dimashq",
+    "رأس حسن": "Ras Hassan",
+    "زناتة": "Zanata", 
+    "سوق الجمعة": "Souq Al Jomaa",
+    "غوط الشعال": "Ghout Al Shaal",
+    "المنصورة": "Al Mansoura",
+    "وسعاية أبديري": "Wesaaeya Abdeeri",
+    "الصريم": "Al Srim",
+    "بن عاشور": "Bin Ashour",
+    "جنزور": "Janzour",
+    "تاجوراء": "Tajoura",
+    "المدينة": "Al Madina"
+
+  };
+
+  String _cityNameLocalized(String? city) {
+    final c = (city ?? '').trim();
+    if (!_isEnglish) return c;
+    return _cityEnMap[c] ?? c;
+  }
+
+  String _locationNameLocalized(String? location) {
+    final l = (location ?? '').trim();
+    if (!_isEnglish) return l;
+    return _locationEnMap[l] ?? l;
+  }
+
   @override
   void initState() {
     super.initState();
+
     _pageController.addListener(() {
       if (_pageController.page != null &&
           _pageController.page!.round() != _currentPage) {
-        setState(() {
-          _currentPage = _pageController.page!.round();
-        });
+        setState(() => _currentPage = _pageController.page!.round());
       }
     });
-    mapFieldTypes();
+
     if (AuthService.isLoggedIn) {
       checkFavorite();
     }
-      fetchFieldReviews();
+    fetchFieldReviews();
   }
 
-  // --- New Review Fetch Method ---
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    final newIsEnglish = Localizations.localeOf(context).languageCode == "en";
+    if (newIsEnglish != _isEnglish) {
+      _isEnglish = newIsEnglish;
+      mapFieldTypes();
+    } else if (mappedFieldType.isEmpty) {
+      mapFieldTypes();
+    }
+  }
+
   Future<void> fetchFieldReviews() async {
     setState(() => _isLoadingReviews = true);
     final fieldId = widget.field["field_id"] ?? widget.field["id"];
@@ -62,34 +129,30 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
         setState(() => _isLoadingReviews = false);
         return;
       }
-      
+
       final res = await http.get(
         Uri.parse("${apiUrl}users/getFieldReviews/$fieldId"),
-        headers: {
-          "x-api-key": apiKey ?? "",
-        },
+        headers: {"x-api-key": apiKey ?? ""},
       );
 
       if (res.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(res.body);
+        if (!mounted) return;
         setState(() {
-          // Ensure we handle potentially null or incorrect types gracefully
-          _fieldScore = (data["field_score"] is num)
-              ? data["field_score"].toDouble()
-              : 0.0;
+          _fieldScore =
+              (data["field_score"] is num) ? data["field_score"].toDouble() : 0.0;
           _reviewCount = (data["field_review_count"] is num)
               ? data["field_review_count"].toInt()
               : 0;
         });
       }
-    } catch (e) {
-      print("Error fetching field reviews: $e");
+    } catch (_) {
+      // ignore
     } finally {
-      setState(() => _isLoadingReviews = false);
+      if (mounted) setState(() => _isLoadingReviews = false);
     }
   }
 
-  // Check if this field is already in favorites
   Future<void> checkFavorite() async {
     try {
       if (userId == null) return;
@@ -103,49 +166,48 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       );
 
       if (res.statusCode == 200) {
-        List data = jsonDecode(res.body);
-
+        final List data = jsonDecode(res.body);
         final fieldId = widget.field["field_id"] ?? widget.field["id"];
-
         final exists = data.any((fav) => fav["field_id"] == fieldId);
 
-        setState(() {
-          _isFavorite = exists;
-        });
+        if (mounted) setState(() => _isFavorite = exists);
       }
-    } catch (e) {
-      print(e);
-    }
+    } catch (_) {}
   }
 
-  // Toggle favorite
   Future<void> toggleFavorite() async {
     if (_loadingFavorite) return;
 
     final fieldId = widget.field["field_id"] ?? widget.field["id"];
 
-    // 1 Show confirmation dialog BEFORE doing anything
     final bool? confirm = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (context) {
         return Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: _isEnglish ? TextDirection.ltr : TextDirection.rtl,
           child: AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             title: Text(
-              _isFavorite ? "إزالة من المفضلة؟" : "إضافة إلى المفضلة؟",
+              _isEnglish
+                  ? (_isFavorite ? "Remove from favorites?" : "Add to favorites?")
+                  : (_isFavorite ? "إزالة من المفضلة؟" : "إضافة إلى المفضلة؟"),
               style: const TextStyle(fontWeight: FontWeight.bold),
+              textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
             ),
             content: Text(
-              _isFavorite
-                  ? "هل أنت متأكد أنك تريد إزالة هذا الملعب من المفضلة؟"
-                  : "هل تريد إضافة هذا الملعب إلى قائمة المفضلة؟",
+              _isEnglish
+                  ? (_isFavorite
+                      ? "Are you sure you want to remove this field from favorites?"
+                      : "Do you want to add this field to your favorites?")
+                  : (_isFavorite
+                      ? "هل أنت متأكد أنك تريد إزالة هذا الملعب من المفضلة؟"
+                      : "هل تريد إضافة هذا الملعب إلى قائمة المفضلة؟"),
+              textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
             ),
             actions: [
               TextButton(
-                child: const Text("إلغاء"),
+                child: Text(_isEnglish ? "Cancel" : "إلغاء"),
                 onPressed: () => Navigator.pop(context, false),
               ),
               ElevatedButton(
@@ -153,8 +215,8 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                   backgroundColor: Theme.of(context).colorScheme.primary,
                 ),
                 child: Text(
-                  _isFavorite ? "إزالة" : "إضافة",
-                  style: TextStyle(color: Colors.white),
+                  _isEnglish ? (_isFavorite ? "Remove" : "Add") : (_isFavorite ? "إزالة" : "إضافة"),
+                  style: const TextStyle(color: Colors.white),
                 ),
                 onPressed: () => Navigator.pop(context, true),
               ),
@@ -164,12 +226,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       },
     );
 
-    // User cancelled dialog
-    if (confirm == null || confirm == false) return;
+    if (confirm != true) return;
 
-    //2 Proceed with actual API call
     setState(() => _loadingFavorite = true);
-
     final endpoint = _isFavorite ? "removeFavorite" : "addFavorite";
 
     try {
@@ -180,70 +239,81 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           "Content-Type": "application/json",
           "x-api-key": apiKey ?? "",
         },
-        body: jsonEncode({
-          "user_id": userId,
-          "field_id": fieldId,
-        }),
+        body: jsonEncode({"user_id": userId, "field_id": fieldId}),
       );
 
       if (res.statusCode == 200) {
-        setState(() {
-          _isFavorite = !_isFavorite;
-        });
+        if (!mounted) return;
+        setState(() => _isFavorite = !_isFavorite);
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              _isFavorite ? "تمت الإضافة للمفضلة" : "تمت الإزالة من المفضلة",
-              textDirection: TextDirection.rtl,
+              _isEnglish
+                  ? (_isFavorite ? "Added to favorites" : "Removed from favorites")
+                  : (_isFavorite ? "تمت الإضافة للمفضلة" : "تمت الإزالة من المفضلة"),
+              textDirection: _isEnglish ? TextDirection.ltr : TextDirection.rtl,
             ),
             backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
     } finally {
-      setState(() => _loadingFavorite = false);
+      if (mounted) setState(() => _loadingFavorite = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
   void mapFieldTypes() {
-    switch (widget.field["field_type"]) {
-      case "football":
-        mappedFieldType = "كرة قدم";
-        break;
-      case "basketball":
-        mappedFieldType = "كرة سلة";
-        break;
-      case "tennis":
-        mappedFieldType = "تنس";
-        break;
-      case "padel":
-        mappedFieldType = "بادل";
-        break;
-      default:
-        mappedFieldType = "";
+    final t = (widget.field["field_type"] ?? '').toString();
+    if (_isEnglish) {
+      switch (t) {
+        case "football":
+          mappedFieldType = "Football";
+          break;
+        case "basketball":
+          mappedFieldType = "Basketball";
+          break;
+        case "tennis":
+          mappedFieldType = "Tennis";
+          break;
+        case "padel":
+          mappedFieldType = "Padel";
+          break;
+        default:
+          mappedFieldType = "";
+      }
+    } else {
+      switch (t) {
+        case "football":
+          mappedFieldType = "كرة قدم";
+          break;
+        case "basketball":
+          mappedFieldType = "كرة سلة";
+          break;
+        case "tennis":
+          mappedFieldType = "تنس";
+          break;
+        case "padel":
+          mappedFieldType = "بادل";
+          break;
+        default:
+          mappedFieldType = "";
+      }
     }
   }
 
-  // Info Row (Styled)
-  Widget _buildInfoRow(IconData icon, String text,
-      {Color color = Colors.redAccent}) {
+  Widget _buildInfoRow(IconData icon, String text, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 22),
+          Icon(icon, color: color ?? Theme.of(context).colorScheme.primary, size: 22),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
+              textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
               style: TextStyle(
                 fontSize: 16,
                 color: Theme.of(context).colorScheme.onSecondary,
@@ -259,13 +329,14 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   String _resolveImageUrl(String url) {
     if (url.startsWith("http")) return url;
     if (apiUrl == null || apiUrl!.trim().isEmpty) return url;
-    final apiUrlBase =
-        apiUrl!.endsWith('/') ? apiUrl!.substring(0, apiUrl!.length - 1) : apiUrl;
-    return "$apiUrlBase$url";
+    final base = apiUrl!.endsWith('/')
+        ? apiUrl!.substring(0, apiUrl!.length - 1)
+        : apiUrl!;
+    return "$base$url";
   }
 
   Widget _buildPillIndicator(int index) {
-    bool isCurrent = index == _currentPage;
+    final isCurrent = index == _currentPage;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: isCurrent ? 20.0 : 8.0,
@@ -273,7 +344,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(5),
-        color: isCurrent ? Theme.of(context).colorScheme.primary : Colors.white.withOpacity(0.7),
+        color: isCurrent
+            ? Theme.of(context).colorScheme.primary
+            : Colors.white.withOpacity(0.7),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.3),
@@ -285,7 +358,6 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     );
   }
 
-  // Image Carousel (Extracted)
   Widget _buildImageCarousel(List<dynamic> images) {
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -325,11 +397,8 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           return Container(
                             color: Colors.grey[300],
                             child: const Center(
-                              child: Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                                size: 50,
-                              ),
+                              child: Icon(Icons.broken_image,
+                                  color: Colors.grey, size: 50),
                             ),
                           );
                         },
@@ -349,8 +418,11 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               ),
               child: Center(
                 child: Text(
-                  'لا توجد صور',
-                  style: TextStyle(color: Theme.of(context).colorScheme.primary, fontSize: 18),
+                  _isEnglish ? 'No images' : 'لا توجد صور',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 18,
+                  ),
                 ),
               ),
             ),
@@ -361,9 +433,8 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
               right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(images.length, (index) {
-                  return _buildPillIndicator(index);
-                }),
+                children:
+                    List.generate(images.length, (index) => _buildPillIndicator(index)),
               ),
             ),
         ],
@@ -371,16 +442,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     );
   }
 
-  // Star Rating Placeholder (Updated)
-  Widget _buildStarRatingPlaceholder() {
-    const double totalStars = 5;
-    
-    // Use fetched data
-    final double rating = _fieldScore;
-    final int reviewCount = _reviewCount;
+  Widget _buildStarRating() {
+    const totalStars = 5;
+    final rating = _fieldScore;
+    final reviewCount = _reviewCount;
 
     if (_isLoadingReviews) {
-      // Show a placeholder or loader while fetching
       return Padding(
         padding: const EdgeInsets.only(top: 8.0),
         child: Row(
@@ -389,43 +456,45 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.primary),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 8),
-            Text('جاري التحميل...', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            Text(
+              _isEnglish ? 'Loading...' : 'جاري التحميل...',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ],
         ),
       );
     }
-    
+
     return Padding(
       padding: const EdgeInsets.only(top: 8.0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ...List.generate(totalStars.toInt(), (index) {
-            double difference = rating - index;
+          ...List.generate(totalStars, (index) {
+            final diff = rating - index;
             IconData iconData;
-            Color color = Theme.of(context).colorScheme.primary;
-
-            if (difference >= 1.0) {
+            if (diff >= 1.0) {
               iconData = Icons.star_rounded;
-            } else if (difference > 0.0) {
+            } else if (diff > 0.0) {
               iconData = Icons.star_half_rounded;
             } else {
               iconData = Icons.star_border_rounded;
             }
-
             return Icon(
               iconData,
-              color: color,
+              color: Theme.of(context).colorScheme.primary,
               size: 24,
             );
           }),
           const SizedBox(width: 8),
           Text(
-            // Show 0.0 if rating is less than 0.1
-            rating > 0.1 ? '${rating.toStringAsFixed(1)}' : '0.0', 
+            rating > 0.1 ? rating.toStringAsFixed(1) : '0.0',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -437,7 +506,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             '(${reviewCount.toString()})',
             style: TextStyle(
               fontSize: 14,
-              color: Theme.of(context).colorScheme.onSecondary
+              color: Theme.of(context).colorScheme.onSecondary,
             ),
           ),
         ],
@@ -446,6 +515,10 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   }
 
   Widget _buildPriceAndFavoriteCard(double totalPrice) {
+    final priceLine = _isEnglish
+        ? "${totalPrice.toStringAsFixed(2)} LYD / hour"
+        : "${totalPrice.toStringAsFixed(2)} د.ل / الساعة";
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -465,29 +538,31 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment:
+                _isEnglish ? CrossAxisAlignment.start : CrossAxisAlignment.start,
             children: [
               Text(
-                "${totalPrice.toStringAsFixed(2)} د.ل / الساعة",
+                priceLine,
                 style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w900,
-                    color: Theme.of(context).colorScheme.primary),
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
-              _buildStarRatingPlaceholder(), // Now uses fetched data
+              _buildStarRating(),
             ],
           ),
-          
-          // Favorite Button (Disable if loading)
           AbsorbPointer(
             absorbing: _loadingFavorite,
             child: IconButton(
               icon: Icon(
                 _isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: _isFavorite ? Theme.of(context).colorScheme.primary : Colors.grey[700],
+                color: _isFavorite
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.grey[700],
                 size: 30,
               ),
-              onPressed:  AuthService.isLoggedIn ? toggleFavorite : null,
+              onPressed: AuthService.isLoggedIn ? toggleFavorite : null,
             ),
           ),
         ],
@@ -496,17 +571,42 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+
     final List<dynamic> images = widget.field["field_images"] ?? [];
 
-    final double? totalPrice = widget.field["field_has_discount"]
+    final double? totalPrice = (widget.field["field_has_discount"] == true)
         ? double.tryParse(
-            widget.field["field_calculated_total_price_after_discount"]
-                .toString())
-        : double.tryParse(widget.field["field_calculated_total_price"].toString());
+            (widget.field["field_calculated_total_price_after_discount"] ?? "0")
+                .toString(),
+          )
+        : double.tryParse(
+            (widget.field["field_calculated_total_price"] ?? "0").toString(),
+          );
+
+    final fieldName = !_isEnglish ? (widget.field["field_name"] ?? '').toString() : (widget.field["field_english_name"] ?? '').toString();
+    final city = _cityNameLocalized(widget.field["field_city"]?.toString());
+
+    final location = _locationNameLocalized(widget.field["field_location"]?.toString());
+
+    final locationDetails =
+        (widget.field["field_location_details"] ?? '').toString();
+    final capacity = (widget.field["field_capacity"] ?? '').toString();
+    final surface = (widget.field["field_surface_type"] ?? '').toString();
+    final openTime = (widget.field["field_open_time"] ?? '').toString();
+    final closeTime = (widget.field["field_close_time"] ?? '').toString();
+    final description = (widget.field["field_description"] ?? '').toString();
+
+    final pageDirection = _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl;
 
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      textDirection: pageDirection,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: buildHomeAppBar(context),
@@ -516,27 +616,24 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildImageCarousel(images),
-
-              // Field Details
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      _isEnglish ? CrossAxisAlignment.start : CrossAxisAlignment.start,
                   children: [
-                    // Field Name
                     Text(
-                      widget.field["field_name"] ?? '',
+                      fieldName,
+                      textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
                       style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Theme.of(context).colorScheme.primary),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                     ),
                     const SizedBox(height: 15),
-
-                    _buildPriceAndFavoriteCard(totalPrice!),
-
+                    if (totalPrice != null) _buildPriceAndFavoriteCard(totalPrice),
                     const SizedBox(height: 25),
-
                     Container(
                       padding: const EdgeInsets.all(12.0),
                       width: double.infinity,
@@ -554,30 +651,46 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                       child: Column(
                         children: [
                           _buildInfoRow(
-                              Icons.location_on_outlined,
-                              "${widget.field["field_city"] ?? ''} / ${widget.field["field_location"]}",
-                              color: Theme.of(context).colorScheme.primary),
-                          _buildInfoRow(Icons.map_outlined,
-                              "${widget.field["field_location_details"] ?? ''}"),
-                          _buildInfoRow(Icons.stadium_outlined, "ملعب $mappedFieldType"),
-                          _buildInfoRow(Icons.people_alt_outlined,
-                              "عدد الاعبين ${widget.field["field_capacity"] ?? ''}"),
-                          _buildInfoRow(Icons.grass_outlined,
-                              "${widget.field["field_surface_type"] ?? ''}"),
+                            Icons.location_on_outlined,
+                            "$city / $location",
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          if (locationDetails.isNotEmpty)
+                            _buildInfoRow(Icons.map_outlined, locationDetails),
+                          _buildInfoRow(
+                            Icons.stadium_outlined,
+                            _isEnglish
+                                ? (mappedFieldType.isEmpty
+                                    ? "Field"
+                                    : "$mappedFieldType field")
+                                : "ملعب $mappedFieldType",
+                          ),
+                          _buildInfoRow(
+                            Icons.people_alt_outlined,
+                            _isEnglish ? "Players: $capacity" : "عدد الاعبين $capacity",
+                          ),
+                          if (surface.isNotEmpty)
+                            _buildInfoRow(Icons.grass_outlined, surface),
                           _buildInfoRow(
                             Icons.access_time,
-                            "${AppFormat.formatArabicTime(widget.field["field_open_time"] ?? '')} - ${AppFormat.formatArabicTime(widget.field["field_close_time"] ?? '')}",
+                            "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
                           ),
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 25),
-
                     Text(
-                      widget.field["field_description"] ?? 'لا يوجد وصف متاح.',
-                      style: const TextStyle(
-                          fontSize: 16, color: Colors.black54, height: 1.5),
+                      description.isNotEmpty
+                          ? description
+                          : (_isEnglish
+                              ? 'No description available.'
+                              : 'لا يوجد وصف متاح.'),
+                      textAlign: _isEnglish ? TextAlign.left : TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSecondary,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
@@ -596,9 +709,9 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
           },
           backgroundColor: Theme.of(context).colorScheme.primary,
           icon: const Icon(Icons.calendar_month, color: Colors.white),
-          label: const Text(
-            "عرض المواعيد",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          label: Text(
+            _isEnglish ? "View schedule" : "عرض المواعيد",
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,

@@ -21,12 +21,17 @@ class OtpPage extends StatefulWidget {
 class OtpPageState extends State<OtpPage> {
   final List<TextEditingController> codeControllers =
       List.generate(4, (_) => TextEditingController());
+
   String? generatedCode;
   bool loading = false;
   int secondsRemaining = 0;
   Timer? timer;
+
   final rasaelUsername = dotenv.env['RASAEL_USERNAME'];
   final rasaelPassword = dotenv.env['RASAEL_PASSWORD'];
+
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   @override
   void initState() {
@@ -43,6 +48,15 @@ class OtpPageState extends State<OtpPage> {
     super.dispose();
   }
 
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg, textDirection: _dir),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
+
   Future<void> _sendOtp() async {
     setState(() {
       loading = true;
@@ -55,14 +69,19 @@ class OtpPageState extends State<OtpPage> {
       final loginRes = await http.post(
         Uri.parse("https://client.almasafa.ly/api/MasafaRasaelLogin"),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"username": "$rasaelUsername", "password": "$rasaelPassword"}),
+        body: json.encode({
+          "username": "$rasaelUsername",
+          "password": "$rasaelPassword",
+        }),
       );
 
       if (loginRes.statusCode == 200) {
         final loginData = json.decode(loginRes.body);
         final token = loginData["token"]?.toString();
 
-        if (token == null) throw Exception("فشل الحصول على التوكن");
+        if (token == null) {
+          throw Exception(_isEnglish ? "Failed to get token" : "فشل الحصول على التوكن");
+        }
 
         final smsRes = await http.post(
           Uri.parse("https://client.almasafa.ly/api/sms/Send"),
@@ -72,29 +91,32 @@ class OtpPageState extends State<OtpPage> {
           },
           body: json.encode({
             "phoneNumber": widget.phoneNumber,
-            "message": "رمز إعادة تعيين كلمة المرور هو: $generatedCode",
+            "message": _isEnglish
+                ? "Your password reset code is: $generatedCode"
+                : "رمز إعادة تعيين كلمة المرور هو: $generatedCode",
             "senderID": "13201",
           }),
         );
 
         if (smsRes.statusCode != 200) {
-          throw Exception("فشل إرسال رمز التحقق");
+          throw Exception(_isEnglish ? "Failed to send code" : "فشل إرسال رمز التحقق");
         }
 
         _startTimer();
       } else {
-        throw Exception("فشل تسجيل الدخول لخدمة الرسائل");
+        throw Exception(_isEnglish ? "SMS service login failed" : "فشل تسجيل الدخول لخدمة الرسائل");
       }
     } catch (e) {
-      _showError("خطأ: ${e.toString()}");
+      _showSnack("${_isEnglish ? "Error" : "خطأ"}: ${e.toString()}");
     }
 
-    setState(() => loading = false);
+    if (mounted) setState(() => loading = false);
   }
 
   void _startTimer() {
     timer?.cancel();
     timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) return;
       if (secondsRemaining > 0) {
         setState(() => secondsRemaining--);
       } else {
@@ -106,7 +128,7 @@ class OtpPageState extends State<OtpPage> {
   void _verifyCode() {
     final enteredCode = codeControllers.map((c) => c.text).join();
     if (enteredCode != generatedCode) {
-      _showError("رمز التحقق غير صحيح");
+      _showSnack(_isEnglish ? "Incorrect code" : "رمز التحقق غير صحيح");
       return;
     }
 
@@ -115,15 +137,6 @@ class OtpPageState extends State<OtpPage> {
       context,
       MaterialPageRoute(
         builder: (_) => ResetPasswordPage(phoneNumber: widget.phoneNumber),
-      ),
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
       ),
     );
   }
@@ -143,6 +156,7 @@ class OtpPageState extends State<OtpPage> {
             decoration: InputDecoration(
               counterText: "",
               filled: true,
+              fillColor: Theme.of(context).colorScheme.onPrimary,
               contentPadding: const EdgeInsets.all(12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(5),
@@ -161,6 +175,7 @@ class OtpPageState extends State<OtpPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Keep OTP inputs LTR always
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Scaffold(
@@ -176,60 +191,74 @@ class OtpPageState extends State<OtpPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "رمز التحقق",
+                  Text(
+                    _isEnglish ? "Verification Code" : "رمز التحقق",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.redAccent,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
-                    style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
+                    _isEnglish
+                        ? "We sent a verification code to ${widget.phoneNumber}"
+                        : "تم إرسال رمز التحقق إلى ${widget.phoneNumber}",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onSecondary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 28),
                   _otpFields(),
                   const SizedBox(height: 28),
+
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton(
                       onPressed: loading ? null : _verifyCode,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        disabledBackgroundColor: Colors.redAccent[300],
+                        backgroundColor: Theme.of(context).colorScheme.primary,
+                        disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                       child: loading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 20,
                               height: 20,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: Theme.of(context).colorScheme.onPrimary,
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              "تأكيد",
+                          : Text(
+                              _isEnglish ? "Confirm" : "تأكيد",
                               style: TextStyle(
-                                  fontSize: 16, color: Colors.white),
+                                fontSize: 16,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
                             ),
                     ),
                   ),
+
                   const SizedBox(height: 20),
+
                   TextButton(
                     onPressed: secondsRemaining > 0 ? null : _sendOtp,
                     child: Text(
                       secondsRemaining > 0
-                          ? "إعادة الإرسال خلال ${secondsRemaining}ث"
-                          : "إعادة إرسال الرمز",
+                          ? (_isEnglish
+                              ? "Resend in ${secondsRemaining}s"
+                              : "إعادة الإرسال خلال ${secondsRemaining}ث")
+                          : (_isEnglish ? "Resend code" : "إعادة إرسال الرمز"),
                       style: TextStyle(
-                        color: secondsRemaining > 0 ? Colors.grey : Colors.redAccent,
+                        color: secondsRemaining > 0
+                            ? Colors.grey
+                            : Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

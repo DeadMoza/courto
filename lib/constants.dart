@@ -1,7 +1,8 @@
-class AppFormat {
+import 'package:intl/intl.dart';
 
-    // convert api time string into datetime to pass to formatting function (formatTime)
-    static formatArabicTime(String timeStr) {
+class AppFormat {
+  // convert api time string into datetime to pass to formatting function (formatTime)
+  static formatArabicTime(String timeStr) {
     try {
       final parts = timeStr.split(':');
       if (parts.length < 2) return timeStr;
@@ -16,33 +17,64 @@ class AppFormat {
     }
   }
 
-
-  // تحويل الوقت إلى صيغة عربية (ص/م)
+  // Arabic -> ص/م
+  // English -> AM/PM
   static String formatTime(DateTime time) {
-    int hour = time.hour;
-    String period = 'ص';
-    if (hour >= 12) {
-      period = 'م';
-      if (hour > 12) hour -= 12;
-    } else if (hour == 0) {
-      hour = 12;
+    try {
+      final lang = Intl.getCurrentLocale(); // "ar" or "en"
+
+      if (lang.startsWith("en")) {
+        // English AM/PM format (e.g. 1:05 PM)
+        return DateFormat("h:mm a", "en").format(time);
+      }
+
+      // Default Arabic format (ص/م)
+      int hour = time.hour;
+      String period = 'ص';
+      if (hour >= 12) {
+        period = 'م';
+        if (hour > 12) hour -= 12;
+      } else if (hour == 0) {
+        hour = 12;
+      }
+      final minute = time.minute.toString().padLeft(2, '0');
+      return "$hour:$minute $period";
+    } catch (_) {
+      // fallback to Arabic logic
+      int hour = time.hour;
+      String period = 'ص';
+      if (hour >= 12) {
+        period = 'م';
+        if (hour > 12) hour -= 12;
+      } else if (hour == 0) {
+        hour = 12;
+      }
+      final minute = time.minute.toString().padLeft(2, '0');
+      return "$hour:$minute $period";
     }
-    final minute = time.minute.toString().padLeft(2, '0');
-    return "$hour:$minute $period";
   }
 
   // تحويل التاريخ إلى صيغة عربية
   static String formatDateArabic(DateTime date) {
     const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+      'يناير',
+      'فبراير',
+      'مارس',
+      'أبريل',
+      'مايو',
+      'يونيو',
+      'يوليو',
+      'أغسطس',
+      'سبتمبر',
+      'أكتوبر',
+      'نوفمبر',
+      'ديسمبر'
     ];
     return "${date.day} ${months[date.month - 1]} ${date.year}";
   }
 
-   static String formatHM(DateTime dt) =>
-      "${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}";
-
+  static String formatHM(DateTime dt) =>
+      "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
 
   static String translateStatus(String status) {
     switch (status) {
@@ -58,18 +90,12 @@ class AppFormat {
   }
 
   static String toEnglishNumbers(String input) {
-  const arabicNums = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
-  const englishNums = ['0','1','2','3','4','5','6','7','8','9'];
+    const arabicNums = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    const englishNums = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-  for (int i = 0; i < arabicNums.length; i++) {
-    input = input.replaceAll(arabicNums[i], englishNums[i]);
+    for (int i = 0; i < arabicNums.length; i++) {
+      input = input.replaceAll(arabicNums[i], englishNums[i]);
+    }
+    return input;
   }
-  return input;
 }
-
-
-
-}
-
-
-

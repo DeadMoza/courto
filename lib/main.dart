@@ -1,8 +1,10 @@
+import 'package:courto/l10n/app_localizations.dart';
 import 'package:courto/pages/settingsPages/booking_history_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'pages/home_page.dart';
 import 'services/auth_service.dart';
@@ -17,6 +19,7 @@ void main() async {
   await dotenv.load(fileName: ".env");
 
   await initializeDateFormatting('ar', null);
+  Intl.defaultLocale = 'ar';
   OneSignal.initialize(dotenv.env['ONESIGNAL_APP_ID']!); 
 
   // Ask for permission
@@ -54,6 +57,7 @@ class MyApp extends StatelessWidget {
               Locale('en'),
             ],
             localizationsDelegates: const [
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

@@ -6,20 +6,10 @@ import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:courto/constants.dart'; // ✅ use your real AppFormat (supports locale)
 
 // --- Global Design Constants for a cleaner look ---
 const double kPadding = 16.0;
-
-// Placeholder for AppFormat.formatArabicTime, as it wasn't provided in the original code
-class AppFormat {
-  static String formatArabicTime(String time) {
-    // Simple placeholder logic
-    if (time.length >= 5) {
-      return time.substring(0, 5);
-    }
-    return time;
-  }
-}
 
 class LandingPage extends StatelessWidget {
   final List<String> carouselImages;
@@ -41,8 +31,59 @@ class LandingPage extends StatelessWidget {
     required this.matchesPlayedCount,
   });
 
-  // Use a private final field for API URL
   final String? _apiUrl = dotenv.env['API_URL'];
+
+  static const Map<String, String> _cityNameEn = {
+    "طرابلس": "Tripoli",
+    "مصراتة": "Misrata",
+    "بنغازي": "Benghazi",
+    "الزاوية": "Zawiya",
+    "الخمس":"Khoms",
+    "سرت":"Surt",
+    "درنة":"Derna",
+    "طبرق":"Tobruk",
+    "سبها":"Sabha",
+    "صبراتة": "Subrata",
+    "زوارة":"Zuwara"
+  };
+
+
+    static const Map<String, String> _locationEnMap = {
+    "الظهرة": "Al Dahra",
+    "زاوية الدهماني": "Zawiyat Al Dahmani",
+    "أبو سليم": "Abu Salim",
+    "الحي الإسلامي": "Al Islamic District",
+    "الدريبي": "Al Draybi",
+    "السراج": "Al Sarraj",
+    "المدينة القديمة": "Old City",
+    "الهاني": "Al Hani",
+    "الهضبة الخضراء": "Green Plateau",
+    "باب بن غشير": "Bab Ben Ghashir",
+    "حي الأندلس": "Hay Al Andalus",
+    "حي دمشق": "Hay Dimashq",
+    "رأس حسن": "Ras Hassan",
+    "زناتة": "Zanata", 
+    "سوق الجمعة": "Souq Al Jomaa",
+    "غوط الشعال": "Ghout Al Shaal",
+    "المنصورة": "Al Mansoura",
+    "وسعاية أبديري": "Wesaaeya Abdeeri",
+    "الصريم": "Al Srim",
+    "بن عاشور": "Bin Ashour",
+    "جنزور": "Janzour",
+    "تاجوراء": "Tajoura",
+    "المدينة": "Al Madina"
+
+  };
+  String _locationLabel(String location, bool isEnglish) {
+  if (!isEnglish) return location;
+  return _locationEnMap[location.trim()] ?? location;
+}
+
+
+  String _cityLabel(String city, bool isEnglish) {
+    if (!isEnglish) return city;
+    return _cityNameEn[city] ?? city;
+  }
 
   String getFirstImageUrl(List<dynamic> images) {
     if (images.isEmpty) return "";
@@ -64,14 +105,12 @@ class LandingPage extends StatelessWidget {
       return "${uri.scheme}://${uri.host}${uri.hasPort ? ':${uri.port}' : ''}$normalizedPath";
     }
 
-    // If relative, prepend API_URL and normalize
     final base =
         _apiUrl?.endsWith('/') == true ? _apiUrl!.substring(0, _apiUrl.length - 1) : _apiUrl ?? '';
     final path = url.startsWith('/') ? url : '/$url';
     return "$base$path".replaceAll(RegExp(r'/{2,}'), '/');
   }
 
-  // Moved Icon logic to be a private method
   Icon _getFieldTypeIcon(String? type) {
     switch (type) {
       case "tennis":
@@ -104,23 +143,19 @@ class LandingPage extends StatelessWidget {
     }
   }
 
-  // --- NEW: Sport Category Navigation Button ---
   Widget _buildSportCategoryButton({
     required BuildContext context,
     required String label,
     required IconData icon,
-    required String categoryType,
     required int categoryIndex,
   }) {
     return Expanded(
       child: GestureDetector(
-        onTap: () {
-          onGoToFieldsPage(categoryIndex);
-        },
+        onTap: () => onGoToFieldsPage(categoryIndex),
         child: Material(
           elevation: 4,
           borderRadius: BorderRadius.circular(10),
-          color: Theme.of(context).colorScheme.primary, // Use primary color for visibility
+          color: Theme.of(context).colorScheme.primary,
           child: Container(
             height: 80,
             padding: const EdgeInsets.all(4),
@@ -146,198 +181,206 @@ class LandingPage extends StatelessWidget {
     );
   }
 
-  // --- REFINED: Discounted Field Card (as before) ---
- Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext context) {
-  final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
-  final fieldName = field["field_name"] ?? "ملعب";
-  final city = field["field_city"] ?? "";
-  final location = field["field_location"] ?? "";
-  final capacity = field["field_capacity"]?.toString() ?? "";
-  final openTime = field["field_open_time"] ?? "";
-  final closeTime = field["field_close_time"] ?? "";
-  final fieldType = field["field_type"] ?? "";
+  Widget _buildDiscountedFieldCard(Map<String, dynamic> field, BuildContext context, bool isEnglish) {
+    final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
 
+    // ✅ English name support
+    final fieldName = isEnglish
+        ? (field["field_english_name"] ?? field["field_name"] ?? "Field")
+        : (field["field_name"] ?? "ملعب");
 
+    final cityRaw = field["field_city"] ?? "";
+    final city = _cityLabel(cityRaw.toString(), isEnglish);
 
-  // Prices
-  final originalPrice = double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
-  final discountPrice = double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0;
+    final locationRaw = (field["field_location"] ?? "").toString();
+    final location = _locationLabel(locationRaw, isEnglish);
 
-  final hasDiscount = field["field_has_discount"] == true;
+    final capacity = field["field_capacity"]?.toString() ?? "";
+    final openTime = field["field_open_time"] ?? "";
+    final closeTime = field["field_close_time"] ?? "";
+    final fieldType = field["field_type"] ?? "";
 
-  // --- Discount percentage ---
-  int discountPercent = 0;
-  if (hasDiscount && originalPrice > 0 && discountPrice > 0) {
-    discountPercent = (100 - (discountPrice / originalPrice * 100)).round();
-  }
+    final originalPrice =
+        double.tryParse(field["field_calculated_total_price"]?.toString() ?? "0") ?? 0;
+    final discountPrice =
+        double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0;
 
-  return GestureDetector(
-    onTap: () {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (_) => FieldDetailsPage(field: field)));
-    },
-    child: Container(
-      width: 250,
-      height: 240, // <-- increased (solves overflow)
-      margin: const EdgeInsets.only(right: 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-Stack(
-  children: [
-    ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
-      child: Image.network(
-        imageUrl,
-        width: 250,
-        height: 130,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
-          height: 130,
-          color: Colors.grey[300],
-          child: const Icon(Icons.image_not_supported, color: Colors.grey),
-        ),
-      ),
-    ),
+    final hasDiscount = field["field_has_discount"] == true;
 
-    // ---------------- DISCOUNT BADGE (top-left) ----------------
-    if (hasDiscount)
-      Positioned(
-        top: 8,
-        left: 8,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            "خصم $discountPercent%",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
+    int discountPercent = 0;
+    if (hasDiscount && originalPrice > 0 && discountPrice > 0) {
+      discountPercent = (100 - (discountPrice / originalPrice * 100)).round();
+    }
 
-    // ---------------- FIELD TYPE ICON (top-right) ----------------
-    Positioned(
-      top: 8,
-      right: 8,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => FieldDetailsPage(field: field)));
+      },
       child: Container(
-        padding: const EdgeInsets.all(6),
+        width: 250,
+        height: 240,
+        margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          shape: BoxShape.circle,
+          color: Theme.of(context).cardTheme.color,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: _getFieldTypeIcon(fieldType),
-      ),
-    ),
-  ],
-),
-
-          // ---------------- TEXT SECTION ----------------
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
               children: [
-                // Field Name
-                Text(
-                  fieldName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: Theme.of(context).colorScheme.primary),
-                ),
-
-                const SizedBox(height: 4),
-
-                // City + Location
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "$city - $location",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style:  TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                  child: Image.network(
+                    imageUrl,
+                    width: 250,
+                    height: 130,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 130,
+                      color: Colors.grey[300],
+                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
                     ),
-                    Row(
-                      children: [
-                       Icon(Icons.people, size: 14, color: Theme.of(context).colorScheme.primary),
-                        const SizedBox(width: 4),
-                        Text(
-                          capacity,
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                // Prices
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          "د.ل ${discountPrice.toStringAsFixed(1)}",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          "د.ل ${originalPrice.toStringAsFixed(1)}",
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
-                    ),
-                  Row(
-                    children: [
-                      Text(
-                        "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
-                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary,),
-                      ),
-                    ],
                   ),
-                  ],
+                ),
+
+                // ✅ discount badge
+                if (hasDiscount)
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        isEnglish ? "$discountPercent% OFF" : "خصم $discountPercent%",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: _getFieldTypeIcon(fieldType),
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fieldName.toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "$city - $location",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Icon(Icons.people, size: 14, color: Theme.of(context).colorScheme.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            capacity,
+                            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            isEnglish
+                                ? "LYD ${discountPrice.toStringAsFixed(1)}"
+                                : "د.ل ${discountPrice.toStringAsFixed(1)}",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isEnglish
+                                ? "LYD ${originalPrice.toStringAsFixed(1)}"
+                                : "د.ل ${originalPrice.toStringAsFixed(1)}",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
+                        style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary),
+                        textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = Localizations.localeOf(context).languageCode == "en";
+
     return Directionality(
-      textDirection: ui.TextDirection.rtl,
+      textDirection: isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SingleChildScrollView(
@@ -402,28 +445,28 @@ Stack(
 
               const SizedBox(height: 20),
 
-              // --- 2. CTA BUTTONS (unchanged) ---
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: kPadding),
                 child: SizedBox(
                   width: double.infinity,
-                  child: _ctaButtons(context),
+                  child: _ctaButtons(context, isEnglish),
                 ),
               ),
 
               const SizedBox(height: 30),
 
-              // --- 3. FEATURED TEXT MARQUEE (unchanged) ---
               _FeaturedTextMarquee(
-                text1: featuredText1!.isEmpty
-                    ? "مرحبا بكم في كورتو!"
-                    : featuredText1,
-                text2:
-                    featuredText2!.isEmpty ? "اشحن احجز العب" : featuredText2,
+                isEnglish: isEnglish,
+                text1: (featuredText1 == null || featuredText1!.isEmpty)
+                    ? (isEnglish ? "Welcome to Courto!" : "مرحبا بكم في كورتو!")
+                    : featuredText1!,
+                text2: (featuredText2 == null || featuredText2!.isEmpty)
+                    ? (isEnglish ? "Top up • Book • Play" : "اشحن احجز العب")
+                    : featuredText2!,
               ),
 
               const SizedBox(height: 30),
- 
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: kPadding),
                 child: Column(
@@ -432,22 +475,26 @@ Stack(
                     SingleChildScrollView(
                       child: Row(
                         children: [
-                          // Tennis
                           _buildSportCategoryButton(
                             context: context,
-                            label: "تنس",
+                            label: isEnglish ? "Tennis" : "تنس",
                             icon: Icons.sports_baseball,
-                            categoryType: "tennis",
                             categoryIndex: 3,
                           ),
                           const SizedBox(width: kPadding / 2),
-                          // Padel
                           _buildSportCategoryButton(
                             context: context,
-                            label: "بادل",
+                            label: isEnglish ? "Padel" : "بادل",
                             icon: Icons.sports_tennis_sharp,
-                            categoryType: "padel",
                             categoryIndex: 4,
+                          ),
+                                                    const SizedBox(width: kPadding / 2),
+
+                                                    _buildSportCategoryButton(
+                            context: context,
+                            label: isEnglish ? "Football" : "كرة القدم",
+                            icon: Icons.sports_soccer,
+                            categoryIndex: 1,
                           ),
                         ],
                       ),
@@ -455,7 +502,6 @@ Stack(
                   ],
                 ),
               ),
-              // -----------------------------------------------------------------
 
               const SizedBox(height: 30),
 
@@ -465,7 +511,7 @@ Stack(
                   child: Align(
                     alignment: Alignment.center,
                     child: Text(
-                      "العروض و التخفيضات",
+                      isEnglish ? "Offers & Discounts" : "العروض و التخفيضات",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -475,20 +521,18 @@ Stack(
                   ),
                 ),
 
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 240,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: kPadding, vertical: 8),
-                    itemCount: discountedFields.length,
-                    itemBuilder: (context, index) {
-                      return _buildDiscountedFieldCard(
-                          discountedFields[index], context);
-                    },
-                  ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 240,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: kPadding, vertical: 8),
+                  itemCount: discountedFields.length,
+                  itemBuilder: (context, index) {
+                    return _buildDiscountedFieldCard(discountedFields[index], context, isEnglish);
+                  },
                 ),
+              ),
 
               const SizedBox(height: 30),
             ],
@@ -498,24 +542,21 @@ Stack(
     );
   }
 
-  // --- CTA Button Logic (unchanged) ---
-  Widget _ctaButtons(BuildContext context) {
+  Widget _ctaButtons(BuildContext context, bool isEnglish) {
     if (AuthService.isLoggedIn) {
-      return _loggedInButtons(context);
+      return _loggedInButtons(context, isEnglish);
     } else {
-      return _loginSignupButtons(context);
+      return _loginSignupButtons(context, isEnglish);
     }
   }
 
-  // --- Logged Out Buttons (Login/Signup) (unchanged) ---
-  Widget _loginSignupButtons(BuildContext context) {
+  Widget _loginSignupButtons(BuildContext context, bool isEnglish) {
     return Row(
       children: [
         Expanded(
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const LoginPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
             },
             child: Material(
               elevation: 6,
@@ -524,14 +565,14 @@ Stack(
               child: Container(
                 height: 120,
                 padding: const EdgeInsets.all(8),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.login, color: Colors.white, size: 40),
-                    SizedBox(height: 8),
+                    const Icon(Icons.login, color: Colors.white, size: 40),
+                    const SizedBox(height: 8),
                     Text(
-                      "تسجيل الدخول",
-                      style: TextStyle(
+                      isEnglish ? "Log in" : "تسجيل الدخول",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -547,8 +588,7 @@ Stack(
         Expanded(
           child: GestureDetector(
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const SignupPage()));
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupPage()));
             },
             child: Material(
               elevation: 6,
@@ -557,14 +597,14 @@ Stack(
               child: Container(
                 height: 120,
                 padding: const EdgeInsets.all(8),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.person_add, color: Colors.white, size: 40),
-                    SizedBox(height: 8),
+                    const Icon(Icons.person_add, color: Colors.white, size: 40),
+                    const SizedBox(height: 8),
                     Text(
-                      "إنشاء حساب",
-                      style: TextStyle(
+                      isEnglish ? "Sign up" : "إنشاء حساب",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -580,8 +620,7 @@ Stack(
     );
   }
 
-  // --- Logged In Buttons (History/Count + Book Field) (unchanged) ---
-  Widget _loggedInButtons(BuildContext context) {
+  Widget _loggedInButtons(BuildContext context, bool isEnglish) {
     const double buttonHeight = 120.0;
 
     return Row(
@@ -600,14 +639,14 @@ Stack(
                   child: Container(
                     height: (buttonHeight - 4) / 2,
                     width: double.infinity,
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, color: Colors.white, size: 24),
-                        SizedBox(height: 4),
+                        const Icon(Icons.history, color: Colors.white, size: 24),
+                        const SizedBox(height: 4),
                         Text(
-                          "سجل الحجوزات",
-                          style: TextStyle(
+                          isEnglish ? "Booking history" : "سجل الحجوزات",
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -637,12 +676,9 @@ Stack(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const Text(
-                        "مباريات لعبت",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
+                      Text(
+                        isEnglish ? "Matches played" : "مباريات لعبت",
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
                       )
                     ],
                   ),
@@ -664,14 +700,14 @@ Stack(
               child: Container(
                 height: buttonHeight,
                 width: double.infinity,
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.stadium, color: Colors.white, size: 45),
-                    SizedBox(height: 8),
+                    const Icon(Icons.stadium, color: Colors.white, size: 45),
+                    const SizedBox(height: 8),
                     Text(
-                      "احجز ملعب",
-                      style: TextStyle(
+                      isEnglish ? "Book a field" : "احجز ملعب",
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -688,14 +724,15 @@ Stack(
   }
 }
 
-// --- REFINED: Featured Text Marquee with Fading Edges (unchanged) ---
 class _FeaturedTextMarquee extends StatefulWidget {
-  final String? text1;
-  final String? text2;
+  final String text1;
+  final String text2;
+  final bool isEnglish;
 
   const _FeaturedTextMarquee({
     required this.text1,
     required this.text2,
+    required this.isEnglish,
   });
 
   @override
@@ -704,7 +741,7 @@ class _FeaturedTextMarquee extends StatefulWidget {
 
 class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
   final ScrollController _scrollController = ScrollController();
-  static const Duration scrollDuration = Duration(seconds: 20);
+  static const Duration scrollDuration = Duration(seconds: 50);
 
   @override
   void initState() {
@@ -749,39 +786,37 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      width: double.infinity,
-      color: Theme.of(context).colorScheme.primary,
-      child: ShaderMask(
-        shaderCallback: (Rect bounds) {
-          return const LinearGradient(
-            colors: [
-              Colors.white,
-              Colors.transparent,
-              Colors.transparent,
-              Colors.white
-            ],
-            stops: [0.0, 0.05, 0.95, 1.0],
-            tileMode: TileMode.clamp,
-          ).createShader(bounds);
-        },
-        blendMode: BlendMode.dstOut,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: kPadding),
-            child: Row(
-              children: [
-                _text(widget.text1, Colors.amber),
-                _text(widget.text2, Colors.white),
-                _text(widget.text1, Colors.amber),
-                _text(widget.text2, Colors.white),
-                _text(widget.text1, Colors.amber),
-                _text(widget.text2, Colors.white),
-              ],
+    return Directionality(
+      textDirection: widget.isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
+      child: Container(
+        height: 40,
+        width: double.infinity,
+        color: Theme.of(context).colorScheme.primary,
+        child: ShaderMask(
+          shaderCallback: (Rect bounds) {
+            return const LinearGradient(
+              colors: [Colors.white, Colors.transparent, Colors.transparent, Colors.white],
+              stops: [0.0, 0.05, 0.95, 1.0],
+              tileMode: TileMode.clamp,
+            ).createShader(bounds);
+          },
+          blendMode: BlendMode.dstOut,
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: kPadding),
+              child: Row(
+                children: [
+                  _text(widget.text1, Colors.amber),
+                  _text(widget.text2, Colors.white),
+                  _text(widget.text1, Colors.amber),
+                  _text(widget.text2, Colors.white),
+                  _text(widget.text1, Colors.amber),
+                  _text(widget.text2, Colors.white),
+                ],
+              ),
             ),
           ),
         ),
@@ -789,7 +824,7 @@ class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
     );
   }
 
-  Widget _text(String? text, Color color) {
+  Widget _text(String text, Color color) {
     return Text(
       "$text  |  ",
       style: TextStyle(

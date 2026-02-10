@@ -15,35 +15,44 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.successMessage});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final phoneController = TextEditingController();
   final passController = TextEditingController();
+
   bool loading = false;
   bool showPassword = false;
+
   final apiUrl = dotenv.env['API_URL'];
+
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   @override
   void initState() {
     super.initState();
 
-    // Show success message if provided (e.g., after signup or password reset)
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       if (widget.successMessage != null && widget.successMessage!.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              widget.successMessage!,
-              textDirection: TextDirection.rtl,
-            ),
+            content: Text(widget.successMessage!, textDirection: _dir),
             backgroundColor: Theme.of(context).colorScheme.primary,
             behavior: SnackBarBehavior.fixed,
           ),
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    phoneController.dispose();
+    passController.dispose();
+    super.dispose();
   }
 
   Future<void> login() async {
@@ -63,31 +72,44 @@ class _LoginPageState extends State<LoginPage> {
     FocusScope.of(context).unfocus();
     setState(() => loading = true);
 
-    final url = Uri.parse("${apiUrl}users/login");
-    String? deviceId = AuthService.playerId ?? await OneSignal.User.getOnesignalId();
-    String? platform = AuthService.platform ?? (Platform.isAndroid ? 'android' : Platform.isIOS ? 'ios' : 'unknown');
+    final url = Uri.parse("${apiUrl ?? ""}users/login");
+
+    String? deviceId =
+        AuthService.playerId ?? await OneSignal.User.getOnesignalId();
+    String? platform = AuthService.platform ??
+        (Platform.isAndroid
+            ? 'android'
+            : Platform.isIOS
+                ? 'ios'
+                : 'unknown');
 
     try {
       final res = await http.post(
         url,
         headers: {
           "Content-Type": "application/json",
-          'x-api-key': '${dotenv.env['API_KEY']}'
+          "x-api-key": dotenv.env['API_KEY'] ?? "",
         },
         body: json.encode({
           "phone_number": phone,
           "password": passController.text.trim(),
           "device_id": deviceId,
-          "platform": platform
+          "platform": platform,
         }),
       );
 
+      if (!mounted) return;
       setState(() => loading = false);
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
 
-        await AuthService.saveSession(data["user"], data["token"], deviceId, platform);
+        await AuthService.saveSession(
+          data["user"],
+          data["token"],
+          deviceId,
+          platform,
+        );
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -95,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (_) => const HomePage()),
         );
       } else {
-        String message = "فشل تسجيل الدخول";
+        String message = _isEnglish ? "Login failed" : "فشل تسجيل الدخول";
         try {
           final data = json.decode(res.body);
           if (data["error"] != null) message = data["error"];
@@ -103,15 +125,19 @@ class _LoginPageState extends State<LoginPage> {
         _showError(message);
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => loading = false);
-      _showError("خطأ في الاتصال بالشبكة، يرجى التحقق من الاتصال بالإنترنت");
+      _showError(_isEnglish
+          ? "Network error. Please check your internet connection."
+          : "خطأ في الاتصال بالشبكة، يرجى التحقق من الاتصال بالإنترنت");
     }
   }
 
   void _showError(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, textDirection: TextDirection.rtl),
+        content: Text(message, textDirection: _dir),
         backgroundColor: Theme.of(context).colorScheme.primary,
         behavior: SnackBarBehavior.fixed,
       ),
@@ -120,15 +146,16 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isEnglish = _isEnglish;
+
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -143,9 +170,13 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: phoneController,
                     keyboardType: TextInputType.phone,
+                    textDirection: TextDirection.ltr, // phone is better LTR always
                     decoration: InputDecoration(
-                      labelText: "رقم الهاتف",
-                      prefixIcon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
+                      labelText: isEnglish ? "Phone number" : "رقم الهاتف",
+                      prefixIcon: Icon(
+                        Icons.phone,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.onPrimary,
                       border: OutlineInputBorder(
@@ -160,19 +191,19 @@ class _LoginPageState extends State<LoginPage> {
                   TextField(
                     controller: passController,
                     obscureText: !showPassword,
+                    textDirection: TextDirection.ltr,
                     decoration: InputDecoration(
-                      labelText: "كلمة المرور",
-                      prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
+                      labelText: isEnglish ? "Password" : "كلمة المرور",
+                      prefixIcon: Icon(
+                        Icons.lock,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
+                          showPassword ? Icons.visibility_off : Icons.visibility,
                           color: Colors.grey,
                         ),
-                        onPressed: () {
-                          setState(() => showPassword = !showPassword);
-                        },
+                        onPressed: () => setState(() => showPassword = !showPassword),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.onPrimary,
@@ -206,10 +237,9 @@ class _LoginPageState extends State<LoginPage> {
                                 strokeWidth: 2.5,
                               ),
                             )
-                          : const Text(
-                              "تسجيل الدخول",
-                              style:
-                                  TextStyle(fontSize: 16, color: Colors.white),
+                          : Text(
+                              isEnglish ? "Log in" : "تسجيل الدخول",
+                              style: const TextStyle(fontSize: 16, color: Colors.white),
                             ),
                     ),
                   ),
@@ -228,7 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     },
                     child: Text(
-                      "هل نسيت كلمة المرور؟",
+                      isEnglish ? "Forgot password?" : "هل نسيت كلمة المرور؟",
                       style: TextStyle(color: Theme.of(context).colorScheme.primary),
                     ),
                   ),
@@ -238,12 +268,11 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(
-                            builder: (_) => const SignupPage()),
+                        MaterialPageRoute(builder: (_) => const SignupPage()),
                       );
                     },
                     child: Text(
-                      "مستخدم جديد؟ أنشئ حساب",
+                      isEnglish ? "New user? Create an account" : "مستخدم جديد؟ أنشئ حساب",
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.primary,
                         fontWeight: FontWeight.bold,

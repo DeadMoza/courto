@@ -1,0 +1,509 @@
+{
+  "@@locale": "en",
+  "appLanguage": "App language",
+  "arabic": "العربية",
+  "english": "English",
+  "darkMode": "Dark mode",
+  "light": "Light",
+  "dark": "Dark",
+  "system": "System",
+
+  "fullName": "Full name",
+  "phoneNumber": "Phone number",
+  "password": "Password",
+  "confirmPassword": "Confirm password",
+
+  "continueText": "Continue",
+  "haveAccountLogin": "Already have an account? Log in",
+
+  "signupAgreePrefix": "By creating an account, you agree to ",
+
+  "termsTitle": "Terms of use",
+  "close": "Close",
+
+  "signupErrorFillAllFields": "Please fill in all fields",
+  "signupErrorArabicFullName": "Please enter your full name in Arabic",
+  "signupErrorPasswordRules": "Password must be 8 to 18 characters and contain letters, with optional numbers or symbols",
+  "signupErrorPasswordsNotMatch": "Passwords do not match",
+  "signupErrorPhoneFormat": "Please enter a valid phone number starting with 2189",
+
+  "termsBody": "Use of Courto (courto) App – Terms and Conditions\nLast update: 2025-12-13\n\nPlease read these terms carefully before using the Courto (courto) app. By using the app, you fully and unconditionally agree to all terms below.\n\n1. Definitions\n• App: Courto (courto) sports booking app (football, basketball, etc.).\n• User: anyone who downloads the app, creates an account, or uses it to book.\n• Venue owner: the person/entity responsible for the venue listed in the app.\n• Initial booking fee: amount paid via the app to confirm a booking, set by the venue owner and may change before booking.\n• Remaining amount: paid directly to the venue owner on arrival or after play as requested.\n\n2. Booking and payment\n1. User tops up their wallet then selects venue, date, and time.\n2. No amount is deducted until the venue owner accepts.\n3. Once accepted, the initial fee is deducted.\n4. Booking is confirmed after acceptance and successful deduction.\n5. User pays the remaining amount directly to the venue owner.\n6. User is responsible for verifying booking details before submitting.\n7. User cannot create a new booking until the previous pending booking is accepted or rejected.\n\n3. Monthly subscription\n1. Some venues may offer monthly subscription if enabled by the venue owner.\n2. Subscription grants one fixed weekly session for a month (four consecutive weeks).\n3. Payment: initial confirmation fee via the app (based on total hours) and the remaining amount paid directly to the owner at the first session.\nNote: amounts paid via the app are confirmation fees and are refundable only in cases below.\n4. Cancellation/refund follows section (4). User cannot cancel or refund after acceptance or after the first session starts.\n5. No-shows are not eligible for makeup sessions or refunds.\n6. Subscription cannot be transferred/shared without owner approval.\n7. App/owners may modify/stop subscription with prior notice while respecting refunds for non-delivered sessions.\n\n4. Cancellation and refunds\n1. User can cancel only after 20 minutes from creating the booking.\n2. If accepted, user cannot cancel or refund the initial fee.\n3. If user does not attend after acceptance, the initial fee is not refunded.\n4. Owner may cancel for necessity (weather/maintenance); in that case the full initial fee is refunded to the user wallet.\n5. App may suspend/ban users for harmful behavior or repeated disruptive cancellations.\n\n5. User responsibilities\n1. Provide correct data during registration/booking.\n2. Attend on time and follow venue rules.\n3. No transfer/rent of booking without owner approval.\n4. User is responsible for any damages caused.\n\n6. Venue owner responsibilities\n1. Provide the venue at the scheduled time.\n2. Responsible for cancellations/changes after confirmation.\n3. Show pricing clearly without hidden fees.\n\n7. Courto app responsibility\n1. App acts as an electronic intermediary between users and venue owners.\n2. App is not responsible for venue quality/cleanliness/readiness, financial disputes, or injuries/damages during use.\n3. App is not responsible for errors due to incorrect user input.\n4. App may suspend/delete violating accounts.\n\n8. Privacy and data protection\n1. User data is stored securely under the privacy policy.\n2. Data is not shared with third parties except with user consent or legal order.\n3. App may use anonymous statistics to improve services.\n\n9. Intellectual property\nAll content/brands/designs in Courto are owned and legally protected; copying/reuse without permission is prohibited.\n\n10. Changes to terms\nCourto may update these terms anytime; continued use after updates implies acceptance.\n\n11. Governing law and disputes\nThese terms are governed by the laws of Libya; Libyan courts have exclusive jurisdiction.\n\n12. Contact\nFor inquiries/complaints:\ncourtolibya@gmail.com",
+
+  "pleaseLogin": "Please log in",
+  "phoneNotAvailable": "No phone number",
+
+  "bookingHistory": "Booking history",
+  "favoriteFields": "Favorite fields",
+  "supportHelp": "Support & help",
+  "chargeWallet": "Charge wallet",
+  "aboutApp": "About the app",
+  "visibilityMode": "Appearance",
+
+  "logout": "Log out",
+  "login": "Log in",
+
+  "logoutConfirmTitle": "Log out?",
+  "yes": "Yes",
+  "no": "No",
+
+    "otpTitle": "Verification code",
+  "otpSentTo": "A verification code was sent to {phone}",
+  "@otpSentTo": {
+    "placeholders": {
+      "phone": {}
+    }
+  },
+
+  "confirm": "Confirm",
+
+  "otpResendCode": "Resend code",
+  "otpResendIn": "Resend in {seconds}s",
+  "@otpResendIn": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+
+  "otpSmsMessage": "Your verification code is: {code}",
+  "@otpSmsMessage": {
+    "placeholders": {
+      "code": {}
+    }
+  },
+
+  "errorPrefix": "Error: {message}",
+  "@errorPrefix": {
+    "placeholders": {
+      "message": {}
+    }
+  },
+
+  "otpErrorToken": "Failed to get token",
+  "otpErrorSendCode": "Failed to send verification code",
+  "otpErrorRasaelLogin": "Failed to login to SMS service",
+
+  "otpErrorInvalidCode": "Incorrect verification code",
+  "otpAccountCreatedDefault": "Account created successfully.",
+  "otpErrorSignupFailed": "Failed to create account",
+  "otpErrorDuringSignup": "An error occurred while creating the account",
+
+    "loginErrorFailed": "Login failed",
+  "networkError": "Network error. Please check your internet connection.",
+
+  "forgotPassword": "Forgot password?",
+  "newUserCreateAccount": "New user? Create an account",
+
+    "landingFeaturedDefault1": "Welcome to Courto!",
+  "landingFeaturedDefault2": "Top up • Book • Play",
+
+  "tennis": "Tennis",
+  "padel": "Padel",
+
+  "offersDiscounts": "Offers & Discounts",
+
+  "matchesPlayed": "Matches played",
+  "bookField": "Book a field",
+  "createAccount": "Create account",
+
+  "fieldDefaultName": "Field",
+
+  "discountBadge": "{percent}% off",
+  "@discountBadge": {
+    "placeholders": {
+      "percent": {}
+    }
+  },
+
+  "currency": "LYD {value}",
+  "@currency": {
+    "placeholders": {
+      "value": {}
+    }
+  },
+
+    "navHome": "Home",
+  "navFields": "Fields",
+  "navMap": "Map",
+  "navSettings": "Settings",
+
+  "errorLoadFields": "Failed to load fields",
+  "errorConnection": "Connection failed",
+
+    "mapPermissionRequired": "You must log in and allow location access to view fields on the map.",
+  "mapNotAvailable": "The map is currently unavailable. We will try again at the beginning of the month.",
+
+  "pricePerHour": "LYD {price} / hour",
+  "@pricePerHour": {
+    "placeholders": {
+      "price": {}
+    }
+  },
+
+   "fieldDefaultName": "Unnamed field",
+
+  "filterCityTitle": "City",
+  "filterTypeTitle": "Field type",
+  "filterSortTitle": "Sort by",
+  "loadingCities": "Loading cities...",
+  "sortDistance": "Distance",
+  "sortPrice": "Price",
+  "filterTooltip": "Filter",
+
+  "typeAll": "All",
+  "typeFootball": "Football",
+  "typeBasketball": "Basketball",
+  "typeTennis": "Tennis",
+  "typePadel": "Padel",
+  "typePadbol": "Padbol",
+  "typeKarting": "Karting",
+  "typePaintball": "Paintball",
+  "typeGolf": "Golf",
+  "typeVolleyball": "Volleyball",
+
+  "activeCity": "City: {city}",
+  "@activeCity": { "placeholders": { "city": {} } },
+
+  "activeType": "Type: {type}",
+  "@activeType": { "placeholders": { "type": {} } },
+
+  "activeSort": "Sort: {sort}",
+  "@activeSort": { "placeholders": { "sort": {} } },
+
+  "kmDistance": "{km} km",
+  "@kmDistance": { "placeholders": { "km": {} } },
+
+  "discountPercent": "-{percent}%",
+  "@discountPercent": { "placeholders": { "percent": {} } },
+
+  "bookingAndPrice": "Booking: {booking} | {price}",
+  "@bookingAndPrice": {
+    "placeholders": {
+      "booking": {},
+      "price": {}
+    }
+  },
+
+  "bookingAndPricePerHour": "Booking: {booking} | {price}/hour",
+  "@bookingAndPricePerHour": {
+    "placeholders": {
+      "booking": {},
+      "price": {}
+    }
+  },
+
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": { "placeholders": { "message": {} } },
+
+  "noFieldsAvailable": "No {type} fields available right now in {city}.",
+  "@noFieldsAvailable": {
+    "placeholders": {
+      "type": {},
+      "city": {}
+    }
+  },
+
+    "themeTitle": "Theme mode",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
+
+    "supportTitle": "Support & Help",
+  "supportHeaderTitle": "Contact us to solve your issue",
+  "supportHeaderDescription": "Please choose the category and issue and describe it in detail. The support team will contact you via your phone number or WhatsApp as soon as possible.",
+
+  "supportCategoryLabel": "Issue category:",
+  "supportSelectCategoryHint": "Select category",
+  "supportUnknownCategory": "Unknown category",
+
+  "supportIssueLabel": "Selected issue:",
+  "supportSelectIssueHint": "Select issue",
+  "supportUnknownIssue": "Unknown issue",
+
+  "supportMessageLabel": "Issue description:",
+  "supportMessageHint": "Write issue details here",
+
+  "supportSendButton": "Send support request",
+
+  "supportSelectIssueFirst": "Please select an issue first.",
+  "supportEnterDescription": "Please enter the issue description.",
+
+  "supportSentSuccess": "Request sent successfully. We will reply soon.",
+
+  "supportErrorNoAuth": "Error: No authentication token.",
+  "supportErrorLoadCategories": "Failed to load categories.",
+  "supportErrorInternet": "Could not connect to the server. Check your internet connection.",
+  "supportErrorServer": "Could not connect to the server.",
+  "supportErrorSending": "An error occurred while sending.",
+
+
+  "policyTitle": "Terms of Use",
+  "policyBody": "Courto (courto) App Terms & Conditions\nLast update: 2025-12-13\nPlease read these terms carefully before using the Courto (courto) app. Your use of the app indicates your full and unconditional acceptance of all the following clauses.\n⸻\n1. Definitions\n• App: The Courto (courto) application for booking sports fields (football, basketball, etc.).\n• User: Any person who downloads the app, creates an account, or uses it to book a field.\n• Field Owner: The person or entity responsible for managing the field listed in the app.\n• Initial Booking Fee: The amount paid via the app to confirm the booking. It is set by the field owner and can be changed before booking.\n• Remaining Amount: The amount paid directly to the field owner on arrival or after playing, depending on the field owner’s policy.\n⸻\n2. Booking & Payment Process\n1. The user tops up their wallet in the app, then selects the field, time, and date for booking.\n2. After sending the request, no funds are deducted until the field owner accepts the booking.\n3. Once accepted, the initial booking fee is deducted from the user’s wallet.\n4. The booking is confirmed after acceptance and successful deduction, and the user receives a confirmation notification.\n5. Upon arriving at the field, the user pays the remaining amount directly to the field owner based on the price shown in the app.\n6. The user is responsible for verifying booking details before submission (time, location, field type).\n7. The user cannot create a new booking until the previous pending booking is accepted or rejected to prevent duplicate requests and ensure fairness.\n⸻\n3. Monthly Subscription\n1. The app offers a monthly subscription option for participating fields, subject to field owner activation.\n2. The subscription gives the user a fixed weekly booking (e.g., Sunday, Monday, etc.) for one month (four consecutive sessions).\n3. Payment:\n• The user pays an initial fee via the app to confirm the subscription, calculated based on the total hours.\n• The remaining amount is paid directly to the field owner at the first session as displayed in the field page.\nNote: Amounts paid via the app are confirmation fees and are refundable only in the cases stated below.\n4. Cancellation & Refund:\n• The same cancellation and refund rules in section (4) apply.\n• The user cannot cancel or refund the initial fee after the subscription is accepted or after the first session begins.\n• The field owner may cancel/adjust sessions for necessary reasons (weather/maintenance). Only the affected session amount is refunded to the user’s wallet.\n5. Attendance:\n• If the user misses any session, they are not entitled to a replacement session or refund.\n6. The subscription cannot be transferred or shared without the field owner’s prior approval.\n7. The app and field owners may modify or stop the subscription service with prior notice while preserving refunds for unfulfilled sessions.\n⸻\n4. Cancellation & Refund\n1. The user can cancel a booking only after 20 minutes of creating it to prevent random cancellations.\n2. If the booking is accepted by the field owner, the user cannot cancel or refund the initial fee.\n3. If the booking is accepted and the user does not attend or changes time, the initial fee is not refunded.\n4. The field owner may cancel in necessary cases (weather/maintenance). In this case, the full initial fee is refunded to the user’s wallet.\n5. The app may suspend/ban any user who harms the system or repeatedly cancels bookings.\n⸻\n5. User Responsibilities\n1. Provide accurate information during registration and booking.\n2. Attend on time and respect field rules.\n3. Do not transfer or rent the booking to another person without field owner approval.\n4. The user is responsible for any damages caused while using the field.\n⸻\n6. Field Owner Responsibilities\n1. Provide the field at the agreed time.\n2. Be responsible for cancellations or changes after confirmation.\n3. Display prices clearly without hidden fees.\n⸻\n7. Courto App Responsibility\n1. The app acts as an electronic intermediary between users and field owners.\n2. The app is not responsible for:\n• Field quality/cleanliness/readiness.\n• Financial disputes between user and field owner.\n• Any physical injury or property damage while using the field.\n3. The app is not responsible for errors caused by incorrect user input.\n4. The app may suspend/delete abusive or violating accounts.\n⸻\n8. Privacy & Data Protection\n1. User data is stored securely under the privacy policy.\n2. Data is not shared with third parties without user consent or legal order.\n3. The app may use anonymous statistical data to improve services.\n⸻\n9. Intellectual Property\nAll content, trademarks, and designs in the Courto app are owned and legally protected. Copying or reuse without permission is prohibited.\n⸻\n10. Changes to Terms\nCourto reserves the right to modify these terms at any time. Continued use after changes indicates acceptance of the updated version.\n⸻\n11. Applicable Law & Disputes\nThese terms are governed by the laws of Libya. Any disputes fall under the jurisdiction of the competent Libyan courts.\n⸻\n12. Contact\nFor inquiries or complaints:\ncourtolibya@gmail.com",
+
+
+    "favoritesTitle": "Favorites",
+  "favoritesEmpty": "No favorite fields",
+  "favoritesLoadFailed": "Failed to load favorites",
+  "favoritesRemoveFailed": "Failed to remove favorite",
+  "favoritesRemovedSuccess": "Removed from favorites",
+
+  "confirmDeleteTitle": "Confirm deletion",
+  "confirmRemoveFavoriteBody": "Are you sure you want to remove this field from favorites?",
+
+  "cancel": "Cancel",
+  "delete": "Delete",
+
+  "cityLabel": "City",
+  "capacityLabel": "Capacity",
+
+  "errorConnectionServer": "Could not connect to the server",
+
+
+    "bookingHistoryTitle": "Booking History",
+  "bookingHistoryEmpty": "No previous bookings.",
+  "bookingHistoryLoadError": "An error occurred while loading booking history",
+  "reviewBadge": "Review!",
+  "currencyLYD": "LYD",
+  "unknown": "Unknown",
+
+    "bookingDetailsTitle": "Booking Details",
+  "unknownField": "Unknown Field",
+
+  "statusPending": "Pending",
+  "statusConfirmed": "Confirmed",
+
+  "bookingCode": "Booking Code",
+
+  "monthlyDatesTitle": "Booking Dates:",
+  "datesLoadError": "Failed to load dates",
+
+  "financialDetailsTitle": "Financial Details:",
+  "bookingPriceLabel": "Booking Price",
+  "remainingPriceLabel": "Remaining to Pay",
+  "currencyLYD": "LYD",
+
+  "bookingCreatedAt": "Booking created at:",
+
+  "cancelNotAllowed24h": "You cannot cancel within 24 hours of the booking time.",
+  "cancelNotAllowed20m": "You can cancel only after 20 minutes from creation.",
+  "cancelConfirmTitle": "Confirm cancellation",
+  "cancelConfirmBody": "Are you sure you want to cancel this booking?",
+  "yes": "Yes",
+  "no": "No",
+
+  "cancelBooking": "Cancel Booking",
+  "cancellingNow": "Cancelling...",
+  "cancelAvailableAfter": "Available after",
+
+  "leaveReview": "Leave a Review",
+  "closeReview": "Close Review",
+  "reviewQuestion": "How was it?",
+  "sendReview": "Submit Review",
+  "reviewSent": "Review submitted",
+  "reviewSendError": "Failed to submit review",
+
+  "unknownError": "Unknown error occurred",
+  "connectionError": "Connection error",
+
+    "aboutAppTitle": "About the App",
+  "versionLabel": "Version",
+  "aboutAppDescription": "An app designed to book sports fields quickly and easily. Browse available fields, check playing times, and complete your booking directly in the app with no hassle.",
+
+    "resetPasswordTitle": "Reset Password",
+  "resetPasswordNewPassword": "New Password",
+  "resetPasswordConfirmPassword": "Confirm New Password",
+  "resetPasswordUpdateButton": "Update Password",
+
+  "resetPasswordFillAllFields": "Please fill all fields",
+  "resetPasswordNotMatch": "Passwords do not match",
+  "resetPasswordSuccess": "Password updated successfully",
+  "resetPasswordFail": "Failed to update password",
+  "resetPasswordError": "An error occurred while updating the password",
+
+
+    "phoneInputTitle": "Reset Password",
+  "phoneInputSubtitle": "Enter the phone number registered with us to reset your password:",
+  "phoneInputLabel": "Phone number",
+  "phoneInputContinue": "Continue",
+
+  "phoneInputEnterPhone": "Please enter your phone number",
+  "phoneInputNetworkError": "Network connection error",
+  "phoneInputCheckFailed": "Failed to verify phone number",
+
+ 
+    "otpTitle": "Verification Code",
+  "otpSentTo": "We sent a verification code to {phone}",
+  "@otpSentTo": {
+    "placeholders": {
+      "phone": {}
+    }
+  },
+
+  "otpConfirm": "Confirm",
+  "otpResend": "Resend code",
+  "otpResendIn": "Resend in {seconds}s",
+  "@otpResendIn": {
+    "placeholders": {
+      "seconds": {}
+    }
+  },
+
+  "otpInvalidCode": "Invalid verification code",
+  "otpLoginFailed": "Failed to login to SMS service",
+  "otpTokenFailed": "Failed to retrieve token",
+  "otpSendFailed": "Failed to send verification code",
+  "otpNetworkError": "Network error",
+
+    "monthlyConfirmTitle": "Monthly booking confirmation",
+  "monthlyConfirmDialogTitle": "Confirm monthly booking",
+  "monthlyConfirmDialogBody": "Do you want to confirm this booking for 4 sessions?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+
+  "bookingPrice": "Booking price",
+  "remainingToOwner": "Remaining to pay the owner",
+  "confirmMonthlyBookingButton": "Confirm monthly booking",
+
+  "midnightInfoTitle": "Time notice",
+  "midnightInfoBody": "If the booking extends past midnight (12:00 AM), those hours are actually on the next day, not the selected date.",
+  "ok": "OK",
+
+  "unknownField": "Unknown field",
+  "notesToOwnerLabel": "Notes to the owner:",
+
+  "monthlyRequestSent": "Monthly booking request has been sent to the owner.",
+  "bookingConfirmFailed": "Failed to confirm booking",
+
+  "pendingInfoPrefix": "If your booking stays pending, you can cancel it exactly after 20 minutes.\nYou can’t book another field while a booking is pending.\n\nThe field manager will respond as soon as possible.\n\nThe booking amount ",
+  "pendingInfoMiddle": " will be deducted once the manager accepts your request, and you will need to pay ",
+  "pendingInfoSuffix": " to the manager before or after playing.",
+
+  "currencyLYD": "LYD",
+  "timeTooltip": "Time notice",
+
+    "noImages": "No images",
+  "loading": "Loading...",
+  "pricePerHour": "{price} LYD / hour",
+  "fieldTypeFootball": "Football",
+  "fieldTypeBasketball": "Basketball",
+  "fieldTypeTennis": "Tennis",
+  "fieldTypePadel": "Padel",
+  "fieldTypeUnknown": "",
+
+  "locationLabel": "{city} / {location}",
+  "playersCountLabel": "Players: {count}",
+  "fieldTypeLabel": "Field: {type}",
+  "openCloseLabel": "{open} - {close}",
+  "noDescription": "No description available.",
+
+  "favoritesAddTitle": "Add to favorites?",
+  "favoritesRemoveTitle": "Remove from favorites?",
+  "favoritesAddBody": "Do you want to add this field to your favorites?",
+  "favoritesRemoveBody": "Are you sure you want to remove this field from favorites?",
+  "cancel": "Cancel",
+  "add": "Add",
+  "remove": "Remove",
+  "favoritesAdded": "Added to favorites",
+  "favoritesRemoved": "Removed from favorites",
+
+  "showSchedule": "Show schedule",
+
+  
+  "calendarTitle": "Calendar",
+  "calendarLoading": "Loading...",
+  "calendarLoadFailed": "Failed to load bookings",
+
+
+  "slotsChooseTypeTitle": "Choose booking type",
+  "bookingTypeDaily": "Daily",
+  "bookingTypeMonthly": "Monthly",
+  "cancel": "Cancel",
+  "continueBooking": "Continue",
+  "slotBooked": "Booked",
+  "slotAlreadyBooked": "This time is already booked",
+  "slotMustBeConsecutive": "You must select consecutive slots (max 3 hours)",
+  "slotMax3Hours": "Maximum selection is 3 hours",
+  "slotCantRemoveMiddle": "You can’t remove this slot because it’s in the middle of a consecutive chain",
+  "bookingPriceLabel": "Booking price",
+  "remainingAfterPlayLabel": "Remaining to pay",
+  "choosePhoneToContinue": "Please sign up to continue",
+
+    "dailyConfirmTitle": "Confirm booking",
+  "confirmBooking": "Confirm booking",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "confirmBookingQuestion": "Do you want to confirm this booking?",
+  "bookingPriceLabel": "Booking price",
+  "remainingAmountLabel": "Remaining amount",
+  "bookingRequestSent": "Booking request was sent to the field owner.",
+  "bookingConfirmFailed": "Booking confirmation failed",
+  "unknownField": "Unknown field",
+  "midnightTimeWarningTitle": "Time notice",
+  "midnightTimeWarningBody": "If the booking extends past midnight (12:00 AM), those hours belong to the next day after the shown date.",
+  "ok": "OK",
+  "notesToOwner": "Notes to field owner:",
+  "apiErrorMissingUrl": "Server URL is not configured",
+  "apiErrorNoAuth": "You must be logged in",
+  "apiErrorConnection": "Connection error",
+  "apiErrorGeneric": "Something went wrong",
+
+  "appName": "Courto",
+
+
+    "chargeWalletTitle": "Charge wallet",
+  "chargeWalletLoginRequired": "You must log in first",
+  "chargeWalletBankCard": "Bank card",
+  "chargeWalletCourtoCard": "Courto card",
+
+  "chargeWalletEnterCardNumber": "Enter card number",
+  "chargeWalletCardMustBe13": "Must be 13 digits",
+  "chargeWalletDigitsOnly": "Digits only",
+
+  "chargeWalletEnterAmount": "Enter amount",
+  "chargeWalletAmountRequired": "Please enter the amount",
+  "chargeWalletInvalidAmount": "Invalid amount",
+  "chargeWalletMax200": "Maximum is 200 LYD",
+
+  "chargeWalletSuccess": "Wallet charged with {voucherValue} LYD. Current balance: {walletBalance} LYD.",
+  "@chargeWalletSuccess": {
+    "placeholders": {
+      "voucherValue": {},
+      "walletBalance": {}
+    }
+  },
+
+  "chargeWalletGenericError": "Something went wrong",
+  "pay": "Pay",
+
+  "statusUnavailable": "Unavailable",
+"statusAvailable": "Available",
+
+  "supportCategoryBooking": "Booking",
+  "supportCategoryPaymentWallet": "Payment / Wallet",
+  "supportCategoryOther": "Other",
+
+  "supportIssuePriceMismatch": "The displayed booking price is different from the paid price",
+  "supportIssueExternalConflict": "There is an external conflict with my booking",
+  "supportIssueCancelDueToCircumstances": "I want to cancel the booking due to special circumstances",
+  "supportIssueNoOwnerResponse": "The field owner is not responding",
+
+  "supportIssueWalletNotChargedDeducted": "My wallet was not charged even though the amount was deducted",
+  "supportIssuePaidMoreThanShown": "The amount paid is more than the displayed amount",
+  "supportIssueWalletChargedCantBook": "My wallet is charged but I can’t book",
+  "supportIssueWalletChargeError": "Error while charging the wallet",
+  "supportIssueRefundMissingOrPartial": "Refund amount is missing/partial or was not returned to my wallet after canceling my booking",
+
+  "supportIssueChangePhoneNumber": "I want to change the phone number linked to my account",
+  "supportIssueAppNotWorkingWell": "The app is not working properly on my device",
+  "supportIssueNoNotifications": "I am not receiving notifications",
+  "supportIssueDeleteAccount": "I want to delete my account",
+
+  "supportIssueFieldClosedOnArrival": "The field was closed when I arrived at the booking time",
+  "supportIssueFieldBadCondition": "The field is in bad condition or not like the displayed photos",
+  "supportIssueNotListed": "An issue not listed",
+
+  "paymentPage": "Charge Wallet",
+
+  "teamsComingSoon": "This section will open soon",
+  "navTeams": "Teams"
+
+}

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
-
 class ResetPasswordPage extends StatefulWidget {
   final String phoneNumber;
 
@@ -16,22 +15,27 @@ class ResetPasswordPage extends StatefulWidget {
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
   final newPassController = TextEditingController();
   final confirmPassController = TextEditingController();
+
   bool showPassword = false;
   bool showConfirmPassword = false;
   bool loading = false;
+
   final apiUrl = dotenv.env['API_URL'];
+
+  bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
+  TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
   void _resetPassword() async {
     String newPass = newPassController.text.trim();
     String confirmPass = confirmPassController.text.trim();
 
     if (newPass.isEmpty || confirmPass.isEmpty) {
-      _showError("يرجى ملء جميع الحقول");
+      _showError(_isEnglish ? "Please fill all fields" : "يرجى ملء جميع الحقول");
       return;
     }
 
     if (newPass != confirmPass) {
-      _showError("كلمتا المرور غير متطابقتين");
+      _showError(_isEnglish ? "Passwords do not match" : "كلمتا المرور غير متطابقتين");
       return;
     }
 
@@ -40,27 +44,34 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
     try {
       final res = await http.patch(
         Uri.parse("${apiUrl}users/resetPassword"),
-        headers: {"Content-Type": "application/json", 'x-api-key': '${dotenv.env['API_KEY']}'},
+        headers: {
+          "Content-Type": "application/json",
+          'x-api-key': '${dotenv.env['API_KEY']}',
+        },
         body: json.encode({
           "phone_number": widget.phoneNumber,
           "new_password": newPass,
         }),
       );
 
+      if (!mounted) return;
       setState(() => loading = false);
 
       if (res.statusCode == 200) {
-        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("تم تحديث كلمة المرور بنجاح"),
-            backgroundColor: Colors.redAccent,
+          SnackBar(
+            content: Text(
+              _isEnglish ? "Password updated successfully" : "تم تحديث كلمة المرور بنجاح",
+              textDirection: _dir,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
-        // Pop all pages until LoginPage
+
+        // Pop all pages until the first route (usually Login)
         Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
-        String message = "فشل تحديث كلمة المرور";
+        String message = _isEnglish ? "Failed to update password" : "فشل تحديث كلمة المرور";
         try {
           final data = json.decode(res.body);
           if (data["error"] != null) message = data["error"];
@@ -68,16 +79,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         _showError(message);
       }
     } catch (_) {
+      if (!mounted) return;
       setState(() => loading = false);
-      _showError("حدث خطأ أثناء تحديث كلمة المرور");
+      _showError(_isEnglish
+          ? "Network error while updating password"
+          : "حدث خطأ أثناء تحديث كلمة المرور");
     }
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message, textDirection: TextDirection.rtl),
-        backgroundColor: Colors.redAccent,
+        content: Text(message, textDirection: _dir),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
     );
   }
@@ -92,13 +106,16 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _dir,
       child: Scaffold(
-        backgroundColor:Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(
           backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(
+              _isEnglish ? Icons.arrow_back : Icons.arrow_back,
+              color: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -111,13 +128,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               children: [
                 const SizedBox(height: 20),
 
-                // Page Title
-                const Text(
-                  "إعادة تعيين كلمة المرور",
+                Text(
+                  _isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -128,19 +144,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 TextField(
                   controller: newPassController,
                   obscureText: !showPassword,
+                  textDirection: TextDirection.ltr,
                   decoration: InputDecoration(
-                    labelText: "كلمة المرور الجديدة",
-                    prefixIcon: const Icon(Icons.lock, color: Colors.redAccent),
+                    labelText: _isEnglish ? "New password" : "كلمة المرور الجديدة",
+                    prefixIcon: Icon(Icons.lock, color: Theme.of(context).colorScheme.primary),
                     suffixIcon: IconButton(
                       icon: Icon(
                         showPassword ? Icons.visibility_off : Icons.visibility,
                         color: Colors.grey,
                       ),
-                      onPressed: () {
-                        setState(() => showPassword = !showPassword);
-                      },
+                      onPressed: () => setState(() => showPassword = !showPassword),
                     ),
                     filled: true,
+                    fillColor: Theme.of(context).colorScheme.onPrimary,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5),
                       borderSide: BorderSide.none,
@@ -153,21 +169,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 TextField(
                   controller: confirmPassController,
                   obscureText: !showConfirmPassword,
+                  textDirection: TextDirection.ltr,
                   decoration: InputDecoration(
-                    labelText: "تأكيد كلمة المرور الجديدة",
-                    prefixIcon: const Icon(Icons.lock_outline, color: Colors.redAccent),
+                    labelText: _isEnglish ? "Confirm new password" : "تأكيد كلمة المرور الجديدة",
+                    prefixIcon: Icon(Icons.lock_outline, color: Theme.of(context).colorScheme.primary),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        showConfirmPassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+                        showConfirmPassword ? Icons.visibility_off : Icons.visibility,
                         color: Colors.grey,
                       ),
-                      onPressed: () {
-                        setState(() => showConfirmPassword = !showConfirmPassword);
-                      },
+                      onPressed: () => setState(() => showConfirmPassword = !showConfirmPassword),
                     ),
                     filled: true,
+                    fillColor: Theme.of(context).colorScheme.onPrimary,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5),
                       borderSide: BorderSide.none,
@@ -183,24 +197,27 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   child: ElevatedButton(
                     onPressed: loading ? null : _resetPassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      disabledBackgroundColor: Colors.redAccent[300],
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      disabledBackgroundColor: Theme.of(context).colorScheme.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
                     ),
                     child: loading
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.onPrimary,
                               strokeWidth: 2.5,
                             ),
                           )
-                        : const Text(
-                            "تحديث كلمة المرور",
-                            style: TextStyle(fontSize: 16, color: Colors.white),
+                        : Text(
+                            _isEnglish ? "Update password" : "تحديث كلمة المرور",
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
                           ),
                   ),
                 ),
