@@ -115,7 +115,6 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
   }
 
   String _statusLocalized(BuildContext context, String rawStatus) {
-  final t = AppLocalizations.of(context)!;
   final lang = Localizations.localeOf(context).languageCode;
 
   if (lang == 'en') {
@@ -433,7 +432,7 @@ class _BookingsHistoryPageState extends State<BookingsHistoryPage> {
             const SizedBox(height: 10),
             Text(
               t.bookingHistoryEmpty,
-              style: const TextStyle(color: Colors.black54, fontSize: 16),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSecondary, fontSize: 16),
             ),
           ],
         ),

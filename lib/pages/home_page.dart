@@ -35,9 +35,9 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _fields = [];
   List<Map<String, dynamic>> _discountedFields = [];
 
+
   bool _loadingFields = true;
 
-  // ✅ store error KEY (not localized text) to avoid needing context inside API methods
   String? _fieldsErrorKey;
 
   List<String> _carouselImages = [];
@@ -57,6 +57,7 @@ class _HomePageState extends State<HomePage> {
     _fetchDiscountedFields();
     _fetchCarouselItems();
     _detectCity();
+
   }
 
   /* ============================================================
@@ -111,7 +112,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (index == 3) {
-      _screens[3] = TeamsPage();
+          _screens[3] = TeamsPage(
+    cityId: _cityId,
+  );
     }
 
     if (index == 4) {
@@ -202,7 +205,10 @@ class _HomePageState extends State<HomePage> {
     _cityId = newCityId;
     _screens[1] = null;
     _screens[2] = null;
+    _screens[3] = null; 
     _fetchFields();
+
+
     setState(() {});
   }
 
@@ -218,6 +224,7 @@ class _HomePageState extends State<HomePage> {
     await _fetchFields();
     await _fetchDiscountedFields();
     await _fetchCarouselItems();
+
     if (AuthService.isLoggedIn) await getMatchCount();
     _screens[0] = null;
     _screens[1] = null;
@@ -331,6 +338,7 @@ class _HomePageState extends State<HomePage> {
     _fetchFields();
     _fetchDiscountedFields();
     _fetchCarouselItems();
+    _screens[3] = null;
     if (AuthService.isLoggedIn) getMatchCount();
 
     // then try to detect precise city from GPS

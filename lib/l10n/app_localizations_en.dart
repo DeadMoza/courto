@@ -228,7 +228,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get errorLoadFields => 'Failed to load fields';
 
   @override
-  String get errorConnection => 'Connection failed';
+  String get errorConnection => 'Connection error';
 
   @override
   String get mapPermissionRequired => 'You must log in and allow location access to view fields on the map.';
@@ -668,7 +668,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingInfoMiddle => ' will be deducted once the manager accepts your request, and you will need to pay ';
 
   @override
-  String get pendingInfoSuffix => ' to the manager before or after playing.';
+  String get pendingInfoSuffix => ' to the manager before or after playing. \n The booking can be cancelled only 24 hours before it\'s date.';
 
   @override
   String get timeTooltip => 'Time notice';
@@ -940,4 +940,246 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navTeams => 'Teams';
+
+  @override
+  String get createMatch => 'Create match';
+
+  @override
+  String get noMatchesNow => 'No matches available right now';
+
+  @override
+  String get sectionMyMatch => 'Your match';
+
+  @override
+  String get sectionJoinedMatches => 'Matches you joined';
+
+  @override
+  String get sectionBrowseMatches => 'Browse matches';
+
+  @override
+  String get badgeJoined => 'Joined';
+
+  @override
+  String get matchStatusOpen => 'Open';
+
+  @override
+  String get matchStatusActive => 'Active';
+
+  @override
+  String get matchStatusClosed => 'Closed';
+
+  @override
+  String get userFallback => 'User';
+
+  @override
+  String get fieldFallback => 'Field';
+
+  @override
+  String get errorLoadMatches => 'Failed to load matches';
+
+  @override
+  String playersCount(int joined, int total) {
+    return 'Players: $joined/$total';
+  }
+
+  @override
+  String get createMatchTitle => 'Create Match';
+
+  @override
+  String get createMatchSelectBookingTitle => 'Choose a booking to create a match:';
+
+  @override
+  String get createMatchNoEligibleBookings => 'Please book a field to create a match and find players.';
+
+  @override
+  String get createMatchOpenSlotsQuestion => 'How many open slots in the match?';
+
+  @override
+  String createMatchAvailableToJoin(int openSlots, int capacity) {
+    return 'Available to join: $openSlots / $capacity';
+  }
+
+  @override
+  String createMatchCapacityLabel(int capacity) {
+    return 'Capacity: $capacity';
+  }
+
+  @override
+  String get createMatchChooseYourPositionBlue => 'Choose your position (Blue team)';
+
+  @override
+  String createMatchSelectedPosition(String position) {
+    return 'Selected position: $position';
+  }
+
+  @override
+  String get createMatchNoCapacityFormation => 'No capacity available to show formation';
+
+  @override
+  String get createMatchNoCapacityPositions => 'No capacity to show positions';
+
+  @override
+  String get createMatchNoPositions => 'No positions';
+
+  @override
+  String get createMatchCreating => 'Creating...';
+
+  @override
+  String get createMatchButton => 'Create match';
+
+  @override
+  String get createMatchLoginRequired => 'You must log in first';
+
+  @override
+  String get createMatchLoadEligibleBookingsFailed => 'Failed to load eligible bookings';
+
+  @override
+  String get createMatchConnectionError => 'Connection error';
+
+  @override
+  String get createMatchBookingIdMissing => 'Error: booking_id is missing';
+
+  @override
+  String get createMatchPickValidPositionFirst => 'Please pick a valid position first';
+
+  @override
+  String get createMatchCreatedSuccess => 'Match created successfully';
+
+  @override
+  String get createMatchCreateFailed => 'Failed to create match';
+
+  @override
+  String get fieldTypeSport => 'Sport';
+
+  @override
+  String get commonUser => 'User';
+
+  @override
+  String get commonConnectionError => 'Connection error';
+
+  @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonBack => 'Back';
+
+  @override
+  String get matchDetailsTitle => 'Match Details';
+
+  @override
+  String get matchDetailsLoadFailed => 'Could not load match details';
+
+  @override
+  String get matchDetailsFieldFallback => 'Field';
+
+  @override
+  String get matchDetailsJoinRequestSent => 'Join request sent';
+
+  @override
+  String get matchDetailsJoinRequestFailed => 'Could not send request';
+
+  @override
+  String get matchDetailsJoinRequestTitle => 'Join Request';
+
+  @override
+  String get matchDetailsTeamBlue => 'Blue';
+
+  @override
+  String get matchDetailsTeamRed => 'Red';
+
+  @override
+  String get matchDetailsSendRequest => 'Send request';
+
+  @override
+  String matchDetailsJoinRequestConfirm(String team, int position) {
+    return 'Do you want to request this slot?\n\nTeam: $team\nPosition: $position';
+  }
+
+  @override
+  String get matchDetailsRequestAccepted => 'Request accepted';
+
+  @override
+  String get matchDetailsAcceptFailed => 'Could not accept request';
+
+  @override
+  String get matchDetailsRequestRejected => 'Request rejected';
+
+  @override
+  String get matchDetailsRejectFailed => 'Could not reject request';
+
+  @override
+  String matchDetailsSlotRequestsTitle(int position, String team) {
+    return 'Slot $position requests • $team';
+  }
+
+  @override
+  String get matchDetailsNoRequestsForSlot => 'No requests for this slot';
+
+  @override
+  String get matchDetailsAccept => 'Accept';
+
+  @override
+  String get matchDetailsReject => 'Reject';
+
+  @override
+  String get matchDetailsCanceled => 'Match canceled';
+
+  @override
+  String get matchDetailsCancelFailed => 'Could not cancel match';
+
+  @override
+  String get matchDetailsCancelTitle => 'Cancel Match';
+
+  @override
+  String get matchDetailsCancelConfirm => 'Are you sure you want to cancel this match?';
+
+  @override
+  String get matchDetailsCancelButton => 'Cancel match';
+
+  @override
+  String get matchDetailsNoCapacityFormation => 'No capacity to display formation';
+
+  @override
+  String get matchDetailsJoinSlotsFull => 'All available join slots are filled';
+
+  @override
+  String matchDetailsRemainingSlots(int count) {
+    return 'Remaining slots: $count';
+  }
+
+  @override
+  String get matchDetailsYouAreHost => 'You are the host';
+
+  @override
+  String get matchDetailsYouJoined => 'You joined this match';
+
+  @override
+  String get matchDetailsPendingReview => 'Your request is under review';
+
+  @override
+  String get matchDetailsBlueFormation => 'Blue Team Formation';
+
+  @override
+  String get matchDetailsRedFormation => 'Red Team Formation';
+
+  @override
+  String get blueTeam => 'Blue Team';
+
+  @override
+  String get redTeam => 'Red Team';
+
+  @override
+  String get matchDetailsLeaveTitle => 'Leave match';
+
+  @override
+  String get matchDetailsLeaveConfirm => 'Are you sure you want to leave this match?';
+
+  @override
+  String get matchDetailsLeaveButton => 'Leave match';
+
+  @override
+  String get matchDetailsLeftMatch => 'You left the match';
+
+  @override
+  String get matchDetailsLeaveFailed => 'Failed to leave the match';
 }

@@ -437,7 +437,7 @@ class _FieldsMapPageState extends State<FieldsMapPage>
               Text(
                 t.mapPermissionRequired,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(fontSize: 16, color: Theme.of(context).colorScheme.onSecondary),
               ),
             ],
           ),

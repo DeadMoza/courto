@@ -512,7 +512,7 @@ abstract class AppLocalizations {
   /// No description provided for @errorConnection.
   ///
   /// In en, this message translates to:
-  /// **'Connection failed'**
+  /// **'Connection error'**
   String get errorConnection;
 
   /// No description provided for @mapPermissionRequired.
@@ -1352,7 +1352,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingInfoSuffix.
   ///
   /// In en, this message translates to:
-  /// **' to the manager before or after playing.'**
+  /// **' to the manager before or after playing. \n The booking can be cancelled only 24 hours before it\'s date.'**
   String get pendingInfoSuffix;
 
   /// No description provided for @timeTooltip.
@@ -1876,6 +1876,462 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Teams'**
   String get navTeams;
+
+  /// No description provided for @createMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Create match'**
+  String get createMatch;
+
+  /// No description provided for @noMatchesNow.
+  ///
+  /// In en, this message translates to:
+  /// **'No matches available right now'**
+  String get noMatchesNow;
+
+  /// No description provided for @sectionMyMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Your match'**
+  String get sectionMyMatch;
+
+  /// No description provided for @sectionJoinedMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Matches you joined'**
+  String get sectionJoinedMatches;
+
+  /// No description provided for @sectionBrowseMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse matches'**
+  String get sectionBrowseMatches;
+
+  /// No description provided for @badgeJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'Joined'**
+  String get badgeJoined;
+
+  /// No description provided for @matchStatusOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get matchStatusOpen;
+
+  /// No description provided for @matchStatusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get matchStatusActive;
+
+  /// No description provided for @matchStatusClosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get matchStatusClosed;
+
+  /// No description provided for @userFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get userFallback;
+
+  /// No description provided for @fieldFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get fieldFallback;
+
+  /// No description provided for @errorLoadMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load matches'**
+  String get errorLoadMatches;
+
+  /// No description provided for @playersCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Players: {joined}/{total}'**
+  String playersCount(int joined, int total);
+
+  /// No description provided for @createMatchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Match'**
+  String get createMatchTitle;
+
+  /// No description provided for @createMatchSelectBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a booking to create a match:'**
+  String get createMatchSelectBookingTitle;
+
+  /// No description provided for @createMatchNoEligibleBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'Please book a field to create a match and find players.'**
+  String get createMatchNoEligibleBookings;
+
+  /// No description provided for @createMatchOpenSlotsQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'How many open slots in the match?'**
+  String get createMatchOpenSlotsQuestion;
+
+  /// No description provided for @createMatchAvailableToJoin.
+  ///
+  /// In en, this message translates to:
+  /// **'Available to join: {openSlots} / {capacity}'**
+  String createMatchAvailableToJoin(int openSlots, int capacity);
+
+  /// No description provided for @createMatchCapacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity: {capacity}'**
+  String createMatchCapacityLabel(int capacity);
+
+  /// No description provided for @createMatchChooseYourPositionBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose your position (Blue team)'**
+  String get createMatchChooseYourPositionBlue;
+
+  /// No description provided for @createMatchSelectedPosition.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected position: {position}'**
+  String createMatchSelectedPosition(String position);
+
+  /// No description provided for @createMatchNoCapacityFormation.
+  ///
+  /// In en, this message translates to:
+  /// **'No capacity available to show formation'**
+  String get createMatchNoCapacityFormation;
+
+  /// No description provided for @createMatchNoCapacityPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No capacity to show positions'**
+  String get createMatchNoCapacityPositions;
+
+  /// No description provided for @createMatchNoPositions.
+  ///
+  /// In en, this message translates to:
+  /// **'No positions'**
+  String get createMatchNoPositions;
+
+  /// No description provided for @createMatchCreating.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating...'**
+  String get createMatchCreating;
+
+  /// No description provided for @createMatchButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Create match'**
+  String get createMatchButton;
+
+  /// No description provided for @createMatchLoginRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'You must log in first'**
+  String get createMatchLoginRequired;
+
+  /// No description provided for @createMatchLoadEligibleBookingsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load eligible bookings'**
+  String get createMatchLoadEligibleBookingsFailed;
+
+  /// No description provided for @createMatchConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error'**
+  String get createMatchConnectionError;
+
+  /// No description provided for @createMatchBookingIdMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: booking_id is missing'**
+  String get createMatchBookingIdMissing;
+
+  /// No description provided for @createMatchPickValidPositionFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please pick a valid position first'**
+  String get createMatchPickValidPositionFirst;
+
+  /// No description provided for @createMatchCreatedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Match created successfully'**
+  String get createMatchCreatedSuccess;
+
+  /// No description provided for @createMatchCreateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create match'**
+  String get createMatchCreateFailed;
+
+  /// No description provided for @fieldTypeSport.
+  ///
+  /// In en, this message translates to:
+  /// **'Sport'**
+  String get fieldTypeSport;
+
+  /// No description provided for @commonUser.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get commonUser;
+
+  /// No description provided for @commonConnectionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection error'**
+  String get commonConnectionError;
+
+  /// No description provided for @commonCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get commonCancel;
+
+  /// No description provided for @commonBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get commonBack;
+
+  /// No description provided for @matchDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Match Details'**
+  String get matchDetailsTitle;
+
+  /// No description provided for @matchDetailsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load match details'**
+  String get matchDetailsLoadFailed;
+
+  /// No description provided for @matchDetailsFieldFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get matchDetailsFieldFallback;
+
+  /// No description provided for @matchDetailsJoinRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Join request sent'**
+  String get matchDetailsJoinRequestSent;
+
+  /// No description provided for @matchDetailsJoinRequestFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send request'**
+  String get matchDetailsJoinRequestFailed;
+
+  /// No description provided for @matchDetailsJoinRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Join Request'**
+  String get matchDetailsJoinRequestTitle;
+
+  /// No description provided for @matchDetailsTeamBlue.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue'**
+  String get matchDetailsTeamBlue;
+
+  /// No description provided for @matchDetailsTeamRed.
+  ///
+  /// In en, this message translates to:
+  /// **'Red'**
+  String get matchDetailsTeamRed;
+
+  /// No description provided for @matchDetailsSendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send request'**
+  String get matchDetailsSendRequest;
+
+  /// No description provided for @matchDetailsJoinRequestConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to request this slot?\n\nTeam: {team}\nPosition: {position}'**
+  String matchDetailsJoinRequestConfirm(String team, int position);
+
+  /// No description provided for @matchDetailsRequestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Request accepted'**
+  String get matchDetailsRequestAccepted;
+
+  /// No description provided for @matchDetailsAcceptFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept request'**
+  String get matchDetailsAcceptFailed;
+
+  /// No description provided for @matchDetailsRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected'**
+  String get matchDetailsRequestRejected;
+
+  /// No description provided for @matchDetailsRejectFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reject request'**
+  String get matchDetailsRejectFailed;
+
+  /// No description provided for @matchDetailsSlotRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Slot {position} requests • {team}'**
+  String matchDetailsSlotRequestsTitle(int position, String team);
+
+  /// No description provided for @matchDetailsNoRequestsForSlot.
+  ///
+  /// In en, this message translates to:
+  /// **'No requests for this slot'**
+  String get matchDetailsNoRequestsForSlot;
+
+  /// No description provided for @matchDetailsAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get matchDetailsAccept;
+
+  /// No description provided for @matchDetailsReject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get matchDetailsReject;
+
+  /// No description provided for @matchDetailsCanceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Match canceled'**
+  String get matchDetailsCanceled;
+
+  /// No description provided for @matchDetailsCancelFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not cancel match'**
+  String get matchDetailsCancelFailed;
+
+  /// No description provided for @matchDetailsCancelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Match'**
+  String get matchDetailsCancelTitle;
+
+  /// No description provided for @matchDetailsCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to cancel this match?'**
+  String get matchDetailsCancelConfirm;
+
+  /// No description provided for @matchDetailsCancelButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel match'**
+  String get matchDetailsCancelButton;
+
+  /// No description provided for @matchDetailsNoCapacityFormation.
+  ///
+  /// In en, this message translates to:
+  /// **'No capacity to display formation'**
+  String get matchDetailsNoCapacityFormation;
+
+  /// No description provided for @matchDetailsJoinSlotsFull.
+  ///
+  /// In en, this message translates to:
+  /// **'All available join slots are filled'**
+  String get matchDetailsJoinSlotsFull;
+
+  /// No description provided for @matchDetailsRemainingSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining slots: {count}'**
+  String matchDetailsRemainingSlots(int count);
+
+  /// No description provided for @matchDetailsYouAreHost.
+  ///
+  /// In en, this message translates to:
+  /// **'You are the host'**
+  String get matchDetailsYouAreHost;
+
+  /// No description provided for @matchDetailsYouJoined.
+  ///
+  /// In en, this message translates to:
+  /// **'You joined this match'**
+  String get matchDetailsYouJoined;
+
+  /// No description provided for @matchDetailsPendingReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is under review'**
+  String get matchDetailsPendingReview;
+
+  /// No description provided for @matchDetailsBlueFormation.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Team Formation'**
+  String get matchDetailsBlueFormation;
+
+  /// No description provided for @matchDetailsRedFormation.
+  ///
+  /// In en, this message translates to:
+  /// **'Red Team Formation'**
+  String get matchDetailsRedFormation;
+
+  /// No description provided for @blueTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Blue Team'**
+  String get blueTeam;
+
+  /// No description provided for @redTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'Red Team'**
+  String get redTeam;
+
+  /// No description provided for @matchDetailsLeaveTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave match'**
+  String get matchDetailsLeaveTitle;
+
+  /// No description provided for @matchDetailsLeaveConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to leave this match?'**
+  String get matchDetailsLeaveConfirm;
+
+  /// No description provided for @matchDetailsLeaveButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave match'**
+  String get matchDetailsLeaveButton;
+
+  /// No description provided for @matchDetailsLeftMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'You left the match'**
+  String get matchDetailsLeftMatch;
+
+  /// No description provided for @matchDetailsLeaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to leave the match'**
+  String get matchDetailsLeaveFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

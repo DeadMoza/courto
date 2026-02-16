@@ -228,7 +228,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get errorLoadFields => 'فشل تحميل الملاعب';
 
   @override
-  String get errorConnection => 'فشل الاتصال';
+  String get errorConnection => 'حدث خطأ في الاتصال';
 
   @override
   String get mapPermissionRequired => 'يجب تسجيل الدخول ومنح صلاحية الوصول إلى الموقع لمشاهدة الملاعب.';
@@ -668,7 +668,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get pendingInfoMiddle => ' في لحظة قبول مدير الملعب لطلبك، وسيتعين عليك دفع ';
 
   @override
-  String get pendingInfoSuffix => ' لمدير الملعب بعد او قبل الانتهاء من اللعب.';
+  String get pendingInfoSuffix => ' لمدير الملعب بعد او قبل الانتهاء من اللعب. \n يمكن ألغاء الحجز قبل الموعد بمدة 24 ساعة فقط.';
 
   @override
   String get timeTooltip => 'تنبيه بخصوص التوقيت';
@@ -683,7 +683,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fieldTypeFootball => 'كرة قدم';
 
   @override
-  String get fieldTypeBasketball => 'كرة سلة';
+  String get fieldTypeBasketball => 'سلة';
 
   @override
   String get fieldTypeTennis => 'تنس';
@@ -701,7 +701,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String playersCountLabel(Object count) {
-    return 'عدد الاعبين $count';
+    return 'عدد اللاعبين $count';
   }
 
   @override
@@ -940,4 +940,246 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get navTeams => 'الفريق';
+
+  @override
+  String get createMatch => 'انشاء مبارة';
+
+  @override
+  String get noMatchesNow => 'لا توجد مباريات متاحة حالياً';
+
+  @override
+  String get sectionMyMatch => 'مباراتك';
+
+  @override
+  String get sectionJoinedMatches => 'المباراة التي انضممت لها';
+
+  @override
+  String get sectionBrowseMatches => 'تصفح المباريات';
+
+  @override
+  String get badgeJoined => 'منضم';
+
+  @override
+  String get matchStatusOpen => 'مفتوحة';
+
+  @override
+  String get matchStatusActive => 'نشطة';
+
+  @override
+  String get matchStatusClosed => 'مغلقة';
+
+  @override
+  String get userFallback => 'مستخدم';
+
+  @override
+  String get fieldFallback => 'ملعب';
+
+  @override
+  String get errorLoadMatches => 'تعذر تحميل المباريات';
+
+  @override
+  String playersCount(int joined, int total) {
+    return 'اللاعبين: $joined/$total';
+  }
+
+  @override
+  String get createMatchTitle => 'إنشاء مباراة';
+
+  @override
+  String get createMatchSelectBookingTitle => 'اختر الحجز لتكوين مباراة فيه:';
+
+  @override
+  String get createMatchNoEligibleBookings => 'يرجى حجز ملعب لإنشاء مباراة والبحث عن لاعبين.';
+
+  @override
+  String get createMatchOpenSlotsQuestion => 'كم عدد الأماكن المفتوحة في المباراة؟';
+
+  @override
+  String createMatchAvailableToJoin(int openSlots, int capacity) {
+    return 'المتاح للانضمام: $openSlots / $capacity';
+  }
+
+  @override
+  String createMatchCapacityLabel(int capacity) {
+    return 'السعة: $capacity';
+  }
+
+  @override
+  String get createMatchChooseYourPositionBlue => 'اختر مركزك (الفريق الأزرق)';
+
+  @override
+  String createMatchSelectedPosition(String position) {
+    return 'المركز المختار: $position';
+  }
+
+  @override
+  String get createMatchNoCapacityFormation => 'لا توجد سعة متاحة لعرض التشكيلة';
+
+  @override
+  String get createMatchNoCapacityPositions => 'لا توجد سعة لعرض المراكز';
+
+  @override
+  String get createMatchNoPositions => 'لا توجد مراكز';
+
+  @override
+  String get createMatchCreating => 'جاري الإنشاء...';
+
+  @override
+  String get createMatchButton => 'إنشاء مباراة';
+
+  @override
+  String get createMatchLoginRequired => 'يجب تسجيل الدخول أولاً';
+
+  @override
+  String get createMatchLoadEligibleBookingsFailed => 'تعذر تحميل الحجوزات المؤهلة';
+
+  @override
+  String get createMatchConnectionError => 'حدث خطأ في الاتصال';
+
+  @override
+  String get createMatchBookingIdMissing => 'خطأ: booking_id غير موجود';
+
+  @override
+  String get createMatchPickValidPositionFirst => 'يرجى اختيار مركز صحيح أولاً';
+
+  @override
+  String get createMatchCreatedSuccess => 'تم إنشاء المباراة بنجاح';
+
+  @override
+  String get createMatchCreateFailed => 'فشل إنشاء المباراة';
+
+  @override
+  String get fieldTypeSport => 'رياضة';
+
+  @override
+  String get commonUser => 'مستخدم';
+
+  @override
+  String get commonConnectionError => 'حدث خطأ في الاتصال';
+
+  @override
+  String get commonCancel => 'إلغاء';
+
+  @override
+  String get commonBack => 'تراجع';
+
+  @override
+  String get matchDetailsTitle => 'تفاصيل المباراة';
+
+  @override
+  String get matchDetailsLoadFailed => 'تعذر تحميل تفاصيل المباراة';
+
+  @override
+  String get matchDetailsFieldFallback => 'ملعب';
+
+  @override
+  String get matchDetailsJoinRequestSent => 'تم إرسال طلب الانضمام';
+
+  @override
+  String get matchDetailsJoinRequestFailed => 'تعذر إرسال الطلب';
+
+  @override
+  String get matchDetailsJoinRequestTitle => 'طلب الانضمام';
+
+  @override
+  String get matchDetailsTeamBlue => 'الأزرق';
+
+  @override
+  String get matchDetailsTeamRed => 'الأحمر';
+
+  @override
+  String get matchDetailsSendRequest => 'إرسال الطلب';
+
+  @override
+  String matchDetailsJoinRequestConfirm(String team, int position) {
+    return 'هل تريد طلب الانضمام لهذا المركز؟\n\nالفريق: $team\nالمركز: $position';
+  }
+
+  @override
+  String get matchDetailsRequestAccepted => 'تم قبول الطلب';
+
+  @override
+  String get matchDetailsAcceptFailed => 'تعذر قبول الطلب';
+
+  @override
+  String get matchDetailsRequestRejected => 'تم رفض الطلب';
+
+  @override
+  String get matchDetailsRejectFailed => 'تعذر رفض الطلب';
+
+  @override
+  String matchDetailsSlotRequestsTitle(int position, String team) {
+    return 'طلبات المركز $position • $team';
+  }
+
+  @override
+  String get matchDetailsNoRequestsForSlot => 'لا توجد طلبات لهذا المركز';
+
+  @override
+  String get matchDetailsAccept => 'قبول';
+
+  @override
+  String get matchDetailsReject => 'رفض';
+
+  @override
+  String get matchDetailsCanceled => 'تم إلغاء المباراة';
+
+  @override
+  String get matchDetailsCancelFailed => 'تعذر إلغاء المباراة';
+
+  @override
+  String get matchDetailsCancelTitle => 'إلغاء المباراة';
+
+  @override
+  String get matchDetailsCancelConfirm => 'هل أنت متأكد أنك تريد إلغاء المباراة؟';
+
+  @override
+  String get matchDetailsCancelButton => 'إلغاء المباراة';
+
+  @override
+  String get matchDetailsNoCapacityFormation => 'لا توجد سعة لعرض التشكيلة';
+
+  @override
+  String get matchDetailsJoinSlotsFull => 'اكتملت المقاعد المتاحة للانضمام';
+
+  @override
+  String matchDetailsRemainingSlots(int count) {
+    return 'الاماكن المتبقية: $count';
+  }
+
+  @override
+  String get matchDetailsYouAreHost => 'أنت المنظم';
+
+  @override
+  String get matchDetailsYouJoined => 'أنت ضمن المباراة';
+
+  @override
+  String get matchDetailsPendingReview => 'طلبك قيد المراجعة';
+
+  @override
+  String get matchDetailsBlueFormation => 'تشكيلة الفريق الأزرق';
+
+  @override
+  String get matchDetailsRedFormation => 'تشكيلة الفريق الأحمر';
+
+  @override
+  String get blueTeam => 'الفريق الأزرق';
+
+  @override
+  String get redTeam => 'الفريق الأحمر';
+
+  @override
+  String get matchDetailsLeaveTitle => 'مغادرة المباراة';
+
+  @override
+  String get matchDetailsLeaveConfirm => 'هل أنت متأكد أنك تريد مغادرة هذه المباراة؟';
+
+  @override
+  String get matchDetailsLeaveButton => 'مغادرة المباراة';
+
+  @override
+  String get matchDetailsLeftMatch => 'تمت مغادرة المباراة';
+
+  @override
+  String get matchDetailsLeaveFailed => 'تعذر مغادرة المباراة';
 }

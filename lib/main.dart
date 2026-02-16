@@ -79,6 +79,7 @@ class MyApp extends StatelessWidget {
               '/': (context) => const HomePage(),
               '/bookingHistoryPage': (context) =>
                   const BookingsHistoryPage(),
+                  
             },
           );
         },

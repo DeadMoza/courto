@@ -375,7 +375,7 @@
 
   "pendingInfoPrefix": "If your booking stays pending, you can cancel it exactly after 20 minutes.\nYou can’t book another field while a booking is pending.\n\nThe field manager will respond as soon as possible.\n\nThe booking amount ",
   "pendingInfoMiddle": " will be deducted once the manager accepts your request, and you will need to pay ",
-  "pendingInfoSuffix": " to the manager before or after playing.",
+  "pendingInfoSuffix": " to the manager before or after playing. \n The booking can be cancelled only 24 hours before it's date.",
 
   "currencyLYD": "LYD",
   "timeTooltip": "Time notice",
@@ -504,6 +504,158 @@
   "paymentPage": "Charge Wallet",
 
   "teamsComingSoon": "This section will open soon",
-  "navTeams": "Teams"
+  "navTeams": "Teams",
+
+    "createMatch": "Create match",
+  "noMatchesNow": "No matches available right now",
+  "sectionMyMatch": "Your match",
+  "sectionJoinedMatches": "Matches you joined",
+  "sectionBrowseMatches": "Browse matches",
+
+  "badgeJoined": "Joined",
+
+  "matchStatusOpen": "Open",
+  "matchStatusActive": "Active",
+  "matchStatusClosed": "Closed",
+
+  "userFallback": "User",
+  "fieldFallback": "Field",
+
+  "errorLoadMatches": "Failed to load matches",
+  "errorConnection": "Connection error",
+
+  "playersCount": "Players: {joined}/{total}",
+  "@playersCount": {
+    "placeholders": {
+      "joined": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+    "createMatchTitle": "Create Match",
+  "createMatchSelectBookingTitle": "Choose a booking to create a match:",
+  "createMatchNoEligibleBookings": "Please book a field to create a match and find players.",
+  "createMatchOpenSlotsQuestion": "How many open slots in the match?",
+  "createMatchAvailableToJoin": "Available to join: {openSlots} / {capacity}",
+  "@createMatchAvailableToJoin": {
+    "placeholders": {
+      "openSlots": { "type": "int" },
+      "capacity": { "type": "int" }
+    }
+  },
+
+  "createMatchCapacityLabel": "Capacity: {capacity}",
+  "@createMatchCapacityLabel": {
+    "placeholders": {
+      "capacity": { "type": "int" }
+    }
+  },
+
+  "createMatchChooseYourPositionBlue": "Choose your position (Blue team)",
+  "createMatchSelectedPosition": "Selected position: {position}",
+  "@createMatchSelectedPosition": {
+    "placeholders": {
+      "position": { "type": "String" }
+    }
+  },
+
+  "createMatchNoCapacityFormation": "No capacity available to show formation",
+  "createMatchNoCapacityPositions": "No capacity to show positions",
+  "createMatchNoPositions": "No positions",
+
+  "createMatchCreating": "Creating...",
+  "createMatchButton": "Create match",
+
+  "createMatchLoginRequired": "You must log in first",
+  "createMatchLoadEligibleBookingsFailed": "Failed to load eligible bookings",
+  "createMatchConnectionError": "Connection error",
+
+  "createMatchBookingIdMissing": "Error: booking_id is missing",
+  "createMatchPickValidPositionFirst": "Please pick a valid position first",
+  "createMatchCreatedSuccess": "Match created successfully",
+  "createMatchCreateFailed": "Failed to create match",
+
+  "fieldTypeFootball": "Football",
+  "fieldTypePadel": "Padel",
+  "fieldTypeTennis": "Tennis",
+  "fieldTypeBasketball": "Basketball",
+  "fieldTypeSport": "Sport",
+
+    "commonUser": "User",
+  "commonConnectionError": "Connection error",
+  "commonCancel": "Cancel",
+  "commonBack": "Back",
+
+  "fieldTypeFootball": "Football",
+  "fieldTypePadel": "Padel",
+  "fieldTypeTennis": "Tennis",
+  "fieldTypeBasketball": "Basketball",
+  "fieldTypeSport": "Sport",
+
+  "matchDetailsTitle": "Match Details",
+  "matchDetailsLoadFailed": "Could not load match details",
+  "matchDetailsFieldFallback": "Field",
+
+  "matchDetailsJoinRequestSent": "Join request sent",
+  "matchDetailsJoinRequestFailed": "Could not send request",
+
+  "matchDetailsJoinRequestTitle": "Join Request",
+  "matchDetailsTeamBlue": "Blue",
+  "matchDetailsTeamRed": "Red",
+  "matchDetailsSendRequest": "Send request",
+  "matchDetailsJoinRequestConfirm": "Do you want to request this slot?\n\nTeam: {team}\nPosition: {position}",
+  "@matchDetailsJoinRequestConfirm": {
+    "placeholders": {
+      "team": { "type": "String" },
+      "position": { "type": "int" }
+    }
+  },
+
+  "matchDetailsRequestAccepted": "Request accepted",
+  "matchDetailsAcceptFailed": "Could not accept request",
+  "matchDetailsRequestRejected": "Request rejected",
+  "matchDetailsRejectFailed": "Could not reject request",
+
+  "matchDetailsSlotRequestsTitle": "Slot {position} requests • {team}",
+  "@matchDetailsSlotRequestsTitle": {
+    "placeholders": {
+      "position": { "type": "int" },
+      "team": { "type": "String" }
+    }
+  },
+  "matchDetailsNoRequestsForSlot": "No requests for this slot",
+  "matchDetailsAccept": "Accept",
+  "matchDetailsReject": "Reject",
+
+  "matchDetailsCanceled": "Match canceled",
+  "matchDetailsCancelFailed": "Could not cancel match",
+  "matchDetailsCancelTitle": "Cancel Match",
+  "matchDetailsCancelConfirm": "Are you sure you want to cancel this match?",
+  "matchDetailsCancelButton": "Cancel match",
+
+  "matchDetailsNoCapacityFormation": "No capacity to display formation",
+  "matchDetailsJoinSlotsFull": "All available join slots are filled",
+
+  "matchDetailsRemainingSlots": "Remaining slots: {count}",
+  "@matchDetailsRemainingSlots": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "matchDetailsYouAreHost": "You are the host",
+  "matchDetailsYouJoined": "You joined this match",
+  "matchDetailsPendingReview": "Your request is under review",
+
+  "matchDetailsBlueFormation": "Blue Team Formation",
+  "matchDetailsRedFormation": "Red Team Formation",
+
+  "blueTeam": "Blue Team",
+  "redTeam": "Red Team",
+
+    "matchDetailsLeaveTitle": "Leave match",
+  "matchDetailsLeaveConfirm": "Are you sure you want to leave this match?",
+  "matchDetailsLeaveButton": "Leave match",
+  "matchDetailsLeftMatch": "You left the match",
+  "matchDetailsLeaveFailed": "Failed to leave the match"
 
 }

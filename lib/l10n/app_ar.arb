@@ -374,7 +374,7 @@
 
   "pendingInfoPrefix": "في حالة بقاء حجزك قيد الانتظار فيمكنك الغاء الحجز بعد مرور 20 دقيقة بالضبط.\nولا يمكنك حجز ملعب آخر أثناء وجود حجز قيد الانتظار.\n\nسيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم خصم مبلغ الحجز ",
   "pendingInfoMiddle": " في لحظة قبول مدير الملعب لطلبك، وسيتعين عليك دفع ",
-  "pendingInfoSuffix": " لمدير الملعب بعد او قبل الانتهاء من اللعب.",
+  "pendingInfoSuffix": " لمدير الملعب بعد او قبل الانتهاء من اللعب. \n يمكن ألغاء الحجز قبل الموعد بمدة 24 ساعة فقط.",
 
   "currencyLYD": "د.ل",
   "timeTooltip": "تنبيه بخصوص التوقيت",
@@ -390,7 +390,7 @@
   "fieldTypeUnknown": "",
 
   "locationLabel": "{city} / {location}",
-  "playersCountLabel": "عدد الاعبين {count}",
+  "playersCountLabel": "عدد اللاعبين {count}",
   "fieldTypeLabel": "ملعب {type}",
   "openCloseLabel": "{open} - {close}",
   "noDescription": "لا يوجد وصف متاح.",
@@ -478,6 +478,159 @@
 
 "paymentPage": "شحن المحفظة",
 "teamsComingSoon": "قريباً سيتم فتح الجيهة",
-"navTeams": "الفريق"
+"navTeams": "الفريق",
+
+  "createMatch": "انشاء مبارة",
+  "noMatchesNow": "لا توجد مباريات متاحة حالياً",
+  "sectionMyMatch": "مباراتك",
+  "sectionJoinedMatches": "المباراة التي انضممت لها",
+  "sectionBrowseMatches": "تصفح المباريات",
+
+  "badgeJoined": "منضم",
+
+  "matchStatusOpen": "مفتوحة",
+  "matchStatusActive": "نشطة",
+  "matchStatusClosed": "مغلقة",
+
+  "userFallback": "مستخدم",
+  "fieldFallback": "ملعب",
+
+  "errorLoadMatches": "تعذر تحميل المباريات",
+  "errorConnection": "حدث خطأ في الاتصال",
+
+  "playersCount": "اللاعبين: {joined}/{total}",
+  "@playersCount": {
+    "placeholders": {
+      "joined": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
+    "createMatchTitle": "إنشاء مباراة",
+  "createMatchSelectBookingTitle": "اختر الحجز لتكوين مباراة فيه:",
+  "createMatchNoEligibleBookings": "يرجى حجز ملعب لإنشاء مباراة والبحث عن لاعبين.",
+  "createMatchOpenSlotsQuestion": "كم عدد الأماكن المفتوحة في المباراة؟",
+  "createMatchAvailableToJoin": "المتاح للانضمام: {openSlots} / {capacity}",
+  "@createMatchAvailableToJoin": {
+    "placeholders": {
+      "openSlots": { "type": "int" },
+      "capacity": { "type": "int" }
+    }
+  },
+
+  "createMatchCapacityLabel": "السعة: {capacity}",
+  "@createMatchCapacityLabel": {
+    "placeholders": {
+      "capacity": { "type": "int" }
+    }
+  },
+
+  "createMatchChooseYourPositionBlue": "اختر مركزك (الفريق الأزرق)",
+  "createMatchSelectedPosition": "المركز المختار: {position}",
+  "@createMatchSelectedPosition": {
+    "placeholders": {
+      "position": { "type": "String" }
+    }
+  },
+
+  "createMatchNoCapacityFormation": "لا توجد سعة متاحة لعرض التشكيلة",
+  "createMatchNoCapacityPositions": "لا توجد سعة لعرض المراكز",
+  "createMatchNoPositions": "لا توجد مراكز",
+
+  "createMatchCreating": "جاري الإنشاء...",
+  "createMatchButton": "إنشاء مباراة",
+
+  "createMatchLoginRequired": "يجب تسجيل الدخول أولاً",
+  "createMatchLoadEligibleBookingsFailed": "تعذر تحميل الحجوزات المؤهلة",
+  "createMatchConnectionError": "حدث خطأ في الاتصال",
+
+  "createMatchBookingIdMissing": "خطأ: booking_id غير موجود",
+  "createMatchPickValidPositionFirst": "يرجى اختيار مركز صحيح أولاً",
+  "createMatchCreatedSuccess": "تم إنشاء المباراة بنجاح",
+  "createMatchCreateFailed": "فشل إنشاء المباراة",
+
+  "fieldTypeFootball": "كرة قدم",
+  "fieldTypePadel": "بادل",
+  "fieldTypeTennis": "تنس",
+  "fieldTypeBasketball": "سلة",
+  "fieldTypeSport": "رياضة",
+
+    "commonUser": "مستخدم",
+  "commonConnectionError": "حدث خطأ في الاتصال",
+  "commonCancel": "إلغاء",
+  "commonBack": "تراجع",
+
+  "fieldTypeFootball": "كرة قدم",
+  "fieldTypePadel": "بادل",
+  "fieldTypeTennis": "تنس",
+  "fieldTypeBasketball": "سلة",
+  "fieldTypeSport": "رياضة",
+
+  "matchDetailsTitle": "تفاصيل المباراة",
+  "matchDetailsLoadFailed": "تعذر تحميل تفاصيل المباراة",
+  "matchDetailsFieldFallback": "ملعب",
+
+  "matchDetailsJoinRequestSent": "تم إرسال طلب الانضمام",
+  "matchDetailsJoinRequestFailed": "تعذر إرسال الطلب",
+
+  "matchDetailsJoinRequestTitle": "طلب الانضمام",
+  "matchDetailsTeamBlue": "الأزرق",
+  "matchDetailsTeamRed": "الأحمر",
+  "matchDetailsSendRequest": "إرسال الطلب",
+  "matchDetailsJoinRequestConfirm": "هل تريد طلب الانضمام لهذا المركز؟\n\nالفريق: {team}\nالمركز: {position}",
+  "@matchDetailsJoinRequestConfirm": {
+    "placeholders": {
+      "team": { "type": "String" },
+      "position": { "type": "int" }
+    }
+  },
+
+  "matchDetailsRequestAccepted": "تم قبول الطلب",
+  "matchDetailsAcceptFailed": "تعذر قبول الطلب",
+  "matchDetailsRequestRejected": "تم رفض الطلب",
+  "matchDetailsRejectFailed": "تعذر رفض الطلب",
+
+  "matchDetailsSlotRequestsTitle": "طلبات المركز {position} • {team}",
+  "@matchDetailsSlotRequestsTitle": {
+    "placeholders": {
+      "position": { "type": "int" },
+      "team": { "type": "String" }
+    }
+  },
+  "matchDetailsNoRequestsForSlot": "لا توجد طلبات لهذا المركز",
+  "matchDetailsAccept": "قبول",
+  "matchDetailsReject": "رفض",
+
+  "matchDetailsCanceled": "تم إلغاء المباراة",
+  "matchDetailsCancelFailed": "تعذر إلغاء المباراة",
+  "matchDetailsCancelTitle": "إلغاء المباراة",
+  "matchDetailsCancelConfirm": "هل أنت متأكد أنك تريد إلغاء المباراة؟",
+  "matchDetailsCancelButton": "إلغاء المباراة",
+
+  "matchDetailsNoCapacityFormation": "لا توجد سعة لعرض التشكيلة",
+  "matchDetailsJoinSlotsFull": "اكتملت المقاعد المتاحة للانضمام",
+
+  "matchDetailsRemainingSlots": "الاماكن المتبقية: {count}",
+  "@matchDetailsRemainingSlots": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "matchDetailsYouAreHost": "أنت المنظم",
+  "matchDetailsYouJoined": "أنت ضمن المباراة",
+  "matchDetailsPendingReview": "طلبك قيد المراجعة",
+
+  "matchDetailsBlueFormation": "تشكيلة الفريق الأزرق",
+  "matchDetailsRedFormation": "تشكيلة الفريق الأحمر",
+"blueTeam": "الفريق الأزرق",
+"redTeam": "الفريق الأحمر",
+  "matchDetailsLeaveTitle": "مغادرة المباراة",
+  "matchDetailsLeaveConfirm": "هل أنت متأكد أنك تريد مغادرة هذه المباراة؟",
+  "matchDetailsLeaveButton": "مغادرة المباراة",
+  "matchDetailsLeftMatch": "تمت مغادرة المباراة",
+  "matchDetailsLeaveFailed": "تعذر مغادرة المباراة"
+
+
+
 
 }

@@ -225,7 +225,7 @@ class _OtpPageState extends State<OtpPage> {
     final isEnglish = _isEnglish;
 
     return Directionality(
-      textDirection: isEnglish ? TextDirection.ltr : TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         appBar: AppBar(

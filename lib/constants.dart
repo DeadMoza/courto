@@ -1,4 +1,6 @@
 import 'package:intl/intl.dart';
+import 'dart:math';
+import 'dart:ui';
 
 class AppFormat {
   // convert api time string into datetime to pass to formatting function (formatTime)
@@ -99,3 +101,73 @@ class AppFormat {
     return input;
   }
 }
+
+class FormationRepo {
+  static final Map<int, List<Offset>> byCapacity = {
+    // capacity: offsets for ONE team only (blue)
+    2: [Offset(0.5, 0.5)], // 1v1: one player each
+    4: [Offset(0.5, 0.75), Offset(0.5, 0.25)], // 2v2
+    6: [Offset(0.5, 0.8), Offset(0.3, 0.5), Offset(0.7, 0.5)], // 3v3
+    // ...
+    22: _elevenV11(), // 11 players per team
+  };
+
+  static List<Offset> getTeamOffsets(int capacity) {
+    final list = byCapacity[capacity];
+    if (list != null) return list;
+
+    // fallback: auto-generate a decent grid if missing
+    return autoGenerate(teamSize: capacity ~/ 2);
+  }
+
+  static List<Offset> autoGenerate({required int teamSize}) {
+    // simple vertical bands: GK + lines
+    // not perfect, but prevents crashes
+    final offsets = <Offset>[];
+    if (teamSize <= 0) return offsets;
+
+    // GK always first
+    offsets.add(const Offset(0.5, 0.92));
+    if (teamSize == 1) return offsets;
+
+    // remaining players distributed in rows
+    final remaining = teamSize - 1;
+    final rows = (remaining / 4).ceil();
+    int placed = 0;
+
+    for (int r = 0; r < rows; r++) {
+      final inRow = ((remaining - placed) >= 4) ? 4 : (remaining - placed);
+      final y = 0.75 - (r * (0.55 / max(1, rows - 1))); // 0.75..0.20
+      for (int c = 0; c < inRow; c++) {
+        final x = (c + 1) / (inRow + 1); // evenly spaced
+        offsets.add(Offset(x, y));
+        placed++;
+      }
+    }
+    return offsets;
+  }
+
+  static List<Offset> _elevenV11() {
+    // Example 4-4-2 (with GK first)
+    return const [
+      Offset(0.5, 0.92), // GK
+
+      // Back 4
+      Offset(0.18, 0.78),
+      Offset(0.38, 0.80),
+      Offset(0.62, 0.80),
+      Offset(0.82, 0.78),
+
+      // Mid 4
+      Offset(0.18, 0.56),
+      Offset(0.38, 0.58),
+      Offset(0.62, 0.58),
+      Offset(0.82, 0.56),
+
+      // Forwards 2
+      Offset(0.40, 0.30),
+      Offset(0.60, 0.30),
+    ];
+  }
+}
+
