@@ -2,6 +2,8 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:ui' as ui;
+import 'package:flutter/services.dart';
+
 
 import 'package:courto/constants.dart'; // must contain FormationRepo + AppFormat
 import 'package:courto/l10n/app_localizations.dart';
@@ -45,6 +47,100 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
     super.initState();
     _fetchMatchDetails();
   }
+
+
+void _showPlayerInfoSheet(Map<String, dynamic> p) {
+  final loc = AppLocalizations.of(context)!;
+
+  final fullName = (p['full_name'] ?? '').toString().trim();
+  final phoneRaw = (p['phone_number'] ?? '').toString().trim();
+
+  String normalizePhoneForCopy(String phone) {
+    String cleaned = phone.replaceAll(RegExp(r'\s+'), '');
+
+    // Remove +
+    if (cleaned.startsWith('+')) {
+      cleaned = cleaned.substring(1);
+    }
+
+    // Replace 218 with 0
+    if (cleaned.startsWith('218')) {
+      cleaned = '0${cleaned.substring(3)}';
+    }
+
+    return cleaned;
+  }
+
+  showModalBottomSheet(
+    context: context,
+    showDragHandle: true,
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (fullName.isNotEmpty)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.person),
+                title: Text(
+                  fullName,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+
+            if (phoneRaw.isNotEmpty)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.phone),
+                title: GestureDetector(
+                  onTap: () async {
+                    final formatted = normalizePhoneForCopy(phoneRaw);
+                    await Clipboard.setData(
+                      ClipboardData(text: formatted),
+                    );
+
+                    if (!mounted) return;
+                  },
+                  child: Text(
+                    phoneRaw,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.copy),
+                  onPressed: () async {
+                    final formatted = normalizePhoneForCopy(phoneRaw);
+                    await Clipboard.setData(
+                      ClipboardData(text: formatted),
+                    );
+
+                    if (!mounted) return;
+                  },
+                ),
+              ),
+
+            const SizedBox(height: 8),
+
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(loc.commonBack),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+
 
   // City name map (Arabic -> English)
   static const Map<String, String> _cityEnMap = {
@@ -747,9 +843,11 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                     final joined = _joinedPlayerAt(team, pos);
                     final isJoined = joined != null;
 
-                    // host can tap empty => view requests
-                    // non-host can tap empty => request join (only if not full)
-                    final isTapEnabled = !isJoined && (_isHost() ? true : canTapToJoin);
+                    final bool host = _isHost();
+
+                    // host can tap joined OR empty
+                    final bool isTapEnabled = host ? true : (!isJoined && canTapToJoin);
+
 
                     final border = isJoined ? color : Colors.grey.withOpacity(0.55);
                     final fill = isJoined ? color : Colors.transparent;
@@ -766,12 +864,17 @@ class _MatchDetailsPageState extends State<MatchDetailsPage> {
                         onTap: !isTapEnabled
                             ? null
                             : () async {
-                                if (_isHost()) {
+                                if (host) {
+                                  if (isJoined) {
+                                    _showPlayerInfoSheet(joined);
+                                    return;
+                                  }
                                   await _showSlotRequestsSheet(team: team, position: pos);
                                 } else {
                                   await _confirmJoinSlot(team: team, position: pos);
                                 }
                               },
+
                         child: SizedBox(
                           width: 44,
                           height: 58,

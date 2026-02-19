@@ -498,39 +498,38 @@ class _FieldsListPageState extends State<FieldsListPage> {
       return baseUrl!.endsWith('/') ? '$baseUrl$url' : '$baseUrl/$url';
     }
   }
-
-  Widget _buildCityChip({
-    required String label,
-    required int cityId,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    bool isTripoli = label == 'طرابلس' || label.toLowerCase() == 'tripoli';
-    bool isDisabled = !isTripoli;
-
-    return GestureDetector(
-      onTap: isDisabled ? null : onTap,
-      child: Opacity(
-        opacity: isDisabled ? 0.4 : 1.0,
-        child: Chip(
-          label: Text(
-            label,
-            style: TextStyle(
-              color: selected ? Theme.of(context).colorScheme.onPrimary : const Color(0xFF1E1E1E),
-            ),
-          ),
-          backgroundColor: selected ? Theme.of(context).colorScheme.primary : Colors.grey[200],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(5),
-            side: BorderSide(
-              color: selected ? Theme.of(context).colorScheme.primary : Colors.grey[300]!,
-              width: selected ? 1.5 : 1,
-            ),
-          ),
+Widget _buildCityChip({
+  required String label,
+  required int cityId,
+  required bool selected,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap, // ✅ enable all cities
+    child: Chip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: selected
+              ? Theme.of(context).colorScheme.onPrimary
+              : const Color(0xFF1E1E1E),
         ),
       ),
-    );
-  }
+      backgroundColor:
+          selected ? Theme.of(context).colorScheme.primary : Colors.grey[200],
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(5),
+        side: BorderSide(
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : Colors.grey[300]!,
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+    ),
+  );
+}
+
 
   Widget _buildTypeBox({
     required IconData icon,

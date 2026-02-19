@@ -494,7 +494,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get financialDetailsTitle => 'التفاصيل المالية:';
 
   @override
-  String get bookingPriceLabel => 'سعر الحجز:';
+  String get bookingPriceLabel => 'سعر الحجز';
 
   @override
   String get remainingPriceLabel => 'السعر المتبقي للدفع';
