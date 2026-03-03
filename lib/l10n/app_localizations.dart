@@ -1709,11 +1709,11 @@ abstract class AppLocalizations {
   /// **'Invalid amount'**
   String get chargeWalletInvalidAmount;
 
-  /// No description provided for @chargeWalletMax200.
+  /// No description provided for @chargeWalletMax.
   ///
   /// In en, this message translates to:
-  /// **'Maximum is 200 LYD'**
-  String get chargeWalletMax200;
+  /// **'Maximum is 1000 LYD'**
+  String get chargeWalletMax;
 
   /// No description provided for @chargeWalletSuccess.
   ///
@@ -1744,6 +1744,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Available'**
   String get statusAvailable;
+
+  /// No description provided for @statusCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get statusCancelled;
 
   /// No description provided for @supportCategoryBooking.
   ///
@@ -2332,6 +2338,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed to leave the match'**
   String get matchDetailsLeaveFailed;
+
+  /// No description provided for @cancelReasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for cancellation'**
+  String get cancelReasonTitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

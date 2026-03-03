@@ -84,10 +84,10 @@ class AppFormat {
         return "مؤكد";
       case "pending":
         return "في انتظار الرد";
-      case "unavailable":
-        return "غير متاح";
+      case "cancelled":
+        return "ملغي";
       default:
-        return "متاح";
+        return "غير متاح";
     }
   }
 

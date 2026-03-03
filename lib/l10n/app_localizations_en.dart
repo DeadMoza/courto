@@ -856,7 +856,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chargeWalletInvalidAmount => 'Invalid amount';
 
   @override
-  String get chargeWalletMax200 => 'Maximum is 200 LYD';
+  String get chargeWalletMax => 'Maximum is 1000 LYD';
 
   @override
   String chargeWalletSuccess(Object voucherValue, Object walletBalance) {
@@ -874,6 +874,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusAvailable => 'Available';
+
+  @override
+  String get statusCancelled => 'Cancelled';
 
   @override
   String get supportCategoryBooking => 'Booking';
@@ -1182,4 +1185,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchDetailsLeaveFailed => 'Failed to leave the match';
+
+  @override
+  String get cancelReasonTitle => 'Reason for cancellation';
 }

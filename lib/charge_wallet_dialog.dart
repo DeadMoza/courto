@@ -109,8 +109,8 @@ Future<void> showChargeWalletDialog(BuildContext context) async {
                               if (amount == null || amount <= 0) {
                                 return t.chargeWalletInvalidAmount;
                               }
-                              if (amount > 200) {
-                                return t.chargeWalletMax200;
+                              if (amount > 1000) {
+                                return t.chargeWalletMax;
                               }
                               return null;
                             },

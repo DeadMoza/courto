@@ -319,12 +319,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String bookingAndPrice(Object booking, Object price) {
-    return 'الحجز: $booking | $price';
+    return 'العربون: $booking | $price';
   }
 
   @override
   String bookingAndPricePerHour(Object booking, Object price) {
-    return 'الحجز: $booking | $price/الساعة';
+    return 'العربون: $booking | $price/الساعة';
   }
 
   @override
@@ -494,7 +494,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get financialDetailsTitle => 'التفاصيل المالية:';
 
   @override
-  String get bookingPriceLabel => 'سعر الحجز';
+  String get bookingPriceLabel => 'سعر الحجز:';
 
   @override
   String get remainingPriceLabel => 'السعر المتبقي للدفع';
@@ -856,7 +856,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get chargeWalletInvalidAmount => 'مبلغ غير صالح';
 
   @override
-  String get chargeWalletMax200 => 'الحد الأقصى 200 دينار';
+  String get chargeWalletMax => 'الحد الأقصى 1000 دينار';
 
   @override
   String chargeWalletSuccess(Object voucherValue, Object walletBalance) {
@@ -874,6 +874,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get statusAvailable => 'متاح';
+
+  @override
+  String get statusCancelled => 'ملغي';
 
   @override
   String get supportCategoryBooking => 'Booking';
@@ -1182,4 +1185,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get matchDetailsLeaveFailed => 'تعذر مغادرة المباراة';
+
+  @override
+  String get cancelReasonTitle => 'سبب الالغاء';
 }

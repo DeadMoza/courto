@@ -64,6 +64,10 @@ class _FieldsListPageState extends State<FieldsListPage> {
     "زوارة":"Zuwara"
   };
 
+  bool _isSearching = false;
+final TextEditingController _searchController = TextEditingController();
+final FocusNode _searchFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -133,8 +137,17 @@ class _FieldsListPageState extends State<FieldsListPage> {
           (a['calculated_total_price'] as double).compareTo(b['calculated_total_price'] as double));
     }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    setState(() => _filteredFields = result);
-  }
+if (_searchController.text.isNotEmpty) {
+  result = result.where((f) {
+    final nameAr = (f["field_name"] ?? "").toString().toLowerCase();
+    final nameEn = (f["field_english_name"] ?? "").toString().toLowerCase();
+    final query = _searchController.text.toLowerCase();
+
+    return nameAr.contains(query) || nameEn.contains(query);
+  }).toList();
+}
+
+setState(() => _filteredFields = result);  }
 
   String _getTypeName(int typeId) {
     switch (typeId) {
@@ -160,6 +173,10 @@ class _FieldsListPageState extends State<FieldsListPage> {
         return "";
     }
   }
+
+  void _onSearchChanged(String value) {
+  _applyFilters();
+}
 
   String _getTypeLabel(int typeId) {
     if (_isEnglish) {
@@ -721,7 +738,7 @@ Widget _buildCityChip({
                                 Text(
                                   _isEnglish
                                       ? "Booking: $bookingPrice | ${discountPrice.toStringAsFixed(2)}"
-                                      : "الحجز: $bookingPrice | ${discountPrice.toStringAsFixed(2)}",
+                                      : "العربون: $bookingPrice | ${discountPrice.toStringAsFixed(2)}",
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.primary,
                                     fontSize: 14,
@@ -742,7 +759,7 @@ Widget _buildCityChip({
                           : Text(
                               _isEnglish
                                   ? "Booking: $bookingPrice | ${originalPrice.toStringAsFixed(2)}/hour"
-                                  : "الحجز: $bookingPrice | ${originalPrice.toStringAsFixed(2)}/الساعة",
+                                  : "العربون: $bookingPrice | ${originalPrice.toStringAsFixed(2)}/الساعة",
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.primary,
                                 fontSize: 14,
@@ -843,11 +860,55 @@ Widget _buildCityChip({
               ),
             ),
           ),
-          IconButton(
-            icon: Icon(Icons.filter_list, color: Theme.of(context).colorScheme.primary),
-            onPressed: _showFilterDialog,
-            tooltip: _isEnglish ? "Filters" : "فلترة",
+AnimatedContainer(
+  duration: const Duration(milliseconds: 250),
+  curve: Curves.easeInOut,
+  width: _isSearching
+      ? MediaQuery.of(context).size.width * 0.93
+      : 45,
+  height: 45,
+  child: _isSearching
+      ? TextField(
+          controller: _searchController,
+          focusNode: _searchFocusNode,
+          autofocus: true,
+          onChanged: _onSearchChanged,
+          decoration: InputDecoration(
+            hintText: _isEnglish
+                ? "Search fields..."
+                : "اسم الملعب..",
+            filled: true,
+            fillColor: Theme.of(context).cardTheme.color,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () {
+                _searchController.clear();
+                _searchFocusNode.unfocus();
+                setState(() => _isSearching = false);
+                _applyFilters();
+              },
+            ),
           ),
+        )
+      : IconButton(
+          icon: Icon(Icons.search,
+              color: Theme.of(context).colorScheme.primary),
+          onPressed: () {
+            setState(() => _isSearching = true);
+            Future.delayed(const Duration(milliseconds: 100), () {
+              _searchFocusNode.requestFocus();
+            });
+          },
+        ),
+)
         ],
       ),
     );

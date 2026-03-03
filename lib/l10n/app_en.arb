@@ -461,7 +461,7 @@
   "chargeWalletEnterAmount": "Enter amount",
   "chargeWalletAmountRequired": "Please enter the amount",
   "chargeWalletInvalidAmount": "Invalid amount",
-  "chargeWalletMax200": "Maximum is 200 LYD",
+  "chargeWalletMax": "Maximum is 1000 LYD",
 
   "chargeWalletSuccess": "Wallet charged with {voucherValue} LYD. Current balance: {walletBalance} LYD.",
   "@chargeWalletSuccess": {
@@ -476,6 +476,8 @@
 
   "statusUnavailable": "Unavailable",
 "statusAvailable": "Available",
+"statusCancelled": "Cancelled",
+
 
   "supportCategoryBooking": "Booking",
   "supportCategoryPaymentWallet": "Payment / Wallet",
@@ -656,6 +658,9 @@
   "matchDetailsLeaveConfirm": "Are you sure you want to leave this match?",
   "matchDetailsLeaveButton": "Leave match",
   "matchDetailsLeftMatch": "You left the match",
-  "matchDetailsLeaveFailed": "Failed to leave the match"
+  "matchDetailsLeaveFailed": "Failed to leave the match",
+
+  "cancelReasonTitle": "Reason for cancellation"
+
 
 }

@@ -366,22 +366,34 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                       Row(
                         children: [
                           Icon(
-                            status == "pending" ? Icons.hourglass_bottom : Icons.check_circle,
-                            color: status == "pending"
-                                ? Colors.orange.shade700
-                                : Theme.of(context).colorScheme.primary,
+                            status == "pending" 
+                              ? Icons.hourglass_bottom
+                              : status == 'cancelled' 
+                                ? Icons.cancel
+                                : Icons.check_circle,
+    color: status == "pending"
+        ? Colors.orange.shade700
+        : status == "cancelled"
+            ? Colors.grey
+            : Theme.of(context).colorScheme.primary,
                             size: 20,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            status == "pending" ? t.statusPending : t.statusConfirmed,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: status == "pending"
-                                  ? Colors.orange.shade700
-                                  : Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
+Text(
+  status == "pending"
+      ? t.statusPending
+      : status == "cancelled"
+          ? t.statusCancelled
+          : t.statusConfirmed,
+  style: TextStyle(
+    fontWeight: FontWeight.bold,
+    color: status == "pending"
+        ? Colors.orange.shade700
+        : status == "cancelled"
+            ? Colors.grey
+            : Theme.of(context).colorScheme.primary,
+  ),
+),
                         ],
                       ),
                       Text(
@@ -480,6 +492,48 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     icon: Icons.history,
                     text: creationDate,
                   ),
+
+                  if (status == "cancelled" &&
+    booking["cancellation_reason"] != null &&
+    booking["cancellation_reason"].toString().trim().isNotEmpty)
+  Padding(
+    padding: const EdgeInsets.only(top: 20),
+    child: Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(5),
+        border: Border.all(color: Theme.of(context).colorScheme.primary),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                t.cancelReasonTitle,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            booking["cancellation_reason"].toString(),
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSecondary,
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
 
                   // --- Inline Review Section ---
                   if (showLeaveReviewButton)

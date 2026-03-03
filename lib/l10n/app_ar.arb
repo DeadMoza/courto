@@ -176,7 +176,7 @@
   "discountPercent": "-{percent}%",
   "@discountPercent": { "placeholders": { "percent": {} } },
 
-  "bookingAndPrice": "الحجز: {booking} | {price}",
+  "bookingAndPrice": "العربون: {booking} | {price}",
   "@bookingAndPrice": {
     "placeholders": {
       "booking": {},
@@ -184,7 +184,7 @@
     }
   },
 
-  "bookingAndPricePerHour": "الحجز: {booking} | {price}/الساعة",
+  "bookingAndPricePerHour": "العربون: {booking} | {price}/الساعة",
   "@bookingAndPricePerHour": {
     "placeholders": {
       "booking": {},
@@ -460,7 +460,7 @@
   "chargeWalletEnterAmount": "ادخل المبلغ",
   "chargeWalletAmountRequired": "الرجاء إدخال المبلغ",
   "chargeWalletInvalidAmount": "مبلغ غير صالح",
-  "chargeWalletMax200": "الحد الأقصى 200 دينار",
+  "chargeWalletMax": "الحد الأقصى 1000 دينار",
 
   "chargeWalletSuccess": "تم شحن المحفظة بمبلغ {voucherValue} دينار. الرصيد الحالي: {walletBalance} دينار.",
   "@chargeWalletSuccess": {
@@ -475,7 +475,7 @@
 
   "statusUnavailable": "غير متاح",
 "statusAvailable": "متاح",
-
+"statusCancelled": "ملغي",
 "paymentPage": "شحن المحفظة",
 "teamsComingSoon": "قريباً سيتم فتح الجيهة",
 "navTeams": "الفريق",
@@ -628,7 +628,9 @@
   "matchDetailsLeaveConfirm": "هل أنت متأكد أنك تريد مغادرة هذه المباراة؟",
   "matchDetailsLeaveButton": "مغادرة المباراة",
   "matchDetailsLeftMatch": "تمت مغادرة المباراة",
-  "matchDetailsLeaveFailed": "تعذر مغادرة المباراة"
+  "matchDetailsLeaveFailed": "تعذر مغادرة المباراة",
+
+  "cancelReasonTitle": "سبب الالغاء"
 
 
 
