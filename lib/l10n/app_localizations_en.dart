@@ -1188,4 +1188,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelReasonTitle => 'Reason for cancellation';
+
+  @override
+  String get subscriptionsPage => 'My Subscriptions';
 }

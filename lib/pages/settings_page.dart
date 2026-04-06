@@ -2,6 +2,7 @@ import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/settingsPages/favorites_page.dart';
 import 'package:courto/pages/settingsPages/language_page.dart';
 import 'package:courto/pages/settingsPages/policy_page.dart';
+import 'package:courto/pages/settingsPages/subscriptions_page.dart';
 import 'package:courto/pages/settingsPages/support_page.dart';
 import 'package:courto/pages/settingsPages/theme_page.dart';
 import 'package:courto/pages/signup_page.dart';
@@ -141,6 +142,19 @@ class SettingsPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => FavoritesPage(fields: fields)),
+                  );
+                },
+              ),
+              
+              const Divider(height: 1),
+
+              SettingsTile(
+                icon: Icons.card_membership,
+                title: t.subscriptionsPage,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SubscriptionsPage()),
                   );
                 },
               ),

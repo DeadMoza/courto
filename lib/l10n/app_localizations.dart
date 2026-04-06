@@ -2344,6 +2344,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Reason for cancellation'**
   String get cancelReasonTitle;
+
+  /// No description provided for @subscriptionsPage.
+  ///
+  /// In en, this message translates to:
+  /// **'My Subscriptions'**
+  String get subscriptionsPage;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

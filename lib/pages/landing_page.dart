@@ -2,6 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:courto/pages/bookingsPages/field_details_page.dart';
 import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/signup_page.dart';
+import 'package:courto/pages/subscription_plan_page.dart';
 import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -19,6 +20,7 @@ class LandingPage extends StatelessWidget {
   final String? featuredText2;
   final onGoToFieldsPage;
   final int matchesPlayedCount;
+  final List<Map<String, dynamic>> subscriptionPlans;
 
   LandingPage({
     super.key,
@@ -29,6 +31,7 @@ class LandingPage extends StatelessWidget {
     required this.featuredText2,
     required this.onGoToFieldsPage,
     required this.matchesPlayedCount,
+    required this.subscriptionPlans,
   });
 
   final String? _apiUrl = dotenv.env['API_URL'];
@@ -97,6 +100,64 @@ class LandingPage extends StatelessWidget {
       return baseUrl!.endsWith('/') ? '$baseUrl$url' : '$baseUrl/$url';
     }
   }
+
+  static const Map<String, String> _planTypeImage = {
+    'chess':    'assets/images/courtoChess.png',
+    'academy':  'assets/images/courtoTeams.jpg',
+    'swimming': 'assets/images/courtoSwimming.png',
+    'fitness':  'assets/images/courtoFitness.png',
+    'arcade': 'assets/images/courtoArcade.png'
+  };
+
+static const Map<String, IconData> _planTypeIcon = {
+  'chess':    Icons.grid_on_rounded,
+  'academy':  Icons.directions_run,
+  'swimming': Icons.pool,
+  'fitness':  Icons.fitness_center,
+  'arcade': Icons.gamepad_outlined
+};
+
+Widget _buildSignUpSections(BuildContext context, bool isEnglish) {
+  if (subscriptionPlans.isEmpty) return const SizedBox.shrink();
+
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: kPadding),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int i = 0; i < subscriptionPlans.length; i++) ...[
+          _buildPlanCard(context, isEnglish, subscriptionPlans[i], i),
+          if (i < subscriptionPlans.length - 1) const SizedBox(height: 16),
+        ],
+      ],
+    ),
+  );
+}
+
+Widget _buildPlanCard(BuildContext context, bool isEnglish, Map<String, dynamic> plan, int planIndex) {
+  final type      = (plan['type'] ?? '').toString().toLowerCase();
+  final imagePath = _planTypeImage[type] ?? 'assets/images/courtoDefaultHeader.jpg';
+  final icon      = _planTypeIcon[type] ?? Icons.star_outline;
+
+  final title       = isEnglish ? (plan['name_eng'] ?? plan['name'] ?? '') : (plan['name'] ?? '');
+  final description = isEnglish ? (plan['short_description_eng'] ?? plan['short_description'] ?? '') : (plan['short_description'] ?? '');
+  final buttonLabel = isEnglish ? 'Subscribe' : 'اشترك الآن';
+
+  return _buildProgramCard(
+    context:     context,
+    isEnglish:   isEnglish,
+    imagePath:   imagePath,
+    title:       title.toString(),
+    description: description.toString(),
+    buttonLabel: buttonLabel,
+    icon:        icon,
+    onTap: () {
+      Navigator.push(context, MaterialPageRoute(
+        builder: (_) => SubscriptionPlanPage(plans: subscriptionPlans, initialIndex: planIndex,),
+      ));
+    },
+  );
+}
 
   String normalizeUrl(String url) {
     if (url.startsWith("http")) {
@@ -505,6 +566,10 @@ class LandingPage extends StatelessWidget {
 
               const SizedBox(height: 30),
 
+_buildSignUpSections(context, isEnglish),
+
+const SizedBox(height: 30),
+
               if (discountedFields.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: kPadding),
@@ -723,6 +788,157 @@ class LandingPage extends StatelessWidget {
     );
   }
 }
+
+
+Widget _buildProgramCard({
+  required BuildContext context,
+  required bool isEnglish,
+  required String imagePath,
+  required String title,
+  required String description,
+  required String buttonLabel,
+  required IconData icon,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Stack(
+        children: [
+
+          // --- Background image ---
+          Positioned.fill(
+            child: Image.asset(
+              imagePath,
+              fit: BoxFit.cover,
+              // smooth fade-in as the image loads
+              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                if (wasSynchronouslyLoaded) return child;
+                return AnimatedOpacity(
+                  opacity: frame == null ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeIn,
+                  child: child,
+                );
+              },
+              errorBuilder: (_, __, ___) => Container(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+              ),
+            ),
+          ),
+
+          // --- Dark gradient overlay so text is always readable ---
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.35),
+                    Colors.black.withOpacity(0.75),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // --- Card content ---
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+
+                // Icon + Title row
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 26),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black45,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 14),
+
+                // Description
+                Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.white.withOpacity(0.9),
+                    height: 1.55,
+                    shadows: const [
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                // CTA button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: onTap,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      buttonLabel,
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        ],
+      ),
+    ),
+  );
+}
+
 
 class _FeaturedTextMarquee extends StatefulWidget {
   final String text1;

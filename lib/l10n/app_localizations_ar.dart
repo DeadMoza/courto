@@ -1188,4 +1188,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cancelReasonTitle => 'سبب الالغاء';
+
+  @override
+  String get subscriptionsPage => 'الاشتراكات';
 }

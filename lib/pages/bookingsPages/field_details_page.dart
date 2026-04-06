@@ -5,6 +5,7 @@ import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:ui' as ui;
 import 'field_calendar_page.dart';
 
@@ -605,6 +606,12 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
 
     final pageDirection = _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl;
 
+    Future<void> openMaps() async {
+      final uri = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${widget.field["field_latitude"]},${widget.field["field_longitude"]}'
+      );      if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
     return Directionality(
       textDirection: pageDirection,
       child: Scaffold(
@@ -656,7 +663,27 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                             color: Theme.of(context).colorScheme.primary,
                           ),
                           if (locationDetails.isNotEmpty)
-                            _buildInfoRow(Icons.map_outlined, locationDetails),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(5),
+                            onTap: openMaps,
+                            child: Row(
+                              children: [
+                                Icon(Icons.map_outlined, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    locationDetails,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.open_in_new, size: 18, color: Colors.grey),
+                              ],
+                            ),
+                          ),
                           _buildInfoRow(
                             Icons.stadium_outlined,
                             _isEnglish

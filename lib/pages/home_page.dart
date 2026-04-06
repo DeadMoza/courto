@@ -34,6 +34,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _fields = [];
   List<Map<String, dynamic>> _discountedFields = [];
+  List<Map<String, dynamic>> _subscriptionPlans = [];
 
 
   bool _loadingFields = true;
@@ -57,6 +58,7 @@ class _HomePageState extends State<HomePage> {
     _fetchDiscountedFields();
     _fetchCarouselItems();
     _detectCity();
+    _fetchSubscriptionPlans();
 
   }
 
@@ -78,6 +80,7 @@ class _HomePageState extends State<HomePage> {
           carouselImages: _carouselImages,
           onGoToFieldsPage: goToFieldsPage,
           matchesPlayedCount: _matchesPlayedCount,
+          subscriptionPlans: _subscriptionPlans,
         ),
       );
     }
@@ -100,16 +103,20 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (index == 2) {
-      _screens[2] = FieldsMapPage(
-        initialLat: _userLat ?? 32.8872,
-        initialLng: _userLng ?? 13.1913,
-        cityLat: cityLatitude ?? 32.8872,
-        cityLng: cityLongitude ?? 13.1913,
-        fields: _fields,
-        loading: _loadingFields,
-      );
-    }
+if (index == 2) {
+  // Prefer user GPS, fall back to detected city centre, then Tripoli default
+  final mapLat = _userLat ?? cityLatitude ?? 32.8872;
+  final mapLng = _userLng ?? cityLongitude ?? 13.1913;
+
+  _screens[2] = FieldsMapPage(
+    initialLat: mapLat,
+    initialLng: mapLng,
+    cityLat:  cityLatitude  ?? 32.8872,
+    cityLng:  cityLongitude ?? 13.1913,
+    fields:   _fields,
+    loading:  _loadingFields,
+  );
+}
 
     if (index == 3) {
           _screens[3] = TeamsPage(
@@ -183,7 +190,11 @@ class _HomePageState extends State<HomePage> {
           unselectedItemColor: Colors.white54,
           showUnselectedLabels: true,
           currentIndex: _selectedIndex,
-          onTap: (i) => setState(() => _selectedIndex = i),
+          onTap: (i) {
+            // Rebuild map every time the user taps to it so coordinates are fresh
+            if (i == 2) _screens[2] = null;
+            setState(() => _selectedIndex = i);
+          },
           items: [
             BottomNavigationBarItem(icon: const Icon(Icons.home), label: t.navHome),
             BottomNavigationBarItem(icon: const Icon(Icons.stadium), label: t.navFields),
@@ -224,6 +235,7 @@ class _HomePageState extends State<HomePage> {
     await _fetchFields();
     await _fetchDiscountedFields();
     await _fetchCarouselItems();
+    await _fetchSubscriptionPlans();
 
     if (AuthService.isLoggedIn) await getMatchCount();
     _screens[0] = null;
@@ -280,6 +292,24 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Add this fetch method:
+Future<void> _fetchSubscriptionPlans() async {
+  try {
+    final res = await http.get(
+      Uri.parse('${apiUrl}users/getSubscriptionPlans'),
+      headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+    );
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      _subscriptionPlans = List<Map<String, dynamic>>.from(data['data'] ?? []);
+
+      _refreshHomeTab();
+    }
+  } catch (e) {
+    print("fetchSubscriptionPlans error: $e");
+  }
+}
+
   Future<void> _fetchDiscountedFields() async {
     try {
       final res = await http.get(
@@ -328,54 +358,63 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _detectCity() async {
-    // show UI instantly
-    _loadingCity = false;
-    setState(() {});
+ Future<void> _detectCity() async {
+  // Show UI instantly with default city
+  _loadingCity = false;
+  setState(() {});
 
-    // kick off everything
-    _fetchCities();
-    _fetchFields();
-    _fetchDiscountedFields();
-    _fetchCarouselItems();
-    _screens[3] = null;
-    if (AuthService.isLoggedIn) getMatchCount();
+  // Fetch everything with default city first (fast path)
+  _fetchCities();
+  _fetchFields();
+  _fetchDiscountedFields();
+  _fetchCarouselItems();
+  _fetchSubscriptionPlans();
+  _screens[3] = null;
+  if (AuthService.isLoggedIn) getMatchCount();
 
-    // then try to detect precise city from GPS
-    LocationService.getUserLocation().then((pos) async {
-      if (pos == null) return;
+  // Then resolve precise location in background
+  LocationService.getUserLocation().then((pos) async {
+    if (pos == null) return;
 
-      _userLat = pos.latitude;
-      _userLng = pos.longitude;
+    _userLat = pos.latitude;
+    _userLng = pos.longitude;
 
-      try {
-        final res = await http.post(
-          Uri.parse('${apiUrl}users/getUserCity'),
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': '${dotenv.env['API_KEY']}'
-          },
-          body: jsonEncode({'latitude': pos.latitude, 'longitude': pos.longitude}),
-        );
+    try {
+      final res = await http.post(
+        Uri.parse('${apiUrl}users/getUserCity'),
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': '${dotenv.env['API_KEY']}'
+        },
+        body: jsonEncode({
+          'latitude': pos.latitude,
+          'longitude': pos.longitude
+        }),
+      );
 
-        if (res.statusCode == 200) {
-          final data = jsonDecode(res.body);
-          _cityId = data['city_id'] ?? 1;
-          cityLatitude = data['city_latitude'];
-          cityLongitude = data['city_longitude'];
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final detectedCityId = data['city_id'] ?? 1;
+        cityLatitude  = data['city_latitude'];
+        cityLongitude = data['city_longitude'];
 
-          _screens[1] = null;
-          _screens[2] = null;
-
+        // Only refetch fields if city actually changed
+        if (detectedCityId != _cityId) {
+          _cityId = detectedCityId;
           await _fetchFields();
-          if (mounted) setState(() {});
         }
-      } catch (e) {
-        // ignore: avoid_print
-        print("detectCity error: $e");
+
+        // Always rebuild map with real GPS coordinates + correct city bounds
+        _screens[1] = null;
+        _screens[2] = null;
+
+        if (mounted) setState(() {});
       }
-    });
-  }
+    } catch (e) {
+      print("detectCity error: $e");
+    }
+  });
+}
 
   Future<void> getMatchCount() async {
     try {

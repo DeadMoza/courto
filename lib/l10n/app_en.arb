@@ -660,7 +660,8 @@
   "matchDetailsLeftMatch": "You left the match",
   "matchDetailsLeaveFailed": "Failed to leave the match",
 
-  "cancelReasonTitle": "Reason for cancellation"
+  "cancelReasonTitle": "Reason for cancellation",
+  "subscriptionsPage": "My Subscriptions"
 
 
 }

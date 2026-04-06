@@ -1,5 +1,6 @@
 import 'package:courto/l10n/app_localizations.dart';
 import 'package:courto/pages/settingsPages/booking_history_page.dart';
+import 'package:courto/pages/settingsPages/subscriptions_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -79,7 +80,8 @@ class MyApp extends StatelessWidget {
               '/': (context) => const HomePage(),
               '/bookingHistoryPage': (context) =>
                   const BookingsHistoryPage(),
-                  
+              '/subscriptionsPage': (context) =>
+                  const SubscriptionsPage(),                 
             },
           );
         },
