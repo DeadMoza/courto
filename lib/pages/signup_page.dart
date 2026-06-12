@@ -72,14 +72,12 @@ class _SignupPageState extends State<SignupPage> {
     }
 
     String password = passController.text;
-    final passwordRegex =
-        RegExp(r'^(?=.*[A-Za-z])[A-Za-z0-9!@#$%^&*()_+=-]{8,18}$');
-    if (!passwordRegex.hasMatch(password)) {
-      _showError(_isEnglish
-          ? "Password must be 8–18 characters and contain at least 1 letter"
-          : "كلمة المرور يجب أن تكون بين 8 و 18 حرفًا وتحتوي على أحرف وأرقام أو رموز اختيارية");
-      return;
-    }
+if (password.length < 8) {
+  _showError(_isEnglish
+      ? "Password must be at least 8 characters"
+      : "كلمة المرور يجب أن تكون 8 أحرف على الأقل");
+  return;
+}
 
     if (passController.text != confirmPassController.text) {
       _showError(_isEnglish ? "Passwords do not match" : "كلمتا المرور غير متطابقتين");

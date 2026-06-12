@@ -625,7 +625,7 @@ const SizedBox(height: 30),
             },
             child: Material(
               elevation: 6,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(5),
               color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: 120,
@@ -657,7 +657,7 @@ const SizedBox(height: 30),
             },
             child: Material(
               elevation: 6,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(5),
               color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: 120,
@@ -699,7 +699,7 @@ const SizedBox(height: 30),
                 },
                 child: Material(
                   elevation: 4,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(5),
                   color: Theme.of(context).colorScheme.primary,
                   child: Container(
                     height: (buttonHeight - 4) / 2,
@@ -725,7 +725,7 @@ const SizedBox(height: 30),
               const SizedBox(height: 4),
               Material(
                 elevation: 4,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(5),
                 color: Theme.of(context).colorScheme.primary,
                 child: Container(
                   height: (buttonHeight - 4) / 2,
@@ -760,7 +760,7 @@ const SizedBox(height: 30),
             },
             child: Material(
               elevation: 6,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(5),
               color: Theme.of(context).colorScheme.primary,
               child: Container(
                 height: buttonHeight,
@@ -957,7 +957,7 @@ class _FeaturedTextMarquee extends StatefulWidget {
 
 class _FeaturedTextMarqueeState extends State<_FeaturedTextMarquee> {
   final ScrollController _scrollController = ScrollController();
-  static const Duration scrollDuration = Duration(seconds: 50);
+  static const Duration scrollDuration = Duration(seconds: 40);
 
   @override
   void initState() {

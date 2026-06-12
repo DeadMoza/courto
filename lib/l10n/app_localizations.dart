@@ -1340,7 +1340,7 @@ abstract class AppLocalizations {
   /// No description provided for @pendingInfoPrefix.
   ///
   /// In en, this message translates to:
-  /// **'If your booking stays pending, you can cancel it exactly after 20 minutes.\nYou can’t book another field while a booking is pending.\n\nThe field manager will respond as soon as possible.\n\nThe booking amount '**
+  /// **'If your booking stays pending, you can cancel it exactly after 20 minutes.\nYou can book up to 3 fields at once, and in case a booking is accepted, all other pending booking on that day are automatically cancelled.\n\nThe field manager will respond as soon as possible.\n\nThe booking amount '**
   String get pendingInfoPrefix;
 
   /// No description provided for @pendingInfoMiddle.

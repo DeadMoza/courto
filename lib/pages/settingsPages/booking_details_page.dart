@@ -648,8 +648,7 @@ Text(
         ),
       ),
       
-      floatingActionButton: (isPending || !hideCancelFab)
-    ? FloatingActionButton.extended(
+      floatingActionButton: (isPending || (status == "confirmed" && !hideCancelFab))    ? FloatingActionButton.extended(
         onPressed: isCancelling ? null : () => cancelBooking(),
         backgroundColor: canCancel ? Colors.redAccent : Colors.amber,
         icon: isCancelling

@@ -3,7 +3,6 @@ import 'package:courto/pages/signup_page.dart';
 import 'services/auth_service.dart';
 import 'charge_wallet_dialog.dart';
 
-// ✅ Localization
 import 'package:courto/l10n/app_localizations.dart';
 
 PreferredSizeWidget buildHomeAppBar(

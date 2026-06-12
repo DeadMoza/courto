@@ -494,7 +494,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get financialDetailsTitle => 'التفاصيل المالية:';
 
   @override
-  String get bookingPriceLabel => 'سعر الحجز:';
+  String get bookingPriceLabel => 'سعر الحجز';
 
   @override
   String get remainingPriceLabel => 'السعر المتبقي للدفع';
@@ -662,13 +662,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bookingConfirmFailed => 'فشل تأكيد الحجز';
 
   @override
-  String get pendingInfoPrefix => 'في حالة بقاء حجزك قيد الانتظار فيمكنك الغاء الحجز بعد مرور 20 دقيقة بالضبط.\nولا يمكنك حجز ملعب آخر أثناء وجود حجز قيد الانتظار.\n\nسيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم خصم مبلغ الحجز ';
+  String get pendingInfoPrefix => 'في حالة بقاء حجزك قيد الانتظار فيمكنك الغاء الحجز بعد مرور 20 دقيقة بالضبط.\nيمكنك حجز ما يصل إلى 3 ملاعب في نفس الوقت، وفي حال قبول الحجز، يتم إلغاء جميع الحجوزات الأخرى المعلقة في ذلك اليوم تلقائيًا.\n\nسيقوم مدير الملعب بالرد على طلبك بالموافقة أو الرفض في اقرب وقت ممكن.\n\nسيتم خصم مبلغ الحجز ';
 
   @override
   String get pendingInfoMiddle => ' في لحظة قبول مدير الملعب لطلبك، وسيتعين عليك دفع ';
 
   @override
-  String get pendingInfoSuffix => ' لمدير الملعب بعد او قبل الانتهاء من اللعب. \n يمكن ألغاء الحجز قبل الموعد بمدة 24 ساعة فقط.';
+  String get pendingInfoSuffix => ' لمدير الملعب بعد او قبل الانتهاء من اللعب. \n  يمكن ألغاء الحجز قبل الموعد بمدة 24 ساعة فقط في حالة كون الحجز مقبول.';
 
   @override
   String get timeTooltip => 'تنبيه بخصوص التوقيت';
