@@ -267,6 +267,8 @@ Widget _buildPlanCard(BuildContext context, bool isEnglish, Map<String, dynamic>
         double.tryParse(field["field_calculated_total_price_after_discount"]?.toString() ?? "0") ?? 0;
 
     final hasDiscount = field["field_has_discount"] == true;
+    final hasDiscountedSlots =
+        field["field_has_discounted_slots"] == true;
 
     int discountPercent = 0;
     if (hasDiscount && originalPrice > 0 && discountPrice > 0) {
@@ -313,26 +315,34 @@ Widget _buildPlanCard(BuildContext context, bool isEnglish, Map<String, dynamic>
                 ),
 
                 // ✅ discount badge
-                if (hasDiscount)
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        isEnglish ? "$discountPercent% OFF" : "خصم $discountPercent%",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
+                if (hasDiscount || hasDiscountedSlots)
+  Positioned(
+    top: 8,
+    left: 8,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: hasDiscount
+            ? Theme.of(context).colorScheme.primary
+            : Colors.redAccent,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        hasDiscount
+            ? (isEnglish
+                ? "$discountPercent% OFF"
+                : "خصم $discountPercent%")
+            : (isEnglish
+                ? "DISCOUNTED SLOTS"
+                : "ساعات مخفضة"),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+  ),
 
                 Positioned(
                   top: 8,
@@ -395,31 +405,49 @@ Widget _buildPlanCard(BuildContext context, bool isEnglish, Map<String, dynamic>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            isEnglish
-                                ? "LYD ${discountPrice.toStringAsFixed(1)}"
-                                : "د.ل ${discountPrice.toStringAsFixed(1)}",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            isEnglish
-                                ? "LYD ${originalPrice.toStringAsFixed(1)}"
-                                : "د.ل ${originalPrice.toStringAsFixed(1)}",
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey,
-                              decoration: TextDecoration.lineThrough,
-                            ),
-                          ),
-                        ],
-                      ),
+                     Row(
+  children: [
+    if (hasDiscount) ...[
+      // Original price (crossed out)
+      Text(
+        isEnglish
+            ? "LYD ${originalPrice.toStringAsFixed(1)}"
+            : "د.ل ${originalPrice.toStringAsFixed(1)}",
+        style: const TextStyle(
+          fontSize: 12,
+          color: Colors.grey,
+          decoration: TextDecoration.lineThrough,
+        ),
+      ),
+      const SizedBox(width: 4),
+
+      // Discounted price
+      Text(
+        isEnglish
+            ? "LYD ${discountPrice.toStringAsFixed(1)}"
+            : "د.ل ${discountPrice.toStringAsFixed(1)}",
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    ] else ...[
+      // For discounted slots OR normal fields,
+      // only show the regular price.
+      Text(
+        isEnglish
+            ? "LYD ${originalPrice.toStringAsFixed(1)}"
+            : "د.ل ${originalPrice.toStringAsFixed(1)}",
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+      ),
+    ],
+  ],
+),
                       Text(
                         "${AppFormat.formatArabicTime(openTime)} - ${AppFormat.formatArabicTime(closeTime)}",
                         style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSecondary),

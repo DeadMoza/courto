@@ -89,17 +89,18 @@ class _HomePageState extends State<HomePage> {
       _screens[1] = RefreshIndicator(
         onRefresh: _refreshApp,
         child: FieldsListPage(
-          key: ValueKey('FieldsListPage_${_cityId}_$_selectedTypeId'),
-          cityId: _cityId,
-          fields: _fields,
-          user_lat: _userLat,
-          user_long: _userLng,
-          loading: _loadingFields,
-          errorMessage: fieldsErrorMessage,
-          onCityChanged: _handleCityChanged,
-          cities: _cities,
-          defaultSelectedTypeId: _selectedTypeId,
-        ),
+  key: ValueKey('FieldsListPage_${_cityId}_$_selectedTypeId'),
+  cityId: _cityId,
+  fields: _fields,
+  discountedFields: _discountedFields,
+  user_lat: _userLat,
+  user_long: _userLng,
+  loading: _loadingFields,
+  errorMessage: fieldsErrorMessage,
+  onCityChanged: _handleCityChanged,
+  cities: _cities,
+  defaultSelectedTypeId: _selectedTypeId,
+),
       );
     }
 

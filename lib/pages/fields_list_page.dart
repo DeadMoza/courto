@@ -16,19 +16,21 @@ class FieldsListPage extends StatefulWidget {
   final Function(int newCityId) onCityChanged;
   final List<Map<String, dynamic>> cities;
   final int defaultSelectedTypeId;
+  final List<Map<String, dynamic>> discountedFields;
 
-  const FieldsListPage({
-    super.key,
-    required this.cityId,
-    required this.fields,
-    required this.user_lat,
-    required this.user_long,
-    required this.loading,
-    this.errorMessage,
-    required this.onCityChanged,
-    required this.cities,
-    required this.defaultSelectedTypeId,
-  });
+const FieldsListPage({
+  super.key,
+  required this.cityId,
+  required this.fields,
+  required this.user_lat,
+  required this.user_long,
+  required this.loading,
+  this.errorMessage,
+  required this.onCityChanged,
+  required this.cities,
+  required this.defaultSelectedTypeId,
+  required this.discountedFields,
+});
 
   @override
   State<FieldsListPage> createState() => _FieldsListPageState();
@@ -173,6 +175,12 @@ setState(() => _filteredFields = result);  }
         return "";
     }
   }
+
+  bool _fieldHasDiscountedSlots(int fieldId) {
+  return widget.discountedFields.any(
+    (d) => d["field_id"] == fieldId,
+  );
+}
 
   void _onSearchChanged(String value) {
   _applyFilters();
@@ -632,6 +640,8 @@ Widget _buildCityChip({
 
   Widget _buildFieldCard(Map<String, dynamic> field) {
     final imageUrl = getFirstImageUrl(field["field_images"] ?? []);
+    final hasDiscountedSlots =
+    _fieldHasDiscountedSlots(field["field_id"]);
 
     final fieldName = _isEnglish
         ? (field["field_english_name"] ?? field["field_name"] ?? "Field")
@@ -709,6 +719,40 @@ Widget _buildCityChip({
                       child: Text(
                         "-$discountPercent%",
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  if (hasDiscountedSlots)
+                  Positioned(
+                    left: 8,
+                    top: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.local_offer,
+                            color: Colors.white,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                        _isEnglish ? "Discounted slots" : "ساعات مخفضة",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                        ],
                       ),
                     ),
                   ),

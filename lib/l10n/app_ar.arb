@@ -425,6 +425,9 @@
   "bookingPriceLabel": "سعر الحجز",
   "remainingAfterPlayLabel": "المتبقي بعد اللعب",
   "choosePhoneToContinue": "سجّل حساباً للمتابعة",
+  
+  
+"discountSlots": "حجوزات مخفضة",
 
     "dailyConfirmTitle": "تأكيد الحجز",
   "confirmBooking": "تأكيد الحجز",

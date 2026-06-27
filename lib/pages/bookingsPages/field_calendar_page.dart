@@ -20,6 +20,9 @@ class FieldCalendarPage extends StatefulWidget {
 
 class _FieldCalendarPageState extends State<FieldCalendarPage> {
   Map<DateTime, List<dynamic>> bookingsByDate = {};
+  // NEW: discounted slots indexed by date
+  Map<DateTime, List<dynamic>> discountedSlotsByDate = {};
+
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   bool loading = true;
@@ -51,17 +54,28 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
-        final Map<DateTime, List<dynamic>> temp = {};
+        print(res.body);
 
-        for (var booking in data["bookings"]) {
+        // ── bookings ──────────────────────────────────────────────────────────
+        final Map<DateTime, List<dynamic>> tempBookings = {};
+        for (var booking in (data["bookings"] as List<dynamic>? ?? [])) {
           final day = DateTime.parse(booking["booking_date"]);
           final simpleDay = DateTime(day.year, day.month, day.day);
-          (temp[simpleDay] ??= []).add(booking);
+          (tempBookings[simpleDay] ??= []).add(booking);
+        }
+
+        // ── discounted slots (NEW) ────────────────────────────────────────────
+        final Map<DateTime, List<dynamic>> tempDiscounts = {};
+        for (var ds in (data["discounted_slots"] as List<dynamic>? ?? [])) {
+          final day = DateTime.parse(ds["date"]);
+          final simpleDay = DateTime(day.year, day.month, day.day);
+          (tempDiscounts[simpleDay] ??= []).add(ds);
         }
 
         if (!mounted) return;
         setState(() {
-          bookingsByDate = temp;
+          bookingsByDate = tempBookings;
+          discountedSlotsByDate = tempDiscounts;
           loading = false;
         });
       } else {
@@ -77,6 +91,12 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
   List<dynamic> _getBookingsForDay(DateTime day) {
     final simpleDay = DateTime(day.year, day.month, day.day);
     return bookingsByDate[simpleDay] ?? [];
+  }
+
+  // NEW: returns discounted slots for a given calendar day
+  List<dynamic> _getDiscountedSlotsForDay(DateTime day) {
+    final simpleDay = DateTime(day.year, day.month, day.day);
+    return discountedSlotsByDate[simpleDay] ?? [];
   }
 
   Color _fillForDay(DateTime day) {
@@ -97,29 +117,66 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
             ? Theme.of(context).colorScheme.onPrimary
             : Theme.of(context).colorScheme.onSecondary);
 
-    // Day number: normal in English, Arabic numerals otherwise (your helper)
     final dayText =
         _isEnglish ? '${day.day}' : AppFormat.toEnglishNumbers('${day.day}');
 
+    // NEW: check whether this day has any discount
+    final hasDiscount = _getDiscountedSlotsForDay(day).isNotEmpty;
+
     return Center(
-      child: Container(
+      child: SizedBox(
         width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: border,
-            width: border == Colors.transparent ? 0 : 2,
-          ),
-        ),
-        child: Center(
-          child: Text(
-            dayText,
-            style: TextStyle(
-              color: numberColor,
-              fontWeight: FontWeight.w600,
+        height: 52, // slightly taller to accommodate the badge below the circle
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.topCenter,
+          children: [
+            // Day circle
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: fill,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: border,
+                  width: border == Colors.transparent ? 0 : 2,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  dayText,
+                  style: TextStyle(
+                    color: numberColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
             ),
-          ),
+
+            // Discount badge (NEW) – a small amber pill below the circle
+            if (hasDiscount)
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade600,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _isEnglish ? '%' : '٪',
+                    style: const TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -131,7 +188,6 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
     final lastDay = today.add(const Duration(days: 7));
 
     return Directionality(
-      // ✅ LTR for English, RTL for Arabic
       textDirection: _isEnglish ? ui.TextDirection.ltr : ui.TextDirection.rtl,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
@@ -152,7 +208,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
                         firstDay: today,
                         lastDay: lastDay,
                         focusedDay: focusedDay,
-                        rowHeight: 52,
+                        rowHeight: 58, // slightly taller rows to fit the badge
                         headerStyle: const HeaderStyle(
                           formatButtonVisible: false,
                           titleCentered: true,
@@ -172,6 +228,9 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
                                 field: widget.field,
                                 date: selected,
                                 bookings: _getBookingsForDay(selected),
+                                // NEW: pass discounted slots for the selected day
+                                discountedSlots:
+                                    _getDiscountedSlotsForDay(selected),
                               ),
                             ),
                           );
@@ -188,12 +247,9 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
                           headerTitleBuilder: (context, day) {
                             final text = MaterialLocalizations.of(context)
                                 .formatMonthYear(day);
-
-                            // If you want Arabic numerals on Arabic, keep your helper.
                             final shown = _isEnglish
                                 ? text
                                 : AppFormat.toEnglishNumbers(text);
-
                             return Center(
                               child: Text(
                                 shown,

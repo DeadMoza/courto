@@ -11,12 +11,14 @@ class FieldBookingSlotsPage extends StatefulWidget {
   final Map<String, dynamic> field;
   final DateTime date;
   final List<dynamic> bookings;
+  final List<dynamic> discountedSlots;
 
   const FieldBookingSlotsPage({
     super.key,
     required this.field,
     required this.date,
     required this.bookings,
+    this.discountedSlots = const [],
   });
 
   @override
@@ -116,7 +118,11 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
           end = end.add(const Duration(days: 1));
         }
 
-        if (startHour < 5) {
+        final openHour = int.parse(
+          (widget.field['field_open_time'] as String).split(':')[0],
+        );
+
+        if (openHour > startHour) {
           start = start.add(const Duration(days: 1));
           end = end.add(const Duration(days: 1));
         }
@@ -127,6 +133,79 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     } catch (_) {
       return null;
     }
+  }
+
+  Map<String, dynamic>? _findDiscountForSlot(TimeSlot slot) {
+    try {
+      return widget.discountedSlots.firstWhere((ds) {
+        final dsDate = DateTime.parse(ds['date']);
+
+        final sParts = (ds['start_time'] as String).split(':');
+        final eParts = (ds['end_time'] as String).split(':');
+
+        int startHour = int.parse(sParts[0]);
+        int endHour = int.parse(eParts[0]);
+
+        var start = DateTime(
+          dsDate.year,
+          dsDate.month,
+          dsDate.day,
+          startHour,
+          int.parse(sParts[1]),
+        );
+
+        var end = DateTime(
+          dsDate.year,
+          dsDate.month,
+          dsDate.day,
+          endHour,
+          int.parse(eParts[1]),
+        );
+
+        if (end.isBefore(start)) {
+          end = end.add(const Duration(days: 1));
+        }
+
+        final openHour = int.parse(
+          (widget.field['field_open_time'] as String).split(':')[0],
+        );
+
+        if (openHour > startHour) {
+          start = start.add(const Duration(days: 1));
+          end = end.add(const Duration(days: 1));
+        }
+
+        return slot.start.isAtSameMomentAs(start) ||
+            (slot.start.isAfter(start) && slot.start.isBefore(end));
+      });
+    } catch (_) {
+      return null;
+    }
+  }
+
+  // NEW: returns the discounted booking price only when the discount type
+  // matches [frequency]. Falls back to the field's base price otherwise.
+  double _effectiveBookingPrice(TimeSlot slot, String frequency) {
+    final discount = _findDiscountForSlot(slot);
+    if (discount == null) return _bookingPricePerHour;
+    final appliesToFrequency = frequency == 'daily'
+        ? discount['is_daily'] == true
+        : discount['is_monthly'] == true;
+    if (!appliesToFrequency) return _bookingPricePerHour;
+    return double.tryParse(discount['booking_price'].toString()) ??
+        _bookingPricePerHour;
+  }
+
+  // NEW: same logic for the remaining-to-owner price.
+  double _effectiveRemainingPrice(TimeSlot slot, String frequency) {
+    final discount = _findDiscountForSlot(slot);
+    if (discount == null) return _remainingToOwnerPerHour ?? 0;
+    final appliesToFrequency = frequency == 'daily'
+        ? discount['is_daily'] == true
+        : discount['is_monthly'] == true;
+    if (!appliesToFrequency) return _remainingToOwnerPerHour ?? 0;
+    return double.tryParse(discount['remaining_price'].toString()) ??
+        (_remainingToOwnerPerHour ?? 0);
   }
 
   bool _isConfirmed(TimeSlot slot) {
@@ -255,11 +334,16 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         )
       : double.tryParse(widget.field['field_calculated_remaining_price'].toString());
 
+  // Uses _effectiveBookingPrice so the correct price is applied per frequency
+  // when the value is read inside the dialog's onTap (after _bookingFrequency is set).
   double get _currentTotalBookingPrice =>
-      _selectedSlots.length * _bookingPricePerHour;
+      _selectedSlots.fold(0.0, (sum, slot) =>
+          sum + _effectiveBookingPrice(slot, _bookingFrequency));
 
+  // Same for remaining price.
   double get _remainingPaymentToOwner =>
-      _selectedSlots.length * (_remainingToOwnerPerHour ?? 0);
+      _selectedSlots.fold(0.0, (sum, slot) =>
+          sum + _effectiveRemainingPrice(slot, _bookingFrequency));
 
   Future<void> _onContinuePressed() async {
     if (_selectedSlots.isEmpty) return;
@@ -294,7 +378,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       context: context,
       builder: (ctx) {
         return Directionality(
-          textDirection: _dir, // ✅ dialog follows language
+          textDirection: _dir,
           child: AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
             title: Text(
@@ -311,6 +395,9 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                     onTap: () {
                       Navigator.pop(ctx);
                       _bookingFrequency = "daily";
+                      // _currentTotalBookingPrice and _remainingPaymentToOwner
+                      // are read here, after _bookingFrequency = "daily",
+                      // so only is_daily discounts are applied.
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -350,6 +437,9 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                     onTap: () {
                       Navigator.pop(ctx);
                       _bookingFrequency = "monthly";
+                      // _currentTotalBookingPrice and _remainingPaymentToOwner
+                      // are read here, after _bookingFrequency = "monthly",
+                      // so only is_monthly discounts are applied.
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -458,8 +548,106 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                           TextStyle(color: Theme.of(context).colorScheme.onPrimary),
                       textDirection: _dir,
                     )
-                  : null),
+                  : _buildDiscountSubtitle(slot)),
         ),
+      ),
+    );
+  }
+
+  Widget? _buildDiscountSubtitle(TimeSlot slot) {
+    final discount = _findDiscountForSlot(slot);
+    if (discount == null) return null;
+
+    final discountedBooking =
+        double.tryParse(discount['booking_price'].toString()) ?? 0.0;
+    final discountedRemaining =
+        double.tryParse(discount['remaining_price'].toString()) ?? 0.0;
+    final isDaily = discount['is_daily'] == true;
+    final isMonthly = discount['is_monthly'] == true;
+
+    final String typeLabel;
+    if (isDaily && isMonthly) {
+      typeLabel = _isEnglish ? 'Daily & Monthly' : 'يومي وشهري';
+    } else if (isMonthly) {
+      typeLabel = _isEnglish ? 'Monthly' : 'تخفيض شهري';
+    } else {
+      typeLabel = _isEnglish ? 'Daily' : 'تخفيض يومي';
+    }
+
+    final currency = _isEnglish ? 'LYD' : 'د.ل';
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${_bookingPricePerHour.toStringAsFixed(2)} $currency',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSecondary
+                      .withOpacity(0.5),
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: Theme.of(context)
+                      .colorScheme
+                      .onSecondary
+                      .withOpacity(0.5),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${discountedBooking.toStringAsFixed(2)} $currency',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.amber,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _isEnglish
+                    ? 'Remaining: ${discountedRemaining.toStringAsFixed(2)} $currency'
+                    : 'المتبقي: ${discountedRemaining.toStringAsFixed(2)} $currency',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSecondary
+                      .withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(4),
+                  border:
+                      Border.all(color: Colors.amber.shade600, width: 0.8),
+                ),
+                child: Text(
+                  typeLabel,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.amber.shade700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -467,7 +655,6 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      // ✅ whole page becomes LTR on English
       textDirection: _dir,
       child: Scaffold(
         appBar: buildHomeAppBar(context),
