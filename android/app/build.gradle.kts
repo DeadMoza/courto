@@ -37,6 +37,8 @@ android {
 
         multiDexEnabled = true
 
+        manifestPlaceholders["mapsApiKey"] = keystoreProperties["mapsApiKey"] as? String ?: ""
+
             ndk {
         abiFilters += listOf("arm64-v8a", "armeabi-v7a")
     }

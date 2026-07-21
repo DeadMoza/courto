@@ -54,6 +54,8 @@
 	<string>يحتاج هذا التطبيق الى معرفة موقعك لتحديد الملاعب الاقرب لك</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>يحتاج هذا التطبيق الى معرفة موقعك دائمًا حتى عند عدم استخدام التطبيق لتحديد الملاعب الاقرب لك</string>
+	<key>MapsAPIKey</key>
+	<string>$(MAPS_API_KEY)</string>
 
 </dict>
 </plist>
