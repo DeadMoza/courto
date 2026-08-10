@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "ly.courto.user"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "30.0.15729638"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

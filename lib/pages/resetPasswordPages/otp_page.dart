@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -22,21 +21,27 @@ class OtpPageState extends State<OtpPage> {
   final List<TextEditingController> codeControllers =
       List.generate(4, (_) => TextEditingController());
 
-  String? generatedCode;
   bool loading = false;
   int secondsRemaining = 0;
   Timer? timer;
 
-  final rasaelUsername = dotenv.env['RASAEL_USERNAME'];
-  final rasaelPassword = dotenv.env['RASAEL_PASSWORD'];
+  final apiUrl = dotenv.env['API_URL'];
 
   bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
   TextDirection get _dir => _isEnglish ? TextDirection.ltr : TextDirection.rtl;
 
+  Map<String, String> get _headers => {
+    "Content-Type": "application/json",
+    "x-api-key": dotenv.env['API_KEY'] ?? "",
+  };
+
   @override
   void initState() {
     super.initState();
-    _sendOtp();
+    // Deferred a frame so the locale is readable when building the request.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _sendOtp();
+    });
   }
 
   @override
@@ -63,54 +68,43 @@ class OtpPageState extends State<OtpPage> {
       secondsRemaining = 120; // 2 minutes
     });
 
-    generatedCode = (1000 + Random().nextInt(9000)).toString();
-
     try {
-      final loginRes = await http.post(
-        Uri.parse("https://client.almasafa.ly/api/MasafaRasaelLogin"),
-        headers: {"Content-Type": "application/json"},
+      final res = await http.post(
+        Uri.parse("${apiUrl ?? ""}users/sendOtp"),
+        headers: _headers,
         body: json.encode({
-          "username": "$rasaelUsername",
-          "password": "$rasaelPassword",
+          "phone_number": widget.phoneNumber,
+          "purpose": "reset",
+          "lang": _isEnglish ? "en" : "ar",
         }),
       );
 
-      if (loginRes.statusCode == 200) {
-        final loginData = json.decode(loginRes.body);
-        final token = loginData["token"]?.toString();
+      if (!mounted) return;
 
-        if (token == null) {
-          throw Exception(_isEnglish ? "Failed to get token" : "فشل الحصول على التوكن");
-        }
-
-        final smsRes = await http.post(
-          Uri.parse("https://client.almasafa.ly/api/sms/Send"),
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-          body: json.encode({
-            "phoneNumber": widget.phoneNumber,
-            "message": _isEnglish
-                ? "Your password reset code is: $generatedCode"
-                : "رمز إعادة تعيين كلمة المرور هو: $generatedCode",
-            "senderID": "13201",
-          }),
-        );
-
-        if (smsRes.statusCode != 200) {
-          throw Exception(_isEnglish ? "Failed to send code" : "فشل إرسال رمز التحقق");
-        }
-
+      if (res.statusCode == 200) {
         _startTimer();
       } else {
-        throw Exception(_isEnglish ? "SMS service login failed" : "فشل تسجيل الدخول لخدمة الرسائل");
+        setState(() => secondsRemaining = 0);
+        _showSnack(
+          _serverError(res, _isEnglish ? "Failed to send code" : "فشل إرسال رمز التحقق"),
+        );
       }
-    } catch (e) {
-      _showSnack("${_isEnglish ? "Error" : "خطأ"}: ${e.toString()}");
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => secondsRemaining = 0);
+      _showSnack(_isEnglish ? "Connection error" : "خطأ في الاتصال");
     }
 
     if (mounted) setState(() => loading = false);
+  }
+
+  String _serverError(http.Response res, String fallback) {
+    try {
+      final data = json.decode(res.body);
+      return data["error"]?.toString() ?? fallback;
+    } catch (_) {
+      return fallback;
+    }
   }
 
   void _startTimer() {
@@ -125,20 +119,60 @@ class OtpPageState extends State<OtpPage> {
     });
   }
 
-  void _verifyCode() {
+  Future<void> _verifyCode() async {
     final enteredCode = codeControllers.map((c) => c.text).join();
-    if (enteredCode != generatedCode) {
-      _showSnack(_isEnglish ? "Incorrect code" : "رمز التحقق غير صحيح");
+
+    if (enteredCode.length < 4) {
+      _showSnack(_isEnglish ? "Please enter the full code" : "يرجى إدخال الرمز كاملاً");
       return;
     }
 
-    if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ResetPasswordPage(phoneNumber: widget.phoneNumber),
-      ),
-    );
+    setState(() => loading = true);
+
+    try {
+      final res = await http.post(
+        Uri.parse("${apiUrl ?? ""}users/verifyOtp"),
+        headers: _headers,
+        body: json.encode({
+          "phone_number": widget.phoneNumber,
+          "code": enteredCode,
+          "purpose": "reset",
+        }),
+      );
+
+      if (!mounted) return;
+      setState(() => loading = false);
+
+      if (res.statusCode != 200) {
+        _showSnack(
+          _serverError(res, _isEnglish ? "Incorrect code" : "رمز التحقق غير صحيح"),
+        );
+        return;
+      }
+
+      // The reset token proves this OTP step happened; the next page can't
+      // change the password without it.
+      final resetToken = (json.decode(res.body))["reset_token"]?.toString();
+
+      if (resetToken == null) {
+        _showSnack(_isEnglish ? "Verification failed" : "فشل التحقق");
+        return;
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ResetPasswordPage(
+            phoneNumber: widget.phoneNumber,
+            resetToken: resetToken,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => loading = false);
+      _showSnack(_isEnglish ? "Connection error" : "خطأ في الاتصال");
+    }
   }
 
   Widget _otpFields() {

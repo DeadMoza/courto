@@ -5,8 +5,13 @@ import 'package:http/http.dart' as http;
 
 class ResetPasswordPage extends StatefulWidget {
   final String phoneNumber;
+  final String resetToken;
 
-  const ResetPasswordPage({super.key, required this.phoneNumber});
+  const ResetPasswordPage({
+    super.key,
+    required this.phoneNumber,
+    required this.resetToken,
+  });
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -51,6 +56,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         body: json.encode({
           "phone_number": widget.phoneNumber,
           "new_password": newPass,
+          "reset_token": widget.resetToken,
         }),
       );
 
