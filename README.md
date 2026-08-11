@@ -19,22 +19,22 @@ Built with Flutter for a native feel on both Android and iOS, fully bilingual (A
 
 ---
 
-## 🏆 Achievements Unlocked
+## Achievements Unlocked
 
 | | |
 |---|---|
-| 📍 **Auto-Locate** | Detects your city and shows nearby fields before you even search |
-| 📅 **Daily & Monthly Booking** | Reserve a single slot or lock in a recurring monthly spot |
-| ⚡ **Live Slot Calendar** | Real-time availability so you never book a field that's already taken |
-| 🤝 **Matchmaking** | Create a match, invite players, and build your team roster |
-| 💳 **In-App Wallet & Payments** | Top up your wallet and pay for bookings securely via card |
-| 🎟️ **Subscriptions & Plans** | Recurring subscription plans for regulars |
-| 🏷️ **Slot Discounts** | Special pricing on selected time slots |
-| ⭐ **Favorites** | Pin your go-to fields for one-tap rebooking |
-| 🔔 **Push Notifications** | Never miss a booking reminder or match update |
-| 🌗 **Light & Dark Mode** | Play your way, day or night |
-| 🌍 **Arabic & English** | Fully localized experience, RTL included |
-| 🗺️ **Interactive Field Maps** | Browse fields on a live map with location links |
+|  **Auto-Locate** | Detects your city and shows nearby fields before you even search |
+|  **Daily & Monthly Booking** | Reserve a single slot or lock in a recurring monthly spot |
+|  **Live Slot Calendar** | Real-time availability so you never book a field that's already taken |
+|  **Matchmaking** | Create a match, invite players, and build your team roster |
+|  **In-App Wallet & Payments** | Top up your wallet and pay for bookings securely via card |
+|  **Subscriptions & Plans** | Recurring subscription plans for regulars |
+|  **Slot Discounts** | Special pricing on selected time slots |
+|  **Favorites** | Pin your go-to fields for one-tap rebooking |
+|  **Push Notifications** | Never miss a booking reminder or match update |
+|  **Light & Dark Mode** | Play your way, day or night |
+|  **Arabic & English** | Fully localized experience, RTL included |
+|  **Interactive Field Maps** | Browse fields on a live map with location links |
 
 ---
 
@@ -49,7 +49,7 @@ Built with Flutter for a native feel on both Android and iOS, fully bilingual (A
 </div>
 
 
-## 🧰 The Loadout (Tech Stack)
+## The Loadout (Tech Stack)
 
 - **Framework:** Flutter 3.8+ / Dart
 - **State Management:** Provider
@@ -62,7 +62,7 @@ Built with Flutter for a native feel on both Android and iOS, fully bilingual (A
 
 ---
 
-## 🚀 Quest Log: Getting Started
+##  Quest Log: Getting Started
 
 ### Prerequisites
 - Flutter SDK `^3.8.1`
@@ -99,16 +99,6 @@ You'll need your own keys for:
 ```bash
 flutter run
 ```
-
----
-
-## 🗺️ Next Levels (Roadmap)
-
-- [ ] In-app chat between matchmaking teams
-- [ ] Loyalty points & rewards system
-- [ ] Field ratings & reviews
-
----
 
 <div align="center">
 
