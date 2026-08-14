@@ -13,7 +13,11 @@ import 'package:intl/intl.dart';
 import '../../constants.dart'; // AppFormat + FormationRepo
 
 class CreateMatchPage extends StatefulWidget {
-  const CreateMatchPage({super.key});
+  /// City the user is currently browsing, used as the default when they post
+  /// a match with no booking behind it.
+  final int? initialCityId;
+
+  const CreateMatchPage({super.key, this.initialCityId});
 
   @override
   State<CreateMatchPage> createState() => _CreateMatchPageState();
@@ -32,10 +36,42 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   int _openSlots = 1; // ✅ never allow 0
   int? _selectedBluePosition; // 1..teamSize
 
+  // ---- "find players first" mode -------------------------------------------
+  // No booking behind the match: the host says where and when they WANT to
+  // play, and books the pitch later once enough people have joined.
+  bool _openMode = false;
+
+  List<Map<String, dynamic>> _cities = [];
+  List<Map<String, dynamic>> _fieldTypes = [];
+  List<Map<String, dynamic>> _cityFields = [];
+  bool _loadingCityFields = false;
+
+  int? _cityId;
+  int? _fieldTypeId;
+  int? _preferredFieldId; // a venue the host likes, NOT a reservation
+  DateTime? _matchDate;
+  TimeOfDay? _startTime;
+  TimeOfDay? _endTime;
+  int _openTotalSlots = 10;
+  final TextEditingController _notesController = TextEditingController();
+
   Map<String, dynamic>? get _selectedBooking =>
       _eligibleBookings.isEmpty ? null : _eligibleBookings[_selectedIndex];
 
+  Map<String, dynamic>? get _preferredField {
+    if (_preferredFieldId == null) return null;
+    for (final f in _cityFields) {
+      if (int.tryParse(f['field_id']?.toString() ?? '') == _preferredFieldId) {
+        return f;
+      }
+    }
+    return null;
+  }
+
+  /// Players the game needs. With a booking that is the field's capacity;
+  /// without one there is no field to ask, so the host states it.
   int get _capacity {
+    if (_openMode) return _openTotalSlots;
     final b = _selectedBooking;
     if (b == null) return 0;
     final c = b['field_capacity'] ?? b['capacity'] ?? b['total_slots'];
@@ -49,8 +85,18 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     return code.startsWith('en');
   }
 
-  // -------- field type from booking (try all known keys) --------
+  // -------- field type: from the booking, or from what the host picked -----
   String get _fieldTypeRaw {
+    if (_openMode) {
+      final f = _preferredField;
+      if (f != null) return (f['field_type'] ?? '').toString().toLowerCase();
+      for (final t in _fieldTypes) {
+        if (int.tryParse(t['field_type_id']?.toString() ?? '') == _fieldTypeId) {
+          return (t['field_type'] ?? '').toString().toLowerCase();
+        }
+      }
+      return '';
+    }
     final b = _selectedBooking;
     if (b == null) return '';
     return (b['field_type']).toString().toLowerCase();
@@ -111,7 +157,94 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   @override
   void initState() {
     super.initState();
+    _cityId = widget.initialCityId;
     _fetchEligibleBookings();
+    _fetchOpenMatchOptions();
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  // Cities and sports for the "no booking" form. Failures are quiet: the
+  // booking-backed path does not need any of this.
+  Future<void> _fetchOpenMatchOptions() async {
+    try {
+      final results = await Future.wait([
+        http.get(
+          Uri.parse('${apiUrl}users/getCities'),
+          headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+        ),
+        http.get(
+          Uri.parse('${apiUrl}users/getFieldTypes'),
+          headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+        ),
+      ]);
+
+      if (!mounted) return;
+
+      if (results[0].statusCode == 200) {
+        _cities = List<Map<String, dynamic>>.from(jsonDecode(results[0].body));
+      }
+      if (results[1].statusCode == 200) {
+        final data = jsonDecode(results[1].body);
+        _fieldTypes = List<Map<String, dynamic>>.from(data['data'] ?? []);
+      }
+
+      // Default to the first sport so the form is usable straight away.
+      _fieldTypeId ??= _fieldTypes.isEmpty
+          ? null
+          : int.tryParse(_fieldTypes.first['field_type_id']?.toString() ?? '');
+
+      setState(() {});
+      if (_cityId != null) await _fetchCityFields();
+    } catch (_) {
+      // leave the lists empty; the form validates before submitting
+    }
+  }
+
+  // Fields in the chosen city, offered as an optional "I'd like to play here".
+  Future<void> _fetchCityFields() async {
+    if (_cityId == null) return;
+    setState(() {
+      _loadingCityFields = true;
+      _cityFields = [];
+      _preferredFieldId = null;
+    });
+
+    try {
+      final res = await http.get(
+        Uri.parse('${apiUrl}users/getFieldsByCity/$_cityId'),
+        headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+      );
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        _cityFields = List<Map<String, dynamic>>.from(data['fields'] ?? []);
+      }
+    } catch (_) {
+      _cityFields = [];
+    } finally {
+      if (mounted) setState(() => _loadingCityFields = false);
+    }
+  }
+
+  // Fields matching the chosen sport, since a padel court is no use to
+  // someone organising football.
+  List<Map<String, dynamic>> get _matchingCityFields {
+    if (_fieldTypeId == null) return _cityFields;
+    String typeName = '';
+    for (final t in _fieldTypes) {
+      if (int.tryParse(t['field_type_id']?.toString() ?? '') == _fieldTypeId) {
+        typeName = (t['field_type'] ?? '').toString().toLowerCase();
+      }
+    }
+    if (typeName.isEmpty) return _cityFields;
+    return _cityFields
+        .where((f) => (f['field_type'] ?? '').toString().toLowerCase() == typeName)
+        .toList();
   }
 
   // City name map (Arabic -> English)
@@ -493,6 +626,98 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     );
   }
 
+  String _fmtTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+
+  String _fmtDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  // ---------------- CREATE MATCH WITH NO BOOKING ----------------
+  Future<void> _onCreateOpenPressed() async {
+    final loc = AppLocalizations.of(context)!;
+    final userId = AuthService.userData?['id'];
+    if (userId == null) return;
+
+    if (_cityId == null) {
+      _showRedSnack(loc.createMatchPickCity);
+      return;
+    }
+
+    if (_matchDate == null || _startTime == null || _endTime == null) {
+      _showRedSnack(loc.createMatchPickDateTime);
+      return;
+    }
+
+    final start = DateTime(
+      _matchDate!.year, _matchDate!.month, _matchDate!.day,
+      _startTime!.hour, _startTime!.minute,
+    );
+    var end = DateTime(
+      _matchDate!.year, _matchDate!.month, _matchDate!.day,
+      _endTime!.hour, _endTime!.minute,
+    );
+    // An end at or before the start means the game runs past midnight.
+    if (!end.isAfter(start)) end = end.add(const Duration(days: 1));
+
+    // Mirrors the server's 6-hour floor so the user is told before the round
+    // trip rather than after it.
+    if (start.isBefore(DateTime.now().add(const Duration(hours: 6)))) {
+      _showRedSnack(loc.createMatchStartsTooSoon);
+      return;
+    }
+
+    final hostPos = _selectedBluePosition;
+    final teamSize = _teamSize;
+    if (teamSize <= 0 || hostPos == null || hostPos < 1 || hostPos > teamSize) {
+      _showRedSnack(loc.createMatchPickValidPositionFirst);
+      return;
+    }
+
+    final openSlots = _openSlots.clamp(1, max(1, _openTotalSlots - 1));
+
+    setState(() => _creating = true);
+
+    try {
+      final res = await http.post(
+        Uri.parse('${apiUrl}users/createOpenMatch'),
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer ${AuthService.token}',
+          'x-api-key': '${dotenv.env['API_KEY']}',
+        },
+        body: jsonEncode({
+          'city_id': _cityId,
+          'field_type_id': _fieldTypeId,
+          'field_id': _preferredFieldId,
+          'match_date': _fmtDate(_matchDate!),
+          'start_time': _fmtTime(_startTime!),
+          'end_time': _fmtTime(_endTime!),
+          'total_slots': _openTotalSlots,
+          'open_slots': openSlots,
+          'position': hostPos,
+          'notes': _notesController.text.trim(),
+        }),
+      );
+
+      final decoded = res.body.isNotEmpty ? jsonDecode(res.body) : null;
+
+      if (!mounted) return;
+
+      if (res.statusCode == 200) {
+        _showRedSnack(decoded?['message'] ?? loc.createMatchCreatedSuccess);
+        Navigator.pop(context, true);
+        return;
+      }
+
+      _showRedSnack((decoded?['error'] ?? loc.createMatchCreateFailed).toString());
+    } catch (_) {
+      if (!mounted) return;
+      _showRedSnack(loc.createMatchConnectionError);
+    } finally {
+      if (mounted) setState(() => _creating = false);
+    }
+  }
+
   // ---------------- ✅ CREATE MATCH (send host position) ----------------
   Future<void> _onCreatePressed() async {
     final loc = AppLocalizations.of(context)!;
@@ -572,18 +797,16 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ? const Center(child: CircularProgressIndicator())
             : (_error != null)
                 ? Center(child: Text(_error!))
-                : (_eligibleBookings.isEmpty)
-                    ? Center(child: Text(loc.createMatchNoEligibleBookings))
-                    : _buildContent(),
-        bottomNavigationBar: (!_loading && _error == null && _eligibleBookings.isNotEmpty)
+                : _buildContent(),
+        bottomNavigationBar: (!_loading && _error == null)
             ? SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                   child: SizedBox(
                     height: 52,
                     child: ElevatedButton.icon(
-                      onPressed: (_capacity > 0 && _selectedBluePosition != null && !_creating)
-                          ? _onCreatePressed
+                      onPressed: _canSubmit
+                          ? (_openMode ? _onCreateOpenPressed : _onCreatePressed)
                           : null,
                       icon: _creating
                           ? const SizedBox(
@@ -616,18 +839,408 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
     if (_openSlots > maxOpenSlots) _openSlots = maxOpenSlots;
 
     return RefreshIndicator(
-      onRefresh: _fetchEligibleBookings,
+      onRefresh: () async {
+        await _fetchEligibleBookings();
+        await _fetchOpenMatchOptions();
+      },
       child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          _modeSelector(),
+          const SizedBox(height: 18),
+
+          if (_openMode)
+            _openMatchForm()
+          else
+            ..._bookingPickerSection(),
+
+          const SizedBox(height: 18),
+
           Text(
-            loc.createMatchSelectBookingTitle,
+            loc.createMatchOpenSlotsQuestion,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
 
-          SizedBox(
-            height: 122,
+          // ✅ min=1 and max=capacity-1 (host takes 1)
+          Slider(
+            value: _openSlots.toDouble().clamp(minOpenSlots.toDouble(), maxOpenSlots.toDouble()),
+            min: minOpenSlots.toDouble(),
+            max: maxOpenSlots.toDouble(),
+            divisions: (maxOpenSlots - minOpenSlots).clamp(1, 9999),
+            label: _openSlots.toString(),
+            onChanged: (v) => setState(() => _openSlots = v.round().clamp(minOpenSlots, maxOpenSlots)),
+          ),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("$minOpenSlots", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+              Text("$maxOpenSlots", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
+            ],
+          ),
+
+          const SizedBox(height: 18),
+
+          _formationPreview(capacity: cap, openSlots: _openSlots),
+          const SizedBox(height: 18),
+
+          _positionPickerBlue(capacity: cap),
+
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  /// Whether the create button is live, per mode.
+  bool get _canSubmit {
+    if (_creating) return false;
+    if (_selectedBluePosition == null || _capacity <= 0) return false;
+    if (_openMode) {
+      return _cityId != null &&
+          _matchDate != null &&
+          _startTime != null &&
+          _endTime != null;
+    }
+    return _eligibleBookings.isNotEmpty;
+  }
+
+  Widget _modeSelector() {
+    final loc = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          loc.createMatchModeTitle,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        SegmentedButton<bool>(
+          segments: [
+            ButtonSegment(
+              value: false,
+              icon: const Icon(Icons.event_available, size: 18),
+              label: Text(loc.createMatchModeBooked),
+            ),
+            ButtonSegment(
+              value: true,
+              icon: const Icon(Icons.person_search, size: 18),
+              label: Text(loc.createMatchModeOpen),
+            ),
+          ],
+          selected: {_openMode},
+          onSelectionChanged: (s) {
+            setState(() {
+              _openMode = s.first;
+              // Capacity comes from a different place in each mode, so the
+              // slot count and position have to be re-seeded.
+              final cap = _capacity;
+              _openSlots = cap > 1 ? max(1, cap ~/ 2) : 1;
+              _selectedBluePosition = (_teamSize > 0) ? 1 : null;
+            });
+          },
+        ),
+        if (_openMode) ...[
+          const SizedBox(height: 8),
+          Text(
+            loc.createMatchModeOpenHint,
+            style: TextStyle(
+              fontSize: 12.5,
+              color: Theme.of(context).textTheme.bodySmall?.color,
+            ),
+          ),
+        ],
+        if (!_openMode && _eligibleBookings.isEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            loc.createMatchModeBookedNoBookings,
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: Colors.redAccent,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  // ---------------- "find players first" form ----------------
+  Widget _openMatchForm() {
+    final loc = AppLocalizations.of(context)!;
+    final fields = _matchingCityFields;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          loc.createMatchWhereAndWhen,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 12),
+
+        DropdownButtonFormField<int>(
+          initialValue: _cityId,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: loc.createMatchCity,
+            border: const OutlineInputBorder(),
+          ),
+          items: _cities.map((c) {
+            final id = int.tryParse(c['city_id']?.toString() ?? '');
+            final name = (c['city_name'] ?? '').toString();
+            return DropdownMenuItem(
+              value: id,
+              child: Text(_translateCityIfNeeded(name)),
+            );
+          }).toList(),
+          onChanged: (v) {
+            setState(() => _cityId = v);
+            _fetchCityFields();
+          },
+        ),
+        const SizedBox(height: 12),
+
+        DropdownButtonFormField<int>(
+          initialValue: _fieldTypeId,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: loc.createMatchSport,
+            border: const OutlineInputBorder(),
+          ),
+          items: _fieldTypes.map((t) {
+            final id = int.tryParse(t['field_type_id']?.toString() ?? '');
+            return DropdownMenuItem(
+              value: id,
+              child: Text((t['field_type'] ?? '').toString()),
+            );
+          }).toList(),
+          onChanged: (v) => setState(() {
+            _fieldTypeId = v;
+            // The old pick may belong to a different sport now.
+            _preferredFieldId = null;
+          }),
+        ),
+        const SizedBox(height: 12),
+
+        // Optional: a venue the host would like. Picking one does NOT reserve
+        // anything, it only tells joiners where the host is aiming.
+        DropdownButtonFormField<int?>(
+          initialValue: _preferredFieldId,
+          isExpanded: true,
+          decoration: InputDecoration(
+            labelText: loc.createMatchPreferredField,
+            border: const OutlineInputBorder(),
+            suffixIcon: _loadingCityFields
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : null,
+          ),
+          items: [
+            DropdownMenuItem<int?>(
+              value: null,
+              child: Text(loc.createMatchAnyField),
+            ),
+            ...fields.map((f) {
+              final id = int.tryParse(f['field_id']?.toString() ?? '');
+              final ar = (f['field_name'] ?? '').toString();
+              final en = (f['field_english_name'] ?? '').toString();
+              final name = _isEnglish
+                  ? (en.isNotEmpty ? en : ar)
+                  : (ar.isNotEmpty ? ar : en);
+              return DropdownMenuItem<int?>(
+                value: id,
+                child: Text(name, overflow: TextOverflow.ellipsis),
+              );
+            }),
+          ],
+          onChanged: (v) => setState(() => _preferredFieldId = v),
+        ),
+        const SizedBox(height: 16),
+
+        Row(
+          children: [
+            Expanded(
+              child: _pickerTile(
+                label: loc.createMatchDate,
+                value: _matchDate == null
+                    ? loc.createMatchPickDate
+                    : _formatBookingDate(_fmtDate(_matchDate!)),
+                icon: Icons.calendar_today,
+                onTap: () async {
+                  final now = DateTime.now();
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _matchDate ?? now.add(const Duration(days: 1)),
+                    firstDate: now,
+                    lastDate: now.add(const Duration(days: 60)),
+                  );
+                  if (picked != null) setState(() => _matchDate = picked);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        Row(
+          children: [
+            Expanded(
+              child: _pickerTile(
+                label: loc.createMatchStartTime,
+                value: _startTime == null
+                    ? loc.createMatchPickTime
+                    : _fmtTime(_startTime!),
+                icon: Icons.schedule,
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: _startTime ?? const TimeOfDay(hour: 20, minute: 0),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _startTime = picked;
+                      // Default to an hour's play so the host rarely has to
+                      // touch the end time at all.
+                      _endTime ??= TimeOfDay(
+                        hour: (picked.hour + 1) % 24,
+                        minute: picked.minute,
+                      );
+                    });
+                  }
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _pickerTile(
+                label: loc.createMatchEndTime,
+                value: _endTime == null
+                    ? loc.createMatchPickTime
+                    : _fmtTime(_endTime!),
+                icon: Icons.schedule_outlined,
+                onTap: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: _endTime ?? const TimeOfDay(hour: 21, minute: 0),
+                  );
+                  if (picked != null) setState(() => _endTime = picked);
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 18),
+
+        Text(
+          loc.createMatchPlayersTotal,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline),
+              onPressed: _openTotalSlots > 2
+                  ? () => setState(() {
+                        _openTotalSlots -= 2;
+                        _selectedBluePosition = 1;
+                        _openSlots = _openSlots.clamp(1, max(1, _openTotalSlots - 1));
+                      })
+                  : null,
+            ),
+            Text(
+              "$_openTotalSlots",
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+            ),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              onPressed: _openTotalSlots < 40
+                  ? () => setState(() {
+                        _openTotalSlots += 2;
+                        _selectedBluePosition ??= 1;
+                      })
+                  : null,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        TextField(
+          controller: _notesController,
+          maxLength: 200,
+          maxLines: 2,
+          decoration: InputDecoration(
+            labelText: loc.createMatchNotes,
+            hintText: loc.createMatchNotesHint,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _pickerTile({
+    required String label,
+    required String value,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _bookingPickerSection() {
+    final loc = AppLocalizations.of(context)!;
+
+    if (_eligibleBookings.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Center(child: Text(loc.createMatchNoEligibleBookings)),
+        ),
+      ];
+    }
+
+    return [
+      Text(
+        loc.createMatchSelectBookingTitle,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+      ),
+      const SizedBox(height: 10),
+
+      SizedBox(
+        height: 122,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _eligibleBookings.length,
@@ -744,44 +1357,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               },
             ),
           ),
-
-          const SizedBox(height: 18),
-
-          Text(
-            loc.createMatchOpenSlotsQuestion,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 8),
-
-          // ✅ min=1 and max=capacity-1 (host takes 1)
-          Slider(
-            value: _openSlots.toDouble().clamp(minOpenSlots.toDouble(), maxOpenSlots.toDouble()),
-            min: minOpenSlots.toDouble(),
-            max: maxOpenSlots.toDouble(),
-            divisions: (maxOpenSlots - minOpenSlots).clamp(1, 9999),
-            label: _openSlots.toString(),
-            onChanged: (v) => setState(() => _openSlots = v.round().clamp(minOpenSlots, maxOpenSlots)),
-          ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text("$minOpenSlots", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
-              Text("$maxOpenSlots", style: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color)),
-            ],
-          ),
-
-          const SizedBox(height: 18),
-
-          _formationPreview(capacity: cap, openSlots: _openSlots),
-          const SizedBox(height: 18),
-
-          _positionPickerBlue(capacity: cap),
-
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
+    ];
   }
 }
 

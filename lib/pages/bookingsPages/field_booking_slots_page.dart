@@ -13,12 +13,18 @@ class FieldBookingSlotsPage extends StatefulWidget {
   final List<dynamic> bookings;
   final List<dynamic> discountedSlots;
 
+  /// Standing admin rules that take a time range off this field's calendar on
+  /// every day. Each carries a display_mode: 'hidden' drops the slot from the
+  /// grid, 'booked' leaves it drawn but unbookable.
+  final List<dynamic> hiddenSlots;
+
   const FieldBookingSlotsPage({
     super.key,
     required this.field,
     required this.date,
     required this.bookings,
     this.discountedSlots = const [],
+    this.hiddenSlots = const [],
   });
 
   @override
@@ -28,6 +34,10 @@ class FieldBookingSlotsPage extends StatefulWidget {
 class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   late List<TimeSlot> slots;
   final List<TimeSlot> _selectedSlots = [];
+
+  // How many slots one booking may span. This is a slot count, not an hour
+  // count: on a 15-minute field 3 slots is 45 minutes.
+  static const int _maxSlotsPerSelection = 3;
 
   String _bookingFrequency = 'daily';
 
@@ -52,132 +62,193 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     }
   }
 
-  void _generateSlots() {
-    final openParts = (widget.field['field_open_time'] ?? '08:00').split(':');
-    final closeParts = (widget.field['field_close_time'] ?? '20:00').split(':');
-    int openHour = int.parse(openParts[0]);
-    int closeHour = int.parse(closeParts[0]);
+  // "HH:mm[:ss]" -> minutes since midnight. Null when unparseable.
+  int? _parseMinutes(dynamic raw) {
+    if (raw == null) return null;
+    final parts = raw.toString().split(':');
+    if (parts.length < 2) return null;
+    final h = int.tryParse(parts[0]);
+    final m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return h * 60 + m;
+  }
 
-    if (closeHour <= openHour) closeHour += 24;
-    if (closeHour > 30) closeHour = 30;
+  // The field's slot size in minutes: 15, 30 or 60. Anything else (missing
+  // column, older API) falls back to the 1-hour grid this page used to assume.
+  int get _slotDuration {
+    final raw = int.tryParse(
+      widget.field['field_slot_duration']?.toString() ?? '',
+    );
+    return (raw == 15 || raw == 30 || raw == 60) ? raw! : 60;
+  }
+
+  // How many bookings this field can run at once in a single slot. 1 is the
+  // old behaviour, where the first booking closed the slot for everyone; a
+  // karting track with 6 carts sells the same 09:15 slot 6 times.
+  int get _slotSeats {
+    final raw = int.tryParse(
+      widget.field['field_slot_seats']?.toString() ?? '',
+    );
+    return (raw != null && raw >= 1) ? raw : 1;
+  }
+
+  bool get _isMultiSeat => _slotSeats > 1;
+
+  // Wall-clock time on the booking day; minutes past 24h roll into the next
+  // day, which is what an after-midnight slot needs.
+  DateTime _slotTime(int minutesFromMidnight) => DateTime(
+        widget.date.year,
+        widget.date.month,
+        widget.date.day,
+        0,
+        minutesFromMidnight,
+      );
+
+  // The pieces a daily-repeating window occupies inside one day. A window
+  // whose end is at or before its start has run past midnight, so it comes
+  // back as two pieces; end == start means the whole day.
+  List<List<int>> _dailyPieces(int startMin, int endMin) {
+    final a = startMin % (24 * 60);
+    final b = endMin % (24 * 60);
+    if (b > a) return [[a, b]];
+    if (b == a) return [[0, 24 * 60]];
+    return [[a, 24 * 60], [0, b]];
+  }
+
+  /// The standing rule covering [slot], if any. Half-open, so a slot ending
+  /// exactly when a rule starts is untouched.
+  Map<String, dynamic>? _hiddenRuleForSlot(TimeSlot slot) {
+    final slotStart = slot.start.hour * 60 + slot.start.minute;
+    var slotEnd = slot.end.hour * 60 + slot.end.minute;
+    if (slotEnd <= slotStart) slotEnd += 24 * 60;
+    final slotPieces = _dailyPieces(slotStart, slotEnd);
+
+    for (final h in widget.hiddenSlots) {
+      final hs = _parseMinutes(h['start_time']);
+      final he = _parseMinutes(h['end_time']);
+      if (hs == null || he == null) continue;
+
+      final rulePieces = _dailyPieces(hs, he);
+      final overlaps = slotPieces.any(
+        (sp) => rulePieces.any((rp) => sp[0] < rp[1] && rp[0] < sp[1]),
+      );
+      if (overlaps) return h as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  void _generateSlots() {
+    final openMinutes = _parseMinutes(widget.field['field_open_time']) ?? 8 * 60;
+    int closeMinutes =
+        _parseMinutes(widget.field['field_close_time']) ?? 20 * 60;
+
+    if (closeMinutes <= openMinutes) closeMinutes += 24 * 60;
+    if (closeMinutes > 30 * 60) closeMinutes = 30 * 60;
+
+    final step = _slotDuration;
 
     slots = [];
-    for (int hour = openHour; hour < closeHour; hour++) {
-      int normalizedHour = hour % 24;
-      int normalizedEndHour = (hour + 1) % 24;
+    for (int m = openMinutes; m + step <= closeMinutes; m += step) {
+      final slot = TimeSlot(start: _slotTime(m), end: _slotTime(m + step));
 
-      DateTime start = DateTime(
-        widget.date.year,
-        widget.date.month,
-        widget.date.day,
-        normalizedHour,
-      );
-      DateTime end = DateTime(
-        widget.date.year,
-        widget.date.month,
-        widget.date.day,
-        normalizedEndHour,
-      );
+      // A rule in 'hidden' mode drops the slot from the day entirely; one in
+      // 'booked' mode keeps it drawn, and _isBooked below makes it untappable.
+      final rule = _hiddenRuleForSlot(slot);
+      if (rule != null && rule['display_mode'] != 'booked') continue;
 
-      if (hour >= 24) {
-        start = start.add(const Duration(days: 1));
-        end = end.add(const Duration(days: 1));
-      }
-
-      slots.add(TimeSlot(start: start, end: end));
+      slots.add(slot);
     }
     if (mounted) setState(() {});
   }
 
-  Map<String, dynamic>? _findBookingForSlot(TimeSlot slot) {
-    try {
-      return widget.bookings.firstWhere((b) {
-        final bookingDate = DateTime.parse(b['booking_date']);
-        final startParts = (b['start_time'] as String).split(':');
-        final endParts = (b['end_time'] as String).split(':');
+  // True when [slot] starts inside the [start, end) range a booking or a
+  // discount covers. Testing the slot START (rather than an exact time match)
+  // is what lets one 60-minute booking mark all four slots of a 15-minute grid
+  // as taken - which is exactly what happens after a field changes its grid.
+  bool _rangeCoversSlot(
+    TimeSlot slot,
+    DateTime rangeDate,
+    dynamic rawStart,
+    dynamic rawEnd,
+  ) {
+    final startMinutes = _parseMinutes(rawStart);
+    final endMinutes = _parseMinutes(rawEnd);
+    if (startMinutes == null || endMinutes == null) return false;
 
-        int startHour = int.parse(startParts[0]);
-        int endHour = int.parse(endParts[0]);
+    // A range stored under this date but starting before the field opens ran
+    // past midnight, so it belongs to the following calendar day.
+    final openMinutes = _parseMinutes(widget.field['field_open_time']) ?? 0;
+    final dayShift = startMinutes < openMinutes ? 1 : 0;
 
-        var start = DateTime(
-          bookingDate.year,
-          bookingDate.month,
-          bookingDate.day,
-          startHour,
-          int.parse(startParts[1]),
-        );
-        var end = DateTime(
-          bookingDate.year,
-          bookingDate.month,
-          bookingDate.day,
-          endHour,
-          int.parse(endParts[1]),
-        );
+    var start = DateTime(
+      rangeDate.year,
+      rangeDate.month,
+      rangeDate.day + dayShift,
+      0,
+      startMinutes,
+    );
+    var end = DateTime(
+      rangeDate.year,
+      rangeDate.month,
+      rangeDate.day + dayShift,
+      0,
+      endMinutes,
+    );
 
-        if (end.isBefore(start)) {
-          end = end.add(const Duration(days: 1));
-        }
-
-        final openHour = int.parse(
-          (widget.field['field_open_time'] as String).split(':')[0],
-        );
-
-        if (openHour > startHour) {
-          start = start.add(const Duration(days: 1));
-          end = end.add(const Duration(days: 1));
-        }
-
-        return slot.start.isAtSameMomentAs(start) ||
-            (slot.start.isAfter(start) && slot.start.isBefore(end));
-      });
-    } catch (_) {
-      return null;
+    if (!end.isAfter(start)) {
+      end = end.add(const Duration(days: 1));
     }
+
+    return slot.start.isAtSameMomentAs(start) ||
+        (slot.start.isAfter(start) && slot.start.isBefore(end));
+  }
+
+  // Every booking overlapping [slot]. On a 1-seat field this is at most one
+  // row; on a multi-seat field it is however many carts are already out.
+  List<Map<String, dynamic>> _bookingsForSlot(TimeSlot slot) {
+    final found = <Map<String, dynamic>>[];
+    for (final b in widget.bookings) {
+      try {
+        if (_rangeCoversSlot(
+          slot,
+          DateTime.parse(b['booking_date']),
+          b['start_time'],
+          b['end_time'],
+        )) {
+          found.add(b as Map<String, dynamic>);
+        }
+      } catch (_) {}
+    }
+    return found;
+  }
+
+  // Seats already gone. A slot the owner closed can hold several seats in one
+  // booking row, so seats are summed rather than counted.
+  int _occupiedSeats(TimeSlot slot) {
+    var taken = 0;
+    for (final b in _bookingsForSlot(slot)) {
+      final status = b['booking_status'];
+      if (status != 'confirmed' && status != 'unavailable') continue;
+      taken += int.tryParse(b['booking_seats']?.toString() ?? '') ?? 1;
+    }
+    return taken;
+  }
+
+  int _seatsLeft(TimeSlot slot) {
+    final left = _slotSeats - _occupiedSeats(slot);
+    return left < 0 ? 0 : left;
   }
 
   Map<String, dynamic>? _findDiscountForSlot(TimeSlot slot) {
     try {
-      return widget.discountedSlots.firstWhere((ds) {
-        final dsDate = DateTime.parse(ds['date']);
-
-        final sParts = (ds['start_time'] as String).split(':');
-        final eParts = (ds['end_time'] as String).split(':');
-
-        int startHour = int.parse(sParts[0]);
-        int endHour = int.parse(eParts[0]);
-
-        var start = DateTime(
-          dsDate.year,
-          dsDate.month,
-          dsDate.day,
-          startHour,
-          int.parse(sParts[1]),
-        );
-
-        var end = DateTime(
-          dsDate.year,
-          dsDate.month,
-          dsDate.day,
-          endHour,
-          int.parse(eParts[1]),
-        );
-
-        if (end.isBefore(start)) {
-          end = end.add(const Duration(days: 1));
-        }
-
-        final openHour = int.parse(
-          (widget.field['field_open_time'] as String).split(':')[0],
-        );
-
-        if (openHour > startHour) {
-          start = start.add(const Duration(days: 1));
-          end = end.add(const Duration(days: 1));
-        }
-
-        return slot.start.isAtSameMomentAs(start) ||
-            (slot.start.isAfter(start) && slot.start.isBefore(end));
-      });
+      return widget.discountedSlots.firstWhere(
+        (ds) => _rangeCoversSlot(
+          slot,
+          DateTime.parse(ds['date']),
+          ds['start_time'],
+          ds['end_time'],
+        ),
+      );
     } catch (_) {
       return null;
     }
@@ -187,39 +258,35 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   // matches [frequency]. Falls back to the field's base price otherwise.
   double _effectiveBookingPrice(TimeSlot slot, String frequency) {
     final discount = _findDiscountForSlot(slot);
-    if (discount == null) return _bookingPricePerHour;
+    if (discount == null) return _bookingPricePerSlot;
     final appliesToFrequency = frequency == 'daily'
         ? discount['is_daily'] == true
         : discount['is_monthly'] == true;
-    if (!appliesToFrequency) return _bookingPricePerHour;
+    if (!appliesToFrequency) return _bookingPricePerSlot;
     return double.tryParse(discount['booking_price'].toString()) ??
-        _bookingPricePerHour;
+        _bookingPricePerSlot;
   }
 
   // NEW: same logic for the remaining-to-owner price.
   double _effectiveRemainingPrice(TimeSlot slot, String frequency) {
     final discount = _findDiscountForSlot(slot);
-    if (discount == null) return _remainingToOwnerPerHour ?? 0;
+    if (discount == null) return _remainingToOwnerPerSlot ?? 0;
     final appliesToFrequency = frequency == 'daily'
         ? discount['is_daily'] == true
         : discount['is_monthly'] == true;
-    if (!appliesToFrequency) return _remainingToOwnerPerHour ?? 0;
+    if (!appliesToFrequency) return _remainingToOwnerPerSlot ?? 0;
     return double.tryParse(discount['remaining_price'].toString()) ??
-        (_remainingToOwnerPerHour ?? 0);
+        (_remainingToOwnerPerSlot ?? 0);
   }
 
-  bool _isConfirmed(TimeSlot slot) {
-    final booking = _findBookingForSlot(slot);
-    return booking?['booking_status'] == "confirmed" ||
-        booking?['booking_status'] == "unavailable";
-  }
+  // Taken means every seat is gone, not just that someone booked. On a 1-seat
+  // field one booking still fills it, so nothing changes for a pitch. A slot
+  // an admin took off the calendar is never for sale either; the only ones
+  // that reach here are 'booked'-mode rules, since 'hidden' ones are not drawn.
+  bool _isBooked(TimeSlot slot) =>
+      _hiddenRuleForSlot(slot) != null || _seatsLeft(slot) <= 0;
 
-  bool _isBooked(TimeSlot slot) {
-    final booking = _findBookingForSlot(slot);
-    return booking != null &&
-        (booking['booking_status'] == "confirmed" ||
-            booking['booking_status'] == "unavailable");
-  }
+  bool _isConfirmed(TimeSlot slot) => _isBooked(slot);
 
   void _onSlotTap(TimeSlot slot) {
     if (!AuthService.isLoggedIn) {
@@ -234,7 +301,13 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _isEnglish ? 'This time is booked' : 'هذه الفترة محجوزة',
+            // A slot taken off the calendar is not "sold out", so the seat
+            // wording would be a lie about why it cannot be booked.
+            (_isMultiSeat && _hiddenRuleForSlot(slot) == null)
+                ? (_isEnglish
+                    ? 'All $_slotSeats places for this time are taken'
+                    : 'كل الأماكن ($_slotSeats) في هذه الفترة محجوزة')
+                : (_isEnglish ? 'This time is booked' : 'هذه الفترة محجوزة'),
             textDirection: _dir,
           ),
           backgroundColor: Colors.redAccent,
@@ -287,17 +360,17 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         .map((s) => s.start)
         .reduce((a, b) => a.isAfter(b) ? a : b);
 
-    final isAdjacent =
-        slot.start.isAtSameMomentAs(minTime.subtract(const Duration(hours: 1))) ||
-            slot.start.isAtSameMomentAs(maxTime.add(const Duration(hours: 1)));
+    final step = Duration(minutes: _slotDuration);
+    final isAdjacent = slot.start.isAtSameMomentAs(minTime.subtract(step)) ||
+        slot.start.isAtSameMomentAs(maxTime.add(step));
 
     if (!isAdjacent) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             _isEnglish
-                ? 'Select consecutive slots (up to 3 hours)'
-                : 'يجب اختيار فترات متتالية (حتى 3 ساعات فقط)',
+                ? 'Select consecutive slots (up to $_maxSlotsPerSelection slots)'
+                : 'يجب اختيار فترات متتالية (حتى $_maxSlotsPerSelection فترات فقط)',
             textDirection: _dir,
           ),
           backgroundColor: Colors.redAccent,
@@ -306,11 +379,13 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       return;
     }
 
-    if (_selectedSlots.length >= 3) {
+    if (_selectedSlots.length >= _maxSlotsPerSelection) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            _isEnglish ? 'Max selection is 3 hours' : 'الحد الأقصى للاختيار 3 ساعات',
+            _isEnglish
+                ? 'Max selection is $_maxSlotsPerSelection slots'
+                : 'الحد الأقصى للاختيار $_maxSlotsPerSelection فترات',
             textDirection: _dir,
           ),
           backgroundColor: Colors.redAccent,
@@ -324,11 +399,13 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     setState(() {});
   }
 
-  double get _bookingPricePerHour =>
+  // Prices are PER SLOT, not per hour: a field priced at 50 charges 50 for one
+  // slot whether that slot is 15, 30 or 60 minutes. Nothing here prorates.
+  double get _bookingPricePerSlot =>
       double.tryParse(widget.field['field_calculated_booking_price'].toString()) ??
       0.0;
 
-  double? get _remainingToOwnerPerHour => widget.field["field_has_discount"] == true
+  double? get _remainingToOwnerPerSlot => widget.field["field_has_discount"] == true
       ? double.tryParse(
           widget.field["field_calculated_remaining_price_after_discount"].toString(),
         )
@@ -354,17 +431,23 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
     final lastSlot = _selectedSlots.last;
     final baseDate = widget.date;
 
+    // Pinned back onto the selected day: the API stores a booking under the day
+    // the session STARTED plus a bare start/end time, so an after-midnight slot
+    // must not carry its +1 day. Minutes are kept - dropping them collapsed
+    // every 20:30 slot into 20:00.
     final normalizedStart = DateTime(
       baseDate.year,
       baseDate.month,
       baseDate.day,
       firstSlot.start.hour,
+      firstSlot.start.minute,
     );
     final normalizedEnd = DateTime(
       baseDate.year,
       baseDate.month,
       baseDate.day,
       lastSlot.end.hour,
+      lastSlot.end.minute,
     );
 
     final mergedSlot = [
@@ -548,7 +631,50 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                           TextStyle(color: Theme.of(context).colorScheme.onPrimary),
                       textDirection: _dir,
                     )
-                  : _buildDiscountSubtitle(slot)),
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_buildDiscountSubtitle(slot) case final d?) d,
+                        // Seat counts are meaningless on a slot that is off
+                        // the calendar, so they are suppressed there.
+                        if (_isMultiSeat && _hiddenRuleForSlot(slot) == null)
+                          _buildSeatsSubtitle(slot),
+                      ],
+                    )),
+        ),
+      ),
+    );
+  }
+
+  // Only shown on fields that run several bookings at once, where "free" is
+  // not the whole story: 2 of 6 carts left reads very differently from 6.
+  Widget _buildSeatsSubtitle(TimeSlot slot) {
+    final left = _seatsLeft(slot);
+    final label = _isEnglish
+        ? '$left of $_slotSeats available'
+        : 'متبقي $left من $_slotSeats';
+
+    // Running low gets a warmer colour so it reads as urgency, not decoration.
+    final isLow = left <= (_slotSeats / 3).ceil();
+    final color = isLow ? Colors.deepOrange : Colors.teal;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(color: color, width: 0.8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: color,
+          ),
+          textDirection: _dir,
         ),
       ),
     );
@@ -585,7 +711,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${_bookingPricePerHour.toStringAsFixed(2)} $currency',
+                '${_bookingPricePerSlot.toStringAsFixed(2)} $currency',
                 style: TextStyle(
                   fontSize: 11,
                   color: Theme.of(context)

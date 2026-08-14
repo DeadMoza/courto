@@ -674,6 +674,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get timeTooltip => 'Time notice';
 
   @override
+  String get discountSlots => 'Discount Slots';
+
+  @override
   String get noImages => 'No images';
 
   @override
@@ -1191,4 +1194,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionsPage => 'My Subscriptions';
+
+  @override
+  String get createMatchModeTitle => 'How do you want to start?';
+
+  @override
+  String get createMatchModeBooked => 'I already booked';
+
+  @override
+  String get createMatchModeOpen => 'Find players first';
+
+  @override
+  String get createMatchModeOpenHint => 'Post the game you want to play. Book the pitch once you know you have enough players.';
+
+  @override
+  String get createMatchModeBookedNoBookings => 'You have no upcoming bookings. Use \"Find players first\" instead.';
+
+  @override
+  String get createMatchWhereAndWhen => 'Where and when';
+
+  @override
+  String get createMatchCity => 'City';
+
+  @override
+  String get createMatchSport => 'Sport';
+
+  @override
+  String get createMatchPreferredField => 'Preferred field (optional)';
+
+  @override
+  String get createMatchAnyField => 'Any field';
+
+  @override
+  String get createMatchDate => 'Date';
+
+  @override
+  String get createMatchPickDate => 'Pick a date';
+
+  @override
+  String get createMatchStartTime => 'Start time';
+
+  @override
+  String get createMatchEndTime => 'End time';
+
+  @override
+  String get createMatchPickTime => 'Pick a time';
+
+  @override
+  String get createMatchPlayersTotal => 'Total players (including you)';
+
+  @override
+  String get createMatchNotes => 'Note for players (optional)';
+
+  @override
+  String get createMatchNotesHint => 'e.g. friendly game, bring a dark shirt';
+
+  @override
+  String get createMatchPickCity => 'Please choose a city';
+
+  @override
+  String get createMatchPickDateTime => 'Please choose a date, a start time and an end time';
+
+  @override
+  String get createMatchStartsTooSoon => 'The match must start at least 6 hours from now';
+
+  @override
+  String get createMatchEndBeforeStart => 'The end time must be after the start time';
+
+  @override
+  String get badgeNoVenue => 'No venue yet';
+
+  @override
+  String matchSuggestedField(String field) {
+    return 'Suggested: $field';
+  }
+
+  @override
+  String get matchVenueNotBookedYet => 'The pitch has not been booked yet';
+
+  @override
+  String get matchDetailsAttachBooking => 'Link one of my bookings';
+
+  @override
+  String get matchDetailsAttachBookingTitle => 'Choose a booking';
+
+  @override
+  String get matchDetailsAttachBookingNone => 'You have no confirmed bookings to link. Book a field first.';
+
+  @override
+  String get matchDetailsAttachBookingSuccess => 'Booking linked to the match';
+
+  @override
+  String get matchDetailsAttachBookingFailed => 'Could not link the booking';
 }

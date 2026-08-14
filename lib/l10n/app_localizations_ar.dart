@@ -494,7 +494,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get financialDetailsTitle => 'التفاصيل المالية:';
 
   @override
-  String get bookingPriceLabel => 'سعر الحجز';
+  String get bookingPriceLabel => 'سعر الحجز:';
 
   @override
   String get remainingPriceLabel => 'السعر المتبقي للدفع';
@@ -672,6 +672,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get timeTooltip => 'تنبيه بخصوص التوقيت';
+
+  @override
+  String get discountSlots => 'حجوزات مخفضة';
 
   @override
   String get noImages => 'لا توجد صور';
@@ -945,7 +948,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get navTeams => 'الفريق';
 
   @override
-  String get createMatch => 'انشاء مبارة';
+  String get createMatch => 'البحث عن لاعبين';
 
   @override
   String get noMatchesNow => 'لا توجد مباريات متاحة حالياً';
@@ -1191,4 +1194,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get subscriptionsPage => 'الاشتراكات';
+
+  @override
+  String get createMatchModeTitle => 'كيف تريد البدء؟';
+
+  @override
+  String get createMatchModeBooked => 'لدي حجز مأكد';
+
+  @override
+  String get createMatchModeOpen => 'أبحث عن لاعبين أولاً';
+
+  @override
+  String get createMatchModeOpenHint => 'انشر المباراة التي تريد لعبها، واحجز الملعب بعد أن تتأكد من اكتمال عدد اللاعبين.';
+
+  @override
+  String get createMatchModeBookedNoBookings => 'ليس لديك حجوزات قادمة. استخدم \"أبحث عن لاعبين أولاً\".';
+
+  @override
+  String get createMatchWhereAndWhen => 'أين ومتى';
+
+  @override
+  String get createMatchCity => 'المدينة';
+
+  @override
+  String get createMatchSport => 'نوع اللعبة';
+
+  @override
+  String get createMatchPreferredField => 'ملعب مقترح (اختياري)';
+
+  @override
+  String get createMatchAnyField => 'أي ملعب';
+
+  @override
+  String get createMatchDate => 'التاريخ';
+
+  @override
+  String get createMatchPickDate => 'اختر التاريخ';
+
+  @override
+  String get createMatchStartTime => 'وقت البداية';
+
+  @override
+  String get createMatchEndTime => 'وقت النهاية';
+
+  @override
+  String get createMatchPickTime => 'اختر الوقت';
+
+  @override
+  String get createMatchPlayersTotal => 'عدد اللاعبين (بما فيهم أنت)';
+
+  @override
+  String get createMatchNotes => 'ملاحظة للاعبين (اختياري)';
+
+  @override
+  String get createMatchNotesHint => 'مثال: مباراة ودية، أحضر قميصاً غامقاً';
+
+  @override
+  String get createMatchPickCity => 'يرجى اختيار المدينة';
+
+  @override
+  String get createMatchPickDateTime => 'يرجى اختيار التاريخ ووقت البداية والنهاية';
+
+  @override
+  String get createMatchStartsTooSoon => 'يجب أن تبدأ المباراة بعد 6 ساعات على الأقل من الآن';
+
+  @override
+  String get createMatchEndBeforeStart => 'وقت النهاية يجب أن يكون بعد وقت البداية';
+
+  @override
+  String get badgeNoVenue => 'بدون حجز';
+
+  @override
+  String matchSuggestedField(String field) {
+    return 'ملعب مقترح: $field';
+  }
+
+  @override
+  String get matchVenueNotBookedYet => 'لم يتم حجز الملعب بعد';
+
+  @override
+  String get matchDetailsAttachBooking => 'اربط أحد حجوزاتي';
+
+  @override
+  String get matchDetailsAttachBookingTitle => 'اختر حجزاً';
+
+  @override
+  String get matchDetailsAttachBookingNone => 'ليس لديك حجوزات مؤكدة لربطها. احجز ملعباً أولاً.';
+
+  @override
+  String get matchDetailsAttachBookingSuccess => 'تم ربط الحجز بالمباراة';
+
+  @override
+  String get matchDetailsAttachBookingFailed => 'تعذر ربط الحجز';
 }

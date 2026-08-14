@@ -777,6 +777,118 @@ void _showPlayerInfoSheet(Map<String, dynamic> p) {
     );
   }
 
+  // ===================== Attach a booking (host, open match) =====================
+
+  /// Offers the host their confirmed upcoming bookings and hands the match
+  /// over to whichever they pick. Uses the same eligibility list the create
+  /// screen does, so a booking that already backs another match never appears.
+  Future<void> _attachBookingFlow() async {
+    final loc = AppLocalizations.of(context)!;
+    final me = _myUserId;
+    if (me == null) return;
+
+    List<Map<String, dynamic>> bookings = [];
+    try {
+      final res = await http.get(
+        Uri.parse('${apiUrl}users/getEligibleMatchBookings/$me'),
+        headers: {
+          'authorization': 'Bearer ${AuthService.token}',
+          'x-api-key': '${dotenv.env['API_KEY']}',
+        },
+      );
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        bookings = List<Map<String, dynamic>>.from(data['data'] ?? []);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _showRedSnack(loc.commonConnectionError);
+      return;
+    }
+
+    if (!mounted) return;
+
+    if (bookings.isEmpty) {
+      _showRedSnack(loc.matchDetailsAttachBookingNone);
+      return;
+    }
+
+    final isAr = Localizations.localeOf(context).languageCode == "ar";
+
+    final chosen = await showDialog<int>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(loc.matchDetailsAttachBookingTitle),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: bookings.length,
+            itemBuilder: (context, i) {
+              final b = bookings[i];
+              final ar = (b['field_name'] ?? '').toString();
+              final en = (b['field_english_name'] ?? '').toString();
+              final name = isAr
+                  ? (ar.isNotEmpty ? ar : en)
+                  : (en.isNotEmpty ? en : ar);
+
+              return ListTile(
+                title: Text(
+                  name.isNotEmpty ? name : loc.matchDetailsFieldFallback,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                subtitle: Text(
+                  '${_formatBookingDate(b['booking_date'])} • '
+                  '${_formatApiTime(b['start_time'])} - ${_formatApiTime(b['end_time'])}',
+                ),
+                onTap: () => Navigator.pop(
+                  ctx,
+                  int.tryParse(b['booking_id']?.toString() ?? ''),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(loc.commonBack),
+          ),
+        ],
+      ),
+    );
+
+    if (chosen == null || !mounted) return;
+
+    try {
+      final res = await http.post(
+        Uri.parse('${apiUrl}users/attachBookingToMatch'),
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': 'Bearer ${AuthService.token}',
+          'x-api-key': '${dotenv.env['API_KEY']}',
+        },
+        body: jsonEncode({'match_id': widget.matchId, 'booking_id': chosen}),
+      );
+
+      if (!mounted) return;
+
+      final data = res.body.isNotEmpty ? jsonDecode(res.body) : {};
+
+      if (res.statusCode == 200) {
+        _showRedSnack(loc.matchDetailsAttachBookingSuccess);
+        await _fetchMatchDetails();
+      } else {
+        _showRedSnack(
+          (data['error'] ?? loc.matchDetailsAttachBookingFailed).toString(),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _showRedSnack(loc.commonConnectionError);
+    }
+  }
+
   // ===================== Formation Board =====================
 
   Widget _formationBoard({
@@ -1025,7 +1137,21 @@ void _showPlayerInfoSheet(Map<String, dynamic> p) {
 
     // ✅ ALWAYS use field_english_name (as requested)
     final fieldEn = isAr ? (info['field_name'] ?? '').toString().trim() : (info['field_english_name'] ?? '').toString().trim();
-    final title = fieldEn.isNotEmpty ? fieldEn : loc.matchDetailsFieldFallback;
+
+    // A match created before booking anything has no field at all, or only a
+    // field the host would LIKE. Neither is a reservation, so it is labelled
+    // as a suggestion rather than presented as the venue.
+    final hasBooking = info['has_booking'] == true;
+    final String title;
+    if (hasBooking) {
+      title = fieldEn.isNotEmpty ? fieldEn : loc.matchDetailsFieldFallback;
+    } else if (fieldEn.isNotEmpty) {
+      title = loc.matchSuggestedField(fieldEn);
+    } else {
+      title = loc.matchVenueNotBookedYet;
+    }
+
+    final matchNotes = (info['match_notes'] ?? '').toString().trim();
 
     // ✅ city + location maps
     final cityRaw = _getCityRaw();
@@ -1093,10 +1219,26 @@ void _showPlayerInfoSheet(Map<String, dynamic> p) {
 
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: hasBooking ? null : Colors.orange.shade800,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+
+                  if (matchNotes.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      matchNotes,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontStyle: FontStyle.italic,
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
+                    ),
+                  ],
 
                   if (placeText.isNotEmpty) ...[
                     const SizedBox(height: 8),
@@ -1154,6 +1296,24 @@ void _showPlayerInfoSheet(Map<String, dynamic> p) {
           _formationBoard(team: 'red', color: Colors.red, title: loc.matchDetailsRedFormation),
 
           const SizedBox(height: 18),
+
+          // The host found their players and can now book the pitch: linking
+          // the booking turns this into an ordinary match, and everyone who
+          // already joined keeps their place.
+          if (_isHost() && !hasBooking) ...[
+            SizedBox(
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: _attachBookingFlow,
+                icon: const Icon(Icons.link),
+                label: Text(
+                  loc.matchDetailsAttachBooking,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
 
           if (_isHost())
             SizedBox(

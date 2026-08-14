@@ -23,11 +23,32 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
   // NEW: discounted slots indexed by date
   Map<DateTime, List<dynamic>> discountedSlotsByDate = {};
 
+  // Standing admin rules that apply to every day, so they are not indexed by
+  // date like the rest.
+  List<dynamic> hiddenSlots = [];
+
   DateTime focusedDay = DateTime.now();
   DateTime? selectedDay;
   bool loading = true;
 
   int get totalSlots => widget.field["slots_per_day"] ?? 10;
+
+  // The bookings endpoint reports the field's seat count too. Trusting it over
+  // whatever field map we were pushed with means the slots page is right even
+  // when it was opened from a list that predates the column.
+  int? _fetchedSlotSeats;
+
+  Map<String, dynamic> get _field => _fetchedSlotSeats == null
+      ? widget.field
+      : {...widget.field, 'field_slot_seats': _fetchedSlotSeats};
+
+  // Bookings this field can hold at once in one slot. A 6-cart karting track
+  // needs 6x as many bookings before a day counts as full.
+  int get _slotSeats {
+    final raw = int.tryParse(_field['field_slot_seats']?.toString() ?? '');
+    return (raw != null && raw >= 1) ? raw : 1;
+  }
+
   final apiUrl = dotenv.env['API_URL'];
 
   bool get _isEnglish => Localizations.localeOf(context).languageCode == "en";
@@ -72,10 +93,15 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
           (tempDiscounts[simpleDay] ??= []).add(ds);
         }
 
+        final seats = int.tryParse(data["slot_seats"]?.toString() ?? '');
+        final hidden = (data["hidden_slots"] as List<dynamic>? ?? []);
+
         if (!mounted) return;
         setState(() {
           bookingsByDate = tempBookings;
           discountedSlotsByDate = tempDiscounts;
+          hiddenSlots = hidden;
+          if (seats != null && seats >= 1) _fetchedSlotSeats = seats;
           loading = false;
         });
       } else {
@@ -101,7 +127,7 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
 
   Color _fillForDay(DateTime day) {
     final bookings = _getBookingsForDay(day);
-    if (bookings.length >= totalSlots) return Colors.red.shade400;
+    if (bookings.length >= totalSlots * _slotSeats) return Colors.red.shade400;
     return Colors.transparent;
   }
 
@@ -225,12 +251,13 @@ class _FieldCalendarPageState extends State<FieldCalendarPage> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => FieldBookingSlotsPage(
-                                field: widget.field,
+                                field: _field,
                                 date: selected,
                                 bookings: _getBookingsForDay(selected),
                                 // NEW: pass discounted slots for the selected day
                                 discountedSlots:
                                     _getDiscountedSlotsForDay(selected),
+                                hiddenSlots: hiddenSlots,
                               ),
                             ),
                           );

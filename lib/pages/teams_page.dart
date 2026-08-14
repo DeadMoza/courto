@@ -317,7 +317,19 @@ class _TeamsPageState extends State<TeamsPage> {
     final fieldTitle = isAr
         ? (m['field_name'] ?? '').toString()
         : (m['field_english_name'] ?? '').toString();
-    final title = fieldTitle.isNotEmpty ? fieldTitle : loc.fieldFallback;
+
+    // A match posted before any booking has no venue, or only one the host
+    // fancies. Saying so up front stops anyone turning up at a pitch nobody
+    // reserved.
+    final hasBooking = m['has_booking'] != false;
+    final String title;
+    if (hasBooking) {
+      title = fieldTitle.isNotEmpty ? fieldTitle : loc.fieldFallback;
+    } else if (fieldTitle.isNotEmpty) {
+      title = loc.matchSuggestedField(fieldTitle);
+    } else {
+      title = loc.matchVenueNotBookedYet;
+    }
 
     final bookingDate = _formatBookingDate(m['booking_date']);
     final startTime = _formatApiTime(m['start_time']);
@@ -373,6 +385,10 @@ class _TeamsPageState extends State<TeamsPage> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  if (!hasBooking) ...[
+                    const SizedBox(width: 8),
+                    _tagBadge(context, text: loc.badgeNoVenue, color: Colors.deepOrange),
+                  ],
                   if (isJoined) ...[
                     const SizedBox(width: 8),
                     _tagBadge(context, text: loc.badgeJoined, color: Colors.orange),
@@ -389,7 +405,11 @@ class _TeamsPageState extends State<TeamsPage> {
                   Expanded(
                     child: Text(
                       title,
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: hasBooking ? null : Colors.deepOrange.shade700,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -450,7 +470,8 @@ class _TeamsPageState extends State<TeamsPage> {
   void _onCreateMatchPressed() async {
     final result = await Navigator.of(context).push(
       PageRouteBuilder(
-        pageBuilder: (_, __, ___) => const CreateMatchPage(),
+        pageBuilder: (_, __, ___) =>
+            CreateMatchPage(initialCityId: widget.cityId),
         transitionsBuilder: (_, animation, __, child) {
           return SlideTransition(
             position: Tween(begin: const Offset(0, 1), end: Offset.zero).animate(animation),
@@ -482,21 +503,23 @@ class _TeamsPageState extends State<TeamsPage> {
     final loc = AppLocalizations.of(context)!;
     final matches = _matches;
 
-    // host match pinned first (your existing logic)
+    // host matches pinned first. A user can now hold both a booked match and
+    // one they posted before booking, so all of them are pinned, not just the
+    // first - otherwise the second would be buried down in "browse".
     final myHosted = matches.where(_isMyHostedMatch).toList();
-    final myHostedKey = myHosted.isNotEmpty ? _getMatchKey(myHosted.first) : null;
+    final myHostedKeys = myHosted.map(_getMatchKey).toSet();
 
-    // joined (excluding hosted match if it matches)
+    // joined (excluding anything they host)
     final joined = matches
         .where(_isMatchJoinedByMe)
-        .where((m) => _getMatchKey(m) != myHostedKey)
+        .where((m) => !myHostedKeys.contains(_getMatchKey(m)))
         .toList();
 
     final joinedKeys = joined.map(_getMatchKey).toSet();
 
     // browse = everything else (excluding hosted + joined)
     final browse = matches
-        .where((m) => _getMatchKey(m) != myHostedKey)
+        .where((m) => !myHostedKeys.contains(_getMatchKey(m)))
         .where((m) => !joinedKeys.contains(_getMatchKey(m)))
         .toList();
 
@@ -542,7 +565,9 @@ class _TeamsPageState extends State<TeamsPage> {
 
         if (myHosted.isNotEmpty) ...[
           _sectionTitle(loc.sectionMyMatch),
-          _buildMatchCard(context, myHosted.first, highlight: true, isJoined: false),
+          ...myHosted.map(
+            (m) => _buildMatchCard(context, m, highlight: true, isJoined: false),
+          ),
           const SizedBox(height: 12),
           const Divider(height: 28),
         ],

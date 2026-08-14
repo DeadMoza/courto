@@ -1361,6 +1361,12 @@ abstract class AppLocalizations {
   /// **'Time notice'**
   String get timeTooltip;
 
+  /// No description provided for @discountSlots.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount Slots'**
+  String get discountSlots;
+
   /// No description provided for @noImages.
   ///
   /// In en, this message translates to:
@@ -2350,6 +2356,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'My Subscriptions'**
   String get subscriptionsPage;
+
+  /// No description provided for @createMatchModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you want to start?'**
+  String get createMatchModeTitle;
+
+  /// No description provided for @createMatchModeBooked.
+  ///
+  /// In en, this message translates to:
+  /// **'I already booked'**
+  String get createMatchModeBooked;
+
+  /// No description provided for @createMatchModeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Find players first'**
+  String get createMatchModeOpen;
+
+  /// No description provided for @createMatchModeOpenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Post the game you want to play. Book the pitch once you know you have enough players.'**
+  String get createMatchModeOpenHint;
+
+  /// No description provided for @createMatchModeBookedNoBookings.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no upcoming bookings. Use \"Find players first\" instead.'**
+  String get createMatchModeBookedNoBookings;
+
+  /// No description provided for @createMatchWhereAndWhen.
+  ///
+  /// In en, this message translates to:
+  /// **'Where and when'**
+  String get createMatchWhereAndWhen;
+
+  /// No description provided for @createMatchCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get createMatchCity;
+
+  /// No description provided for @createMatchSport.
+  ///
+  /// In en, this message translates to:
+  /// **'Sport'**
+  String get createMatchSport;
+
+  /// No description provided for @createMatchPreferredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred field (optional)'**
+  String get createMatchPreferredField;
+
+  /// No description provided for @createMatchAnyField.
+  ///
+  /// In en, this message translates to:
+  /// **'Any field'**
+  String get createMatchAnyField;
+
+  /// No description provided for @createMatchDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get createMatchDate;
+
+  /// No description provided for @createMatchPickDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a date'**
+  String get createMatchPickDate;
+
+  /// No description provided for @createMatchStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Start time'**
+  String get createMatchStartTime;
+
+  /// No description provided for @createMatchEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'End time'**
+  String get createMatchEndTime;
+
+  /// No description provided for @createMatchPickTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a time'**
+  String get createMatchPickTime;
+
+  /// No description provided for @createMatchPlayersTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total players (including you)'**
+  String get createMatchPlayersTotal;
+
+  /// No description provided for @createMatchNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for players (optional)'**
+  String get createMatchNotes;
+
+  /// No description provided for @createMatchNotesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. friendly game, bring a dark shirt'**
+  String get createMatchNotesHint;
+
+  /// No description provided for @createMatchPickCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a city'**
+  String get createMatchPickCity;
+
+  /// No description provided for @createMatchPickDateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a date, a start time and an end time'**
+  String get createMatchPickDateTime;
+
+  /// No description provided for @createMatchStartsTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The match must start at least 6 hours from now'**
+  String get createMatchStartsTooSoon;
+
+  /// No description provided for @createMatchEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'The end time must be after the start time'**
+  String get createMatchEndBeforeStart;
+
+  /// No description provided for @badgeNoVenue.
+  ///
+  /// In en, this message translates to:
+  /// **'No venue yet'**
+  String get badgeNoVenue;
+
+  /// No description provided for @matchSuggestedField.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested: {field}'**
+  String matchSuggestedField(String field);
+
+  /// No description provided for @matchVenueNotBookedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The pitch has not been booked yet'**
+  String get matchVenueNotBookedYet;
+
+  /// No description provided for @matchDetailsAttachBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Link one of my bookings'**
+  String get matchDetailsAttachBooking;
+
+  /// No description provided for @matchDetailsAttachBookingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a booking'**
+  String get matchDetailsAttachBookingTitle;
+
+  /// No description provided for @matchDetailsAttachBookingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no confirmed bookings to link. Book a field first.'**
+  String get matchDetailsAttachBookingNone;
+
+  /// No description provided for @matchDetailsAttachBookingSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Booking linked to the match'**
+  String get matchDetailsAttachBookingSuccess;
+
+  /// No description provided for @matchDetailsAttachBookingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not link the booking'**
+  String get matchDetailsAttachBookingFailed;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

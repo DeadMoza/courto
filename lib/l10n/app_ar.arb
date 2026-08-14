@@ -483,7 +483,7 @@
 "teamsComingSoon": "قريباً سيتم فتح الجيهة",
 "navTeams": "الفريق",
 
-  "createMatch": "انشاء مبارة",
+  "createMatch": "البحث عن لاعبين",
   "noMatchesNow": "لا توجد مباريات متاحة حالياً",
   "sectionMyMatch": "مباراتك",
   "sectionJoinedMatches": "المباراة التي انضممت لها",
@@ -634,9 +634,43 @@
   "matchDetailsLeaveFailed": "تعذر مغادرة المباراة",
 
   "cancelReasonTitle": "سبب الالغاء",
-  "subscriptionsPage": "الاشتراكات"
+  "subscriptionsPage": "الاشتراكات",
 
+  "createMatchModeTitle": "كيف تريد البدء؟",
+  "createMatchModeBooked": "لدي حجز مأكد",
+  "createMatchModeOpen": "أبحث عن لاعبين أولاً",
+  "createMatchModeOpenHint": "انشر المباراة التي تريد لعبها، واحجز الملعب بعد أن تتأكد من اكتمال عدد اللاعبين.",
+  "createMatchModeBookedNoBookings": "ليس لديك حجوزات قادمة. استخدم \"أبحث عن لاعبين أولاً\".",
 
+  "createMatchWhereAndWhen": "أين ومتى",
+  "createMatchCity": "المدينة",
+  "createMatchSport": "نوع اللعبة",
+  "createMatchPreferredField": "ملعب مقترح (اختياري)",
+  "createMatchAnyField": "أي ملعب",
+  "createMatchDate": "التاريخ",
+  "createMatchPickDate": "اختر التاريخ",
+  "createMatchStartTime": "وقت البداية",
+  "createMatchEndTime": "وقت النهاية",
+  "createMatchPickTime": "اختر الوقت",
+  "createMatchPlayersTotal": "عدد اللاعبين (بما فيهم أنت)",
+  "createMatchNotes": "ملاحظة للاعبين (اختياري)",
+  "createMatchNotesHint": "مثال: مباراة ودية، أحضر قميصاً غامقاً",
 
+  "createMatchPickCity": "يرجى اختيار المدينة",
+  "createMatchPickDateTime": "يرجى اختيار التاريخ ووقت البداية والنهاية",
+  "createMatchStartsTooSoon": "يجب أن تبدأ المباراة بعد 6 ساعات على الأقل من الآن",
+  "createMatchEndBeforeStart": "وقت النهاية يجب أن يكون بعد وقت البداية",
 
+  "badgeNoVenue": "بدون حجز",
+  "matchSuggestedField": "ملعب مقترح: {field}",
+  "@matchSuggestedField": {
+    "placeholders": { "field": { "type": "String" } }
+  },
+  "matchVenueNotBookedYet": "لم يتم حجز الملعب بعد",
+
+  "matchDetailsAttachBooking": "اربط أحد حجوزاتي",
+  "matchDetailsAttachBookingTitle": "اختر حجزاً",
+  "matchDetailsAttachBookingNone": "ليس لديك حجوزات مؤكدة لربطها. احجز ملعباً أولاً.",
+  "matchDetailsAttachBookingSuccess": "تم ربط الحجز بالمباراة",
+  "matchDetailsAttachBookingFailed": "تعذر ربط الحجز"
 }
