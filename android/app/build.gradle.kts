@@ -42,6 +42,20 @@ android {
     }
 
 
+    // The NUMO/PaySky SDK ships prebuilt card.io + OpenCV .so files. Their
+    // x86_64 builds have 4KB-aligned LOAD segments, which fails Google Play's
+    // 16KB memory page size requirement. arm64-v8a is clean (64KB aligned), so
+    // the fix is to drop the x86 ABIs entirely.
+    //
+    // --target-platform only controls the Flutter engine libs, not the .so
+    // files bundled inside dependency AARs, which is why the CLI flag alone
+    // left x86_64 in the bundle. Removing this block puts the error back.
+    packaging {
+        jniLibs {
+            excludes += listOf("lib/x86_64/**", "lib/x86/**")
+        }
+    }
+
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String
