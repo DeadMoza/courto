@@ -7,6 +7,8 @@ import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:courto/image_viewer.dart';
+
 // ---------------------------------------------------------------------------
 // SubscriptionPlanPage
 // ---------------------------------------------------------------------------
@@ -32,7 +34,13 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
 
   // ── Selected plan ─────────────────────────────────────────────────────────
   late int _planIndex;
-  Map<String, dynamic> get _plan => widget.plans[_planIndex];
+
+  /// A local copy of what we were handed, so a plan can be refreshed in place.
+  /// The list this page is pushed with was loaded a screen ago, and the places
+  /// count is the one thing on here that goes out of date while it is open.
+  late List<Map<String, dynamic>> _plans;
+
+  Map<String, dynamic> get _plan => _plans[_planIndex];
 
   // ── Duration selector ─────────────────────────────────────────────────────
   String _durationType = 'monthly';
@@ -57,11 +65,7 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
   final _formKey    = GlobalKey<FormState>();
   final _nameCtrl   = TextEditingController();
   final _phoneCtrl  = TextEditingController();
-  final _schoolCtrl = TextEditingController();
-  final _gradeCtrl  = TextEditingController();
 
-  String?   _gender;
-  DateTime? _birthDate;
   bool      _loading = false;
 
   // ── Animation ─────────────────────────────────────────────────────────────
@@ -71,11 +75,55 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
   @override
   void initState() {
     super.initState();
-    _planIndex = widget.initialIndex.clamp(0, widget.plans.length - 1);
+    _plans     = List<Map<String, dynamic>>.from(widget.plans);
+    _planIndex = widget.initialIndex.clamp(0, _plans.length - 1);
     _fadeCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 350));
     _fadeAnim  = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeIn);
     _fadeCtrl.forward();
     _initDuration();
+    _refreshPlan();
+    _prefillFromAccount();
+  }
+
+  /// The account holder is almost always the member, so the two fields they
+  /// would otherwise retype are filled in. Both stay editable: a parent
+  /// subscribing for someone else needs to be able to overwrite them, and the
+  /// member details are stored per subscription, not taken from the account.
+  void _prefillFromAccount() {
+    final user = AuthService.userData;
+    if (user == null) return;
+
+    _nameCtrl.text = user['full_name']?.toString() ?? '';
+    // Digits only, matching the field's input formatter. _normalisePhone
+    // accepts the stored 218XXXXXXXXX form as-is.
+    _phoneCtrl.text =
+        (user['phone_number']?.toString() ?? '').replaceAll(RegExp(r'\D'), '');
+  }
+
+  /// Re-reads the selected plan so places-left and prices are current. Silent
+  /// on failure: what we already have is only slightly stale, and a purchase
+  /// is validated server-side regardless.
+  Future<void> _refreshPlan() async {
+    final id = _plan['id'];
+    if (id == null) return;
+
+    try {
+      final apiUrl = dotenv.env['API_URL'] ?? '';
+      final res = await http.get(
+        Uri.parse('${apiUrl}users/getGymById/$id'),
+        headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
+      );
+      if (res.statusCode != 200) return;
+
+      final data = jsonDecode(res.body);
+      if (data['data'] == null || !mounted) return;
+
+      setState(() {
+        _plans[_planIndex] = Map<String, dynamic>.from(data['data']);
+      });
+    } catch (_) {
+      // Keep what we were handed.
+    }
   }
 
   void _initDuration() {
@@ -90,8 +138,6 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
     _fadeCtrl.dispose();
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
-    _schoolCtrl.dispose();
-    _gradeCtrl.dispose();
     super.dispose();
   }
 
@@ -102,6 +148,29 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
     final type = (_plan['type'] ?? '').toString().toLowerCase();
     return _planTypeImage[type] ?? 'assets/images/courtoDefaultHeader.jpg';
   }
+
+  // ── Photos ────────────────────────────────────────────────────────────────
+  // Real uploaded photos, from subscription_plan_images. The bundled asset
+  // keyed off `type` is only the fallback now - it was never a picture of
+  // this particular place.
+  List<String> get _images => ((_plan['images'] as List<dynamic>?) ?? [])
+      .map((e) => e.toString())
+      .where((e) => e.isNotEmpty)
+      .toList();
+
+  String _imageUrl(String raw) {
+    if (raw.startsWith('http')) return raw;
+    final base = dotenv.env['API_URL'] ?? '';
+    final trimmed = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    return "$trimmed${raw.startsWith('/') ? raw : '/$raw'}";
+  }
+
+  // ── Places ────────────────────────────────────────────────────────────────
+  // max_seats null means the gym does not cap membership, which is different
+  // from "no places left" - the two must not collapse into the same display.
+  int? get _maxSeats => int.tryParse(_plan['max_seats']?.toString() ?? '');
+  int get _seatsLeft => int.tryParse(_plan['available_seats']?.toString() ?? '') ?? 0;
+  bool get _isFull => _maxSeats != null && _seatsLeft <= 0;
 
   double? get _selectedPrice {
     final p = _plan;
@@ -162,46 +231,9 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
     return v;
   }
 
-  // ── Date picker ───────────────────────────────────────────────────────────
-  Future<void> _pickBirthDate() async {
-    final primary = Theme.of(context).colorScheme.primary;
-    final picked  = await showDatePicker(
-      context:     context,
-      initialDate: _birthDate ?? DateTime(2005),
-      firstDate:   DateTime(1950),
-      lastDate:    DateTime.now(),
-      locale:      const Locale('en'), // always English letters in the picker
-      builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: ColorScheme.light(primary: primary),
-        ),
-        child: child!,
-      ),
-    );
-    if (picked != null) setState(() => _birthDate = picked);
-  }
-
-  // Always display date in English regardless of app locale
-  String _formatDate(DateTime d) {
-    const months = [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December',
-    ];
-    return '${months[d.month - 1]} ${d.day}, ${d.year}';
-  }
-
   // ── Submit ────────────────────────────────────────────────────────────────
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    if (_gender == null) {
-      _showSnack(isEnglish ? 'Please select your gender' : 'يرجى اختيار الجنس');
-      return;
-    }
-    if (_birthDate == null) {
-      _showSnack(isEnglish ? 'Please select your birth date' : 'يرجى اختيار تاريخ الميلاد');
-      return;
-    }
 
     final normalisedPhone = _normalisePhone(_phoneCtrl.text);
     if (normalisedPhone == null) {
@@ -226,10 +258,9 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
           'duration_type': _durationType,
           'full_name':     _nameCtrl.text.trim(),
           'phone_number':  normalisedPhone,
-          'school':        _schoolCtrl.text.trim(),
-          'grade':         _gradeCtrl.text.trim(),
-          'gender':        _gender,
-          'birth_date':    _birthDate!.toIso8601String().split('T').first,
+          // gender / school / grade / birth_date are no longer collected. All
+          // four columns are nullable and users_purchase_subscription takes
+          // null for them; a gym only needs a name and a number.
         }),
       );
 
@@ -268,6 +299,9 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
       _planIndex = index;
       _initDuration();
     });
+    // The newly selected plan carries the same stale places count as the one
+    // just left, so it gets the same refresh.
+    _refreshPlan();
     _fadeCtrl
       ..reset()
       ..forward();
@@ -332,8 +366,21 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
                     children: [
 
                       // Plan selector — only shown when there are multiple plans
-                      if (widget.plans.length > 1) ...[
+                      if (_plans.length > 1) ...[
                         _buildPlanSelector(en, cs),
+                        const SizedBox(height: 24),
+                      ],
+
+                      if (_maxSeats != null) ...[
+                        _buildSeatsBadge(en),
+                        const SizedBox(height: 20),
+                      ],
+
+                      // More than one photo is worth a strip; a single one is
+                      // already the hero above, and tapping that opens the
+                      // viewer just the same.
+                      if (_images.length > 1) ...[
+                        _buildGallery(en),
                         const SizedBox(height: 24),
                       ],
 
@@ -382,9 +429,24 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
       ? (_plan['location_eng'] ?? _plan['location'] ?? '')
       : (_plan['location'] ?? '');
 
+  // Coordinates, not the location text: the text is a free-typed description
+  // ("behind the mosque"), which Google resolves to whatever it likes — or to
+  // nothing. The gym's own lat/lng drops the pin exactly where it is, matching
+  // what the field details page already does.
   Future<void> openMaps() async {
-    final query = Uri.encodeComponent(location.toString());
-    final uri   = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
+    final double? lat = double.tryParse(_plan['latitude']?.toString() ?? '');
+    final double? lng = double.tryParse(_plan['longitude']?.toString() ?? '');
+    final bool hasCoords =
+        lat != null && lng != null && !(lat == 0 && lng == 0);
+
+    // A plan saved without coordinates would otherwise open the map at 0,0 in
+    // the Atlantic, so the text is still the fallback for that one case.
+    final String query = hasCoords
+        ? '$lat,$lng'
+        : Uri.encodeComponent(location.toString());
+    if (query.isEmpty) return;
+
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$query');
     if (await canLaunchUrl(uri)) launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
@@ -395,12 +457,28 @@ class _SubscriptionPlanPageState extends State<SubscriptionPlanPage>
       fit: StackFit.expand,
       children: [
 
-        // Background image
-        Image.asset(
-          _imagePath,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(color: cs.primary),
-        ),
+        // Background: the gym's own first photo, falling back to the bundled
+        // asset for a plan that has none uploaded yet. Tapping opens the
+        // viewer, so the hero is not a dead end when there is only one photo.
+        if (_images.isNotEmpty)
+          GestureDetector(
+            onTap: () => _openViewer(0),
+            child: Image.network(
+              _imageUrl(_images.first),
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Image.asset(
+                _imagePath,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(color: cs.primary),
+              ),
+            ),
+          )
+        else
+          Image.asset(
+            _imagePath,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(color: cs.primary),
+          ),
 
         // Multi-stop gradient: dark top (for back button) → transparent middle → dark bottom
         DecoratedBox(
@@ -549,6 +627,118 @@ if (description.isNotEmpty) ...[
   );
 }
 
+  // ── Gallery ───────────────────────────────────────────────────────────────
+  /// Opens the full-screen viewer at [index]. Reached from the hero and from
+  /// any thumbnail, so a photo is always one tap from being readable.
+  void _openViewer(int index) {
+    if (_images.isEmpty) return;
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, __, ___) => ImageViewer(
+          images: _images.map(_imageUrl).toList(),
+          initialIndex: index,
+          isEnglish: isEnglish,
+        ),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
+    );
+  }
+
+  Widget _buildGallery(bool en) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              en ? 'Photos' : 'الصور',
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '(${_images.length})',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SizedBox(
+          height: 130,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _images.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: () => _openViewer(i),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  _imageUrl(_images[i]),
+                  width: 180,
+                  height: 130,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 180,
+                    height: 130,
+                    color: Colors.grey.shade300,
+                    child: Icon(Icons.broken_image,
+                        color: Colors.grey.shade600),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Places left ───────────────────────────────────────────────────────────
+  // Only rendered when the gym caps membership. available_seats comes from
+  // plans_occupied_seats, which counts distinct members with a subscription
+  // that has not lapsed - so a place frees up the day a membership expires.
+  Widget _buildSeatsBadge(bool en) {
+    final max = _maxSeats!;
+    final left = _seatsLeft;
+    final full = _isFull;
+    // A quarter of capacity is the point where "nearly gone" is worth saying.
+    final low = !full && left <= (max / 4).ceil();
+    final color = full ? Colors.redAccent : (low ? Colors.deepOrange : Colors.teal);
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: color, width: 0.8),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(full ? Icons.block : Icons.event_seat_outlined,
+                color: color, size: 14),
+            const SizedBox(width: 5),
+            Text(
+              full
+                  ? (en ? 'Full' : 'مكتمل')
+                  : (en ? '$left of $max left' : 'متبقي $left من $max'),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   // ── Plan selector ─────────────────────────────────────────────────────────
   Widget _buildPlanSelector(bool en, ColorScheme cs) {
     return Column(
@@ -563,10 +753,10 @@ if (description.isNotEmpty) ...[
           height: 90,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount:       widget.plans.length,
+            itemCount:       _plans.length,
             separatorBuilder: (_, __) => const SizedBox(width: 10),
             itemBuilder: (_, i) {
-              final p        = widget.plans[i];
+              final p        = _plans[i];
               final selected = i == _planIndex;
               final type     = (p['type'] ?? '').toString().toLowerCase();
               final icon     = _planTypeIcon[type] ?? Icons.star_outline;
@@ -723,28 +913,11 @@ if (description.isNotEmpty) ...[
               return null;
             },
           ),
-          const SizedBox(height: 14),
 
-          _genderSelector(en, cs),
-          const SizedBox(height: 14),
-
-          _birthDatePicker(en, cs),
-          const SizedBox(height: 14),
-
-          _field(
-            controller: _schoolCtrl,
-            label: en ? 'School (optional)' : 'المدرسة (اختياري)',
-            icon:  Icons.school_outlined,
-            cs:    cs,
-          ),
-          const SizedBox(height: 14),
-
-          _field(
-            controller: _gradeCtrl,
-            label: en ? 'Grade (optional)' : 'الصف الدراسي (اختياري)',
-            icon:  Icons.grade_outlined,
-            cs:    cs,
-          ),
+          // Gender, school, grade and birth date used to sit here. They belong
+          // to the academy-style plans this page was first written for; a gym
+          // needs a name and a number, and asking for more is friction plus
+          // personal data nobody uses. The columns stay nullable.
         ],
       ),
     );
@@ -777,100 +950,22 @@ if (description.isNotEmpty) ...[
     );
   }
 
-  Widget _genderSelector(bool en, ColorScheme cs) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            _genderOption(en ? 'Male' : 'ذكر',    'male',   Icons.male,   cs),
-            const SizedBox(width: 12),
-            _genderOption(en ? 'Female' : 'أنثى', 'female', Icons.female, cs),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _genderOption(String label, String value, IconData icon, ColorScheme cs) {
-    final selected = _gender == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _gender = value),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color:        selected ? cs.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: selected ? cs.primary : Colors.grey.shade300,
-              width: 1.5,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon,
-                size:  20,
-                color: selected ? Colors.white : Colors.grey.shade500,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: selected ? Colors.white : Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _birthDatePicker(bool en, ColorScheme cs) {
-    return GestureDetector(
-      onTap: _pickBirthDate,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
-        decoration: BoxDecoration(
-          border:       Border.all(color: Colors.grey.shade400),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.cake_outlined, color: cs.primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                _birthDate == null
-                    ? (en ? 'Birth date' : 'تاريخ الميلاد')
-                    : _formatDate(_birthDate!), // always English format
-                style: TextStyle(
-                  fontSize: 15,
-                  color: _birthDate == null ? Colors.grey.shade500 : null,
-                ),
-              ),
-            ),
-            Icon(Icons.calendar_today_outlined,
-              size:  18,
-              color: Colors.grey.shade500,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   // ── Pay button ────────────────────────────────────────────────────────────
 Widget _buildPayButton(bool en, ColorScheme cs) {
   final price    = _selectedPrice;
   final loggedIn = AuthService.isLoggedIn;
 
+  // users_purchase_subscription refuses a full plan anyway; catching it here
+  // means the user is told before filling the form, not after paying attention
+  // to it. The button stays visible rather than hidden so the reason is on
+  // screen next to the places card.
+  final full = _isFull;
+
   final String label;
-  if (!loggedIn) {
+  if (full) {
+    label = en ? 'No places left' : 'لا توجد أماكن متاحة';
+  } else if (!loggedIn) {
     label = price != null
         ? (en
             ? 'Log in to pay LYD ${price.toStringAsFixed(2)}'
@@ -888,13 +983,13 @@ Widget _buildPayButton(bool en, ColorScheme cs) {
     width:  double.infinity,
     height: 54,
     child: ElevatedButton(
-      // disabled when not logged in OR while loading
-      onPressed: (!loggedIn || _loading) ? null : _submit,
+      // disabled when full, not logged in, or while loading
+      onPressed: (full || !loggedIn || _loading) ? null : _submit,
       style: ElevatedButton.styleFrom(
-        backgroundColor: loggedIn ? cs.primary : Colors.grey.shade400,
-        disabledBackgroundColor: loggedIn ? null : Colors.grey.shade300,
+        backgroundColor: (loggedIn && !full) ? cs.primary : Colors.grey.shade400,
+        disabledBackgroundColor: (loggedIn && !full) ? null : Colors.grey.shade300,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: loggedIn ? 4 : 0,
+        elevation: (loggedIn && !full) ? 4 : 0,
       ),
       child: _loading
           ? const SizedBox(

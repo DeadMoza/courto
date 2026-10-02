@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:courto/app_bar.dart';
 import 'package:courto/constants.dart';
+import 'package:courto/image_viewer.dart';
 import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -359,6 +360,30 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
     );
   }
 
+  /// Full-screen browser for the field's photos: swipe, pinch and double-tap
+  /// to zoom. Same viewer the gym gallery uses.
+  void _openImageViewer(List<dynamic> images, int index) {
+    final urls = images
+        .map((e) => _resolveImageUrl(e?.toString() ?? ''))
+        .where((e) => e.isNotEmpty)
+        .toList();
+    if (urls.isEmpty) return;
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierColor: Colors.black,
+        pageBuilder: (_, __, ___) => ImageViewer(
+          images: urls,
+          initialIndex: index,
+          isEnglish: _isEnglish,
+        ),
+        transitionsBuilder: (_, anim, __, child) =>
+            FadeTransition(opacity: anim, child: child),
+      ),
+    );
+  }
+
   Widget _buildImageCarousel(List<dynamic> images) {
     return Container(
       margin: const EdgeInsets.only(top: 10.0),
@@ -375,7 +400,11 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                   final img = images[index]?.toString() ?? '';
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                    child: ClipRRect(
+                    child: GestureDetector(
+                      // Opens the full-screen viewer at this photo, where it
+                      // can be zoomed and swiped through properly.
+                      onTap: () => _openImageViewer(images, index),
+                      child: ClipRRect(
                       borderRadius: BorderRadius.circular(5),
                       child: Image.network(
                         _resolveImageUrl(img),
@@ -404,6 +433,7 @@ class _FieldDetailsPageState extends State<FieldDetailsPage> {
                           );
                         },
                       ),
+                    ),
                     ),
                   );
                 },

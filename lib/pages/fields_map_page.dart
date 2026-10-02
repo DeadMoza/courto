@@ -7,6 +7,7 @@ import 'package:custom_info_window/custom_info_window.dart';
 import 'dart:ui' as ui;
 import 'package:courto/l10n/app_localizations.dart';
 import 'bookingsPages/field_details_page.dart';
+import 'gymsPages/subscription_plan_page.dart';
 import '../services/auth_service.dart';
 
 class FieldsMapPage extends StatefulWidget {
@@ -15,6 +16,12 @@ class FieldsMapPage extends StatefulWidget {
   final double cityLat;
   final double cityLng;
   final List<Map<String, dynamic>> fields;
+
+  /// Gyms are subscription_plans rows, not fields, so they arrive separately
+  /// and are pinned with their own marker. Optional: a caller that has not
+  /// loaded them simply shows fields, as before.
+  final List<Map<String, dynamic>> gyms;
+
   final bool loading;
 
   const FieldsMapPage({
@@ -24,6 +31,7 @@ class FieldsMapPage extends StatefulWidget {
     required this.cityLat,
     required this.cityLng,
     required this.fields,
+    this.gyms = const [],
     required this.loading,
   });
 
@@ -59,6 +67,13 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   static const String _basketballSelectedIconKey = 'basketball_selected';
   static const String _padelIconKey = 'padel';
   static const String _padelSelectedIconKey = 'padel_selected';
+  static const String _gymIconKey = 'gym';
+  static const String _gymSelectedIconKey = 'gym_selected';
+
+  /// Gym marker ids are prefixed so a gym and a field can share a numeric id
+  /// without colliding in [_fieldLookup] — and so the icon lookup knows which
+  /// sprite set a marker belongs to.
+  static const String _gymIdPrefix = 'gym_';
 
   @override
   void initState() {
@@ -76,7 +91,8 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   @override
   void didUpdateWidget(covariant FieldsMapPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.fields != oldWidget.fields && _iconsLoaded) {
+    if ((widget.fields != oldWidget.fields || widget.gyms != oldWidget.gyms) &&
+        _iconsLoaded) {
       _loadFieldMarkers();
     }
   }
@@ -124,6 +140,23 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     }
   }
 
+  bool _isGymMarker(String markerId) => markerId.startsWith(_gymIdPrefix);
+
+  /// Both marker families live in [_fieldLookup] and both go through
+  /// [_updateSingleMarkerIcon], so the sprite has to be chosen by marker id.
+  /// Picking on `field_type` alone would hand every gym the football sprite,
+  /// since a subscription_plans row has no field_type at all.
+  BitmapDescriptor? _iconForMarker(String markerId, {required bool isSelected}) {
+    if (_isGymMarker(markerId)) {
+      return isSelected
+          ? _cachedIcons[_gymSelectedIconKey]
+          : _cachedIcons[_gymIconKey];
+    }
+    final Map<String, dynamic>? field = _fieldLookup[markerId];
+    if (field == null) return null;
+    return _getIconForField(field: field, isSelected: isSelected);
+  }
+
   Future<void> _loadCustomMarkers() async {
     try {
       _cachedIcons[_fieldIconKey] =
@@ -145,6 +178,11 @@ class _FieldsMapPageState extends State<FieldsMapPage>
           await _bitmapDescriptorFromAsset("assets/images/courtoPadelSprite.png", 110);
       _cachedIcons[_padelSelectedIconKey] =
           await _bitmapDescriptorFromAsset("assets/images/courtoPadelSprite.png", 130);
+
+      _cachedIcons[_gymIconKey] =
+          await _bitmapDescriptorFromAsset("assets/images/courtoGymSprite.jpg", 110);
+      _cachedIcons[_gymSelectedIconKey] =
+          await _bitmapDescriptorFromAsset("assets/images/courtoGymSprite.jpg", 130);
 
       if (mounted) {
         setState(() => _iconsLoaded = true);
@@ -229,8 +267,141 @@ class _FieldsMapPageState extends State<FieldsMapPage>
     setState(() {
       _markers
         ..clear()
-        ..addAll(markers);
+        ..addAll(markers)
+        ..addAll(_buildGymMarkers());
     });
+  }
+
+  // Gyms are subscription_plans rows, so they carry their own sprite rather
+  // than a field type. The id is prefixed so a gym and a field can share a
+  // numeric id without colliding in _fieldLookup.
+  Set<Marker> _buildGymMarkers() {
+    final isEnglish = Localizations.localeOf(context).languageCode == "en";
+
+    return widget.gyms
+        .where((g) => g["latitude"] != null && g["longitude"] != null)
+        .map((gym) {
+          final double lat =
+              double.tryParse(gym["latitude"]?.toString() ?? '') ?? 0.0;
+          final double lng =
+              double.tryParse(gym["longitude"]?.toString() ?? '') ?? 0.0;
+          if (lat == 0.0 && lng == 0.0) return null;
+
+          final String name = isEnglish
+              ? (gym["name_eng"] ?? gym["name"] ?? 'Gym').toString()
+              : (gym["name"] ?? 'صالة').toString();
+
+          final String uniqueId = '$_gymIdPrefix${gym["id"] ?? "${name}_$lat$lng"}';
+          _fieldLookup[uniqueId] = gym;
+
+          final BitmapDescriptor? icon = _iconForMarker(
+            uniqueId,
+            isSelected: _selectedMarkerId == uniqueId,
+          );
+          if (icon == null) return null;
+
+          return Marker(
+            markerId: MarkerId(uniqueId),
+            position: LatLng(lat, lng),
+            icon: icon,
+            onTap: () => _handleGymTap(uniqueId),
+          );
+        })
+        .whereType<Marker>()
+        .toSet();
+  }
+
+  void _handleGymTap(String markerId) {
+    final Map<String, dynamic>? gym = _fieldLookup[markerId];
+    if (gym == null) return;
+
+    final LatLng position = LatLng(
+      double.tryParse(gym["latitude"]?.toString() ?? '') ?? 0.0,
+      double.tryParse(gym["longitude"]?.toString() ?? '') ?? 0.0,
+    );
+
+    // Same bookkeeping as a field tap: whatever was selected before goes back
+    // to its unselected sprite, otherwise tapping from a field to a gym leaves
+    // the field marker stuck at its enlarged size.
+    final String? oldSelectedId = _selectedMarkerId;
+    if (oldSelectedId != null && oldSelectedId != markerId) {
+      _updateSingleMarkerIcon(oldSelectedId, false);
+    }
+
+    final bool currentlySelected = _selectedMarkerId == markerId;
+    _updateSingleMarkerIcon(markerId, !currentlySelected);
+
+    setState(() => _selectedMarkerId = currentlySelected ? null : markerId);
+
+    if (currentlySelected) {
+      _customInfoWindowController.hideInfoWindow!();
+    } else {
+      _customInfoWindowController.addInfoWindow!(
+        _buildGymInfo(gym),
+        position,
+      );
+    }
+  }
+
+  Widget _buildGymInfo(Map<String, dynamic> gym) {
+    final isEnglish = Localizations.localeOf(context).languageCode == "en";
+    final name = isEnglish
+        ? (gym["name_eng"] ?? gym["name"] ?? "Gym").toString()
+        : (gym["name"] ?? "صالة").toString();
+    final price = gym["monthly_price"]?.toString() ?? "0";
+
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SubscriptionPlanPage(plans: [gym], initialIndex: 0),
+          ),
+        );
+      },
+      child: _AnimatedInfoWindow(
+        child: Container(
+          width: 240,
+          padding: const EdgeInsets.all(7),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 6,
+                offset: const Offset(2, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: "Changa",
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                isEnglish ? "$price LYD / month" : "$price د.ل / شهرياً",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _handleMarkerTap(String markerId) {
@@ -265,25 +436,30 @@ class _FieldsMapPageState extends State<FieldsMapPage>
   }
 
   void _updateSingleMarkerIcon(String markerId, bool isSelected) {
-    final field = _fieldLookup[markerId];
-    if (field == null || field.isEmpty) return;
+    final entry = _fieldLookup[markerId];
+    if (entry == null || entry.isEmpty) return;
 
     final BitmapDescriptor? newIcon =
-        _getIconForField(field: field, isSelected: isSelected);
+        _iconForMarker(markerId, isSelected: isSelected);
     if (newIcon == null) return;
 
-    final Marker? existingMarker = _markers.firstWhere(
-      (m) => m.markerId.value == markerId,
-      // ignore: cast_from_null_always_fails
-      orElse: () => null as Marker,
-    );
-
-    if (existingMarker != null) {
-      setState(() {
-        _markers.remove(existingMarker);
-        _markers.add(existingMarker.copyWith(iconParam: newIcon));
-      });
+    // firstWhere with an `orElse` that casts null to Marker throws when the id
+    // is not on the map, which is reachable now that gym taps come through
+    // here too. A nullable lookup just does nothing instead.
+    Marker? existingMarker;
+    for (final m in _markers) {
+      if (m.markerId.value == markerId) {
+        existingMarker = m;
+        break;
+      }
     }
+    if (existingMarker == null) return;
+
+    final Marker marker = existingMarker;
+    setState(() {
+      _markers.remove(marker);
+      _markers.add(marker.copyWith(iconParam: newIcon));
+    });
   }
 
   Widget _buildCustomInfo(Map<String, dynamic> field) {

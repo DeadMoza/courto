@@ -348,11 +348,59 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
                   ),
                 ],
               ),
+
+              // How long is left, or how long ago it lapsed. days_remaining is
+              // computed against end_date server-side, so this stays right
+              // even before the expiry sweep has corrected the stored status.
+              if (_remainingLabel(sub, en) case final label?) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      status == 'active'
+                          ? Icons.hourglass_bottom
+                          : Icons.event_busy,
+                      size: 15,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: statusColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// "12 days left" / "Expired 3 days ago", or null when there is nothing
+  /// useful to say (a paused or cancelled membership, or a missing value).
+  String? _remainingLabel(Map<String, dynamic> sub, bool en) {
+    final days = int.tryParse(sub['days_remaining']?.toString() ?? '');
+    if (days == null) return null;
+
+    final status = (sub['status'] ?? '').toString();
+
+    if (status == 'expired') {
+      final ago = days < 0 ? -days : 0;
+      if (ago == 0) return en ? 'Expired today' : 'انتهى اليوم';
+      return en ? 'Expired $ago days ago' : 'انتهى منذ $ago يوم';
+    }
+
+    if (status != 'active') return null;
+
+    if (days <= 0) return en ? 'Expires today' : 'ينتهي اليوم';
+    if (days == 1) return en ? '1 day left' : 'متبقي يوم واحد';
+    return en ? '$days days left' : 'متبقي $days يوم';
   }
 
   Widget _dateChip(String label, String value, IconData icon, Color iconColor) {

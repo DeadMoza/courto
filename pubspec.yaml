@@ -58,7 +58,8 @@ flutter:
     - assets/images/courtoPadelSprite.png
     - assets/images/courtoDefaultHeader.jpg
     - assets/images/courtoTeams.jpg
-    - assets/images/courtoChess.png
+    - assets/images/courtoFitness.png
+    - assets/images/courtoGymSprite.jpg
     - assets/map_styles/dark_map.json
   fonts:
     - family: Changa

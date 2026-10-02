@@ -134,8 +134,12 @@ class _MonthlyBookingConfirmationPageState
     final endTime = firstRange['end']!;
     final note = _noteController.text;
 
-    final totalBookingPrice = widget.totalBookingPrice * 4;
-    final remaining = widget.remainingPaymentToOwner * 4;
+    // Already the 4-week figures. The slots page prices each slot from the
+    // field's monthly_price / monthly_booking_price, which an owner can set
+    // independently of the daily price - multiplying by 4 again here would
+    // quadruple whatever they chose.
+    final totalBookingPrice = widget.totalBookingPrice;
+    final remaining = widget.remainingPaymentToOwner;
 
     showDialog(
       context: context,
@@ -269,8 +273,9 @@ class _MonthlyBookingConfirmationPageState
 
     final mergedRanges = _mergeConsecutiveSlots();
 
-    final totalBookingPrice = widget.totalBookingPrice * 4;
-    final remaining = widget.remainingPaymentToOwner * 4;
+    // The 4-week totals as priced by the slots page; see _bookField.
+    final totalBookingPrice = widget.totalBookingPrice;
+    final remaining = widget.remainingPaymentToOwner;
 
     final date2 = widget.date.add(const Duration(days: 7));
     final date3 = widget.date.add(const Duration(days: 14));

@@ -34,7 +34,9 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _cities = [];
   List<Map<String, dynamic>> _fields = [];
   List<Map<String, dynamic>> _discountedFields = [];
-  List<Map<String, dynamic>> _subscriptionPlans = [];
+
+  // Pinned on the map alongside fields.
+  List<Map<String, dynamic>> _gyms = [];
 
 
   bool _loadingFields = true;
@@ -58,7 +60,7 @@ class _HomePageState extends State<HomePage> {
     _fetchDiscountedFields();
     _fetchCarouselItems();
     _detectCity();
-    _fetchSubscriptionPlans();
+    _fetchGyms();
 
   }
 
@@ -80,7 +82,6 @@ class _HomePageState extends State<HomePage> {
           carouselImages: _carouselImages,
           onGoToFieldsPage: goToFieldsPage,
           matchesPlayedCount: _matchesPlayedCount,
-          subscriptionPlans: _subscriptionPlans,
         ),
       );
     }
@@ -115,6 +116,7 @@ if (index == 2) {
     cityLat:  cityLatitude  ?? 32.8872,
     cityLng:  cityLongitude ?? 13.1913,
     fields:   _fields,
+    gyms:     _gyms,
     loading:  _loadingFields,
   );
 }
@@ -236,7 +238,7 @@ if (index == 2) {
     await _fetchFields();
     await _fetchDiscountedFields();
     await _fetchCarouselItems();
-    await _fetchSubscriptionPlans();
+    await _fetchGyms();
 
     if (AuthService.isLoggedIn) await getMatchCount();
     _screens[0] = null;
@@ -293,21 +295,27 @@ if (index == 2) {
     }
   }
 
-  // Add this fetch method:
-Future<void> _fetchSubscriptionPlans() async {
+// Subscription plans are no longer fetched here. The landing page used to
+// draw a card per plan; it now shows a single Gyms entry, and GymsListPage
+// loads its own data. users/getSubscriptionPlans is still there server-side
+// for when there is more than one kind of plan again.
+
+// Gyms are subscription_plans rows with type = 'gym'. They are fetched here
+// only so the map can pin them; the gyms list screen loads its own copy.
+Future<void> _fetchGyms() async {
   try {
     final res = await http.get(
-      Uri.parse('${apiUrl}users/getSubscriptionPlans'),
+      Uri.parse('${apiUrl}users/getGyms'),
       headers: {'x-api-key': '${dotenv.env['API_KEY']}'},
     );
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
-      _subscriptionPlans = List<Map<String, dynamic>>.from(data['data'] ?? []);
-
-      _refreshHomeTab();
+      _gyms = List<Map<String, dynamic>>.from(data['data'] ?? []);
+      if (mounted) setState(() {});
     }
   } catch (e) {
-    print("fetchSubscriptionPlans error: $e");
+    // The map still works with fields alone.
+    print("fetchGyms error: $e");
   }
 }
 
@@ -369,7 +377,6 @@ Future<void> _fetchSubscriptionPlans() async {
   _fetchFields();
   _fetchDiscountedFields();
   _fetchCarouselItems();
-  _fetchSubscriptionPlans();
   _screens[3] = null;
   if (AuthService.isLoggedIn) getMatchCount();
 

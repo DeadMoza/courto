@@ -2,7 +2,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:courto/pages/bookingsPages/field_details_page.dart';
 import 'package:courto/pages/login_page.dart';
 import 'package:courto/pages/signup_page.dart';
-import 'package:courto/pages/subscription_plan_page.dart';
+import 'package:courto/pages/gymsPages/gyms_list_page.dart';
 import 'package:courto/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
@@ -20,7 +20,6 @@ class LandingPage extends StatelessWidget {
   final String? featuredText2;
   final onGoToFieldsPage;
   final int matchesPlayedCount;
-  final List<Map<String, dynamic>> subscriptionPlans;
 
   LandingPage({
     super.key,
@@ -31,7 +30,6 @@ class LandingPage extends StatelessWidget {
     required this.featuredText2,
     required this.onGoToFieldsPage,
     required this.matchesPlayedCount,
-    required this.subscriptionPlans,
   });
 
   final String? _apiUrl = dotenv.env['API_URL'];
@@ -101,60 +99,32 @@ class LandingPage extends StatelessWidget {
     }
   }
 
-  static const Map<String, String> _planTypeImage = {
-    'chess':    'assets/images/courtoChess.png',
-    'academy':  'assets/images/courtoTeams.jpg',
-    'swimming': 'assets/images/courtoSwimming.png',
-    'fitness':  'assets/images/courtoFitness.png',
-    'arcade': 'assets/images/courtoArcade.png'
-  };
-
-static const Map<String, IconData> _planTypeIcon = {
-  'chess':    Icons.grid_on_rounded,
-  'academy':  Icons.directions_run,
-  'swimming': Icons.pool,
-  'fitness':  Icons.fitness_center,
-  'arcade': Icons.gamepad_outlined
-};
-
+// One entry, not one card per gym. Individual gyms live behind the list -
+// there can be many of them, and each needs photos, a location and places
+// left, none of which fits on a landing page tile.
 Widget _buildSignUpSections(BuildContext context, bool isEnglish) {
-  if (subscriptionPlans.isEmpty) return const SizedBox.shrink();
-
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: kPadding),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (int i = 0; i < subscriptionPlans.length; i++) ...[
-          _buildPlanCard(context, isEnglish, subscriptionPlans[i], i),
-          if (i < subscriptionPlans.length - 1) const SizedBox(height: 16),
-        ],
-      ],
-    ),
+    child: _buildGymsCard(context, isEnglish),
   );
 }
 
-Widget _buildPlanCard(BuildContext context, bool isEnglish, Map<String, dynamic> plan, int planIndex) {
-  final type      = (plan['type'] ?? '').toString().toLowerCase();
-  final imagePath = _planTypeImage[type] ?? 'assets/images/courtoDefaultHeader.jpg';
-  final icon      = _planTypeIcon[type] ?? Icons.star_outline;
-
-  final title       = isEnglish ? (plan['name_eng'] ?? plan['name'] ?? '') : (plan['name'] ?? '');
-  final description = isEnglish ? (plan['short_description_eng'] ?? plan['short_description'] ?? '') : (plan['short_description'] ?? '');
-  final buttonLabel = isEnglish ? 'Subscribe' : 'اشترك الآن';
-
+Widget _buildGymsCard(BuildContext context, bool isEnglish) {
   return _buildProgramCard(
-    context:     context,
-    isEnglish:   isEnglish,
-    imagePath:   imagePath,
-    title:       title.toString(),
-    description: description.toString(),
-    buttonLabel: buttonLabel,
-    icon:        icon,
+    context: context,
+    isEnglish: isEnglish,
+    imagePath: 'assets/images/courtoFitness.png',
+    title: isEnglish ? 'Gyms' : 'الصالات الرياضية',
+    description: isEnglish
+        ? 'Browse gyms near you and subscribe monthly, quarterly or annually.'
+        : 'تصفح الصالات الرياضية القريبة منك واشترك والصالة تسجلك عند الحضور.',
+    buttonLabel: isEnglish ? 'Browse gyms' : 'تصفح الصالات',
+    icon: Icons.fitness_center,
     onTap: () {
-      Navigator.push(context, MaterialPageRoute(
-        builder: (_) => SubscriptionPlanPage(plans: subscriptionPlans, initialIndex: planIndex,),
-      ));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GymsListPage()),
+      );
     },
   );
 }

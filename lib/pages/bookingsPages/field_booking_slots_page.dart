@@ -257,27 +257,36 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
   // NEW: returns the discounted booking price only when the discount type
   // matches [frequency]. Falls back to the field's base price otherwise.
   double _effectiveBookingPrice(TimeSlot slot, String frequency) {
+    final base = _basePricePerSlot(frequency);
     final discount = _findDiscountForSlot(slot);
-    if (discount == null) return _bookingPricePerSlot;
+    if (discount == null) return base;
     final appliesToFrequency = frequency == 'daily'
         ? discount['is_daily'] == true
         : discount['is_monthly'] == true;
-    if (!appliesToFrequency) return _bookingPricePerSlot;
-    return double.tryParse(discount['booking_price'].toString()) ??
-        _bookingPricePerSlot;
+    if (!appliesToFrequency) return base;
+    final raw = double.tryParse(discount['booking_price'].toString());
+    if (raw == null) return base;
+    return raw * _discountWeeks(frequency);
   }
 
   // NEW: same logic for the remaining-to-owner price.
   double _effectiveRemainingPrice(TimeSlot slot, String frequency) {
+    final base = _baseRemainingPerSlot(frequency);
     final discount = _findDiscountForSlot(slot);
-    if (discount == null) return _remainingToOwnerPerSlot ?? 0;
+    if (discount == null) return base;
     final appliesToFrequency = frequency == 'daily'
         ? discount['is_daily'] == true
         : discount['is_monthly'] == true;
-    if (!appliesToFrequency) return _remainingToOwnerPerSlot ?? 0;
-    return double.tryParse(discount['remaining_price'].toString()) ??
-        (_remainingToOwnerPerSlot ?? 0);
+    if (!appliesToFrequency) return base;
+    final raw = double.tryParse(discount['remaining_price'].toString());
+    if (raw == null) return base;
+    return raw * _discountWeeks(frequency);
   }
+
+  // A discounted_slots row stores one session's price, so a monthly booking
+  // still multiplies it by the 4 weeks it covers. The field's own monthly
+  // price does NOT get this treatment - it is already a 4-week figure.
+  int _discountWeeks(String frequency) => frequency == 'monthly' ? 4 : 1;
 
   // Taken means every seat is gone, not just that someone booked. On a 1-seat
   // field one booking still fills it, so nothing changes for a pitch. A slot
@@ -411,6 +420,35 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
         )
       : double.tryParse(widget.field['field_calculated_remaining_price'].toString());
 
+  // The 4-week subscription price the owner set. It is stored on the field
+  // rather than worked out here: it started as the daily price x 4 when the
+  // field was created, but the owner can move it since - that is the whole
+  // point of a subscription. The x 4 fallback keeps this working against a
+  // server that has not run the BookingTypes migration yet.
+  double get _monthlyBookingPricePerSlot =>
+      double.tryParse(
+        widget.field['field_monthly_booking_price']?.toString() ?? '',
+      ) ??
+      (_bookingPricePerSlot * 4);
+
+  double get _monthlyRemainingPerSlot =>
+      double.tryParse(
+        widget.field['field_calculated_monthly_remaining_price']?.toString() ?? '',
+      ) ??
+      ((_remainingToOwnerPerSlot ?? 0) * 4);
+
+  // Undiscounted per-slot prices for one booking of [frequency].
+  double _basePricePerSlot(String frequency) =>
+      frequency == 'monthly' ? _monthlyBookingPricePerSlot : _bookingPricePerSlot;
+
+  double _baseRemainingPerSlot(String frequency) =>
+      frequency == 'monthly' ? _monthlyRemainingPerSlot : (_remainingToOwnerPerSlot ?? 0);
+
+  // Which booking frequencies this field sells. Absent means an older API
+  // that predates the toggles, where everything sold both.
+  bool get _allowsDaily => widget.field['field_allows_daily'] != false;
+  bool get _allowsMonthly => widget.field['field_allows_monthly'] != false;
+
   // Uses _effectiveBookingPrice so the correct price is applied per frequency
   // when the value is read inside the dialog's onTap (after _bookingFrequency is set).
   double get _currentTotalBookingPrice =>
@@ -457,6 +495,18 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
       }
     ];
 
+    // A field may sell only one of the two. Asking "daily or monthly?" when
+    // there is nothing to choose is just an extra tap, so the single enabled
+    // type is taken straight through.
+    if (!_allowsMonthly) {
+      _openDaily(mergedSlot);
+      return;
+    }
+    if (!_allowsDaily) {
+      _openMonthly(mergedSlot);
+      return;
+    }
+
     await showDialog(
       context: context,
       builder: (ctx) {
@@ -477,24 +527,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                   GestureDetector(
                     onTap: () {
                       Navigator.pop(ctx);
-                      _bookingFrequency = "daily";
-                      // _currentTotalBookingPrice and _remainingPaymentToOwner
-                      // are read here, after _bookingFrequency = "daily",
-                      // so only is_daily discounts are applied.
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => DailyBookingConfirmationPage(
-                            field: widget.field,
-                            date: widget.date,
-                            slots: mergedSlot,
-                            totalBookingPrice: _currentTotalBookingPrice,
-                            remainingPaymentToOwner: _remainingPaymentToOwner,
-                            frequency: _bookingFrequency,
-                            userId: AuthService.userData?['id'],
-                          ),
-                        ),
-                      );
+                      _openDaily(mergedSlot);
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -519,24 +552,7 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
                   GestureDetector(
                     onTap: () {
                       Navigator.pop(ctx);
-                      _bookingFrequency = "monthly";
-                      // _currentTotalBookingPrice and _remainingPaymentToOwner
-                      // are read here, after _bookingFrequency = "monthly",
-                      // so only is_monthly discounts are applied.
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MonthlyBookingConfirmationPage(
-                            field: widget.field,
-                            date: widget.date,
-                            slots: mergedSlot,
-                            totalBookingPrice: _currentTotalBookingPrice,
-                            remainingPaymentToOwner: _remainingPaymentToOwner,
-                            frequency: _bookingFrequency,
-                            userId: AuthService.userData?['id'],
-                          ),
-                        ),
-                      );
+                      _openMonthly(mergedSlot);
                     },
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -568,6 +584,46 @@ class _FieldBookingSlotsPageState extends State<FieldBookingSlotsPage> {
           ),
         );
       },
+    );
+  }
+
+  // _bookingFrequency is set BEFORE the totals are read, because
+  // _currentTotalBookingPrice and _remainingPaymentToOwner price each slot
+  // for the current frequency: the field's monthly figures instead of its
+  // daily ones, and only the discounts flagged for that frequency.
+  void _openDaily(List<Map<String, String>> mergedSlot) {
+    _bookingFrequency = "daily";
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DailyBookingConfirmationPage(
+          field: widget.field,
+          date: widget.date,
+          slots: mergedSlot,
+          totalBookingPrice: _currentTotalBookingPrice,
+          remainingPaymentToOwner: _remainingPaymentToOwner,
+          frequency: _bookingFrequency,
+          userId: AuthService.userData?['id'],
+        ),
+      ),
+    );
+  }
+
+  void _openMonthly(List<Map<String, String>> mergedSlot) {
+    _bookingFrequency = "monthly";
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MonthlyBookingConfirmationPage(
+          field: widget.field,
+          date: widget.date,
+          slots: mergedSlot,
+          totalBookingPrice: _currentTotalBookingPrice,
+          remainingPaymentToOwner: _remainingPaymentToOwner,
+          frequency: _bookingFrequency,
+          userId: AuthService.userData?['id'],
+        ),
+      ),
     );
   }
 
